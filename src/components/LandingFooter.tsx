@@ -18,10 +18,10 @@ const LandingFooter = () => {
               Transform your ideas into beautifully crafted books with the power of AI.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-slate-400 hover:text-white transition-colors">
+              <a href="https://www.facebook.com/profile.php?id=61574131919351" className="text-slate-400 hover:text-white transition-colors">
                 <Facebook size={20} />
               </a>
-              <a href="#" className="text-slate-400 hover:text-white transition-colors">
+              <a href="https://x.com/_fan_boi_lm10_" className="text-slate-400 hover:text-white transition-colors">
                 <X size={20} />
               </a>
               <a href="www.instagram.com/@_fan_boi_lm10_" className="text-slate-400 hover:text-white transition-colors">
