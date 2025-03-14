@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Twitter, Instagram, Linkedin, Github } from 'lucide-react';
+import { Facebook, X, Instagram, Linkedin, Github } from 'lucide-react';
 
 const LandingFooter = () => {
   return (
@@ -22,7 +22,7 @@ const LandingFooter = () => {
                 <Facebook size={20} />
               </a>
               <a href="#" className="text-slate-400 hover:text-white transition-colors">
-                <Twitter size={20} />
+                <X size={20} />
               </a>
               <a href="www.instagram.com/@_fan_boi_lm10_" className="text-slate-400 hover:text-white transition-colors">
                 <Instagram size={20} />
