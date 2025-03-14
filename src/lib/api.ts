@@ -11,19 +11,8 @@ const MODEL_NAME = "gemini-pro";
 // Function to call the Gemini API 
 export const generateWithGemini = async (prompt: string, maxTokens = 1024): Promise<string> => {
   try {
-    // This part would typically be done in a backend service to protect your API key
-    // For this demo, we'll mock the behavior with a simulated response delay
-    
     console.log("Generating content with prompt:", prompt);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Mock successful response
-    return `This is a simulated response from the Gemini API based on your prompt: "${prompt}". In a real implementation, this would call the actual API with proper authentication.`;
-    
-    /* 
-    // Real implementation would look something like this, but on the backend:
     const response = await fetch(
       `${API_BASE_URL}/${MODEL_NAME}:generateContent?key=${GEMINI_API_KEY}`,
       {
@@ -58,10 +47,33 @@ export const generateWithGemini = async (prompt: string, maxTokens = 1024): Prom
     }
 
     return data.candidates[0].content.parts[0].text;
-    */
   } catch (error) {
     console.error("Error generating content:", error);
     toast.error("Failed to generate content. Please try again.");
     throw error;
   }
+};
+
+// Function to generate book content based on type
+export const generateBookContent = async (
+  book: any, 
+  itemType: 'cover' | 'chapter' | 'credits', 
+  itemTitle: string
+): Promise<string> => {
+  let prompt = "";
+  
+  if (itemType === 'cover') {
+    prompt = `Create a cover page for a ${book.type} book titled "${book.title}" in the ${book.category} category. This book is about: ${book.description}. Format the response using markdown.`;
+  } else if (itemType === 'chapter') {
+    prompt = `Write a chapter titled "${itemTitle}" for a ${book.type} book titled "${book.title}" in the ${book.category} category. The book is about: ${book.description}. Make it engaging and appropriate for the target audience. Format the response using markdown.`;
+  } else if (itemType === 'credits') {
+    // Create a credits list prompt including the book's contributors
+    const creditsList = book.credits
+      .map((credit: any) => `${credit.role}: ${credit.name}`)
+      .join(", ");
+    
+    prompt = `Create a credits page for a ${book.type} book titled "${book.title}". Include the following contributors: ${creditsList}. Format it nicely with markdown.`;
+  }
+  
+  return generateWithGemini(prompt);
 };
