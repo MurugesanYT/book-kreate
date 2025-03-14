@@ -11,6 +11,8 @@ import RequireAuth from "./components/RequireAuth";
 import LandingPage from "./pages/LandingPage";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
+import BookCreationPage from "./pages/BookCreationPage";
+import BookPlanPage from "./pages/BookPlanPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +32,22 @@ const App = () => (
               element={
                 <RequireAuth>
                   <DashboardPage />
+                </RequireAuth>
+              } 
+            />
+            <Route 
+              path="/book/create" 
+              element={
+                <RequireAuth>
+                  <BookCreationPage />
+                </RequireAuth>
+              } 
+            />
+            <Route 
+              path="/book/plan/:bookId" 
+              element={
+                <RequireAuth>
+                  <BookPlanPage />
                 </RequireAuth>
               } 
             />
