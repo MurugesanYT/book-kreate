@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -14,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { BookOpen, Plus, Trash2 } from 'lucide-react';
+import { generateBookTitle } from '@/lib/api';
 
 // Book types
 const BOOK_TYPES = [
@@ -99,9 +99,22 @@ const BookDetailsForm = () => {
     setIsSubmitting(true);
     
     try {
+      // If title is not provided, generate one using AI
+      let bookTitle = title;
+      if (!title) {
+        toast.loading("Generating a title for your book...");
+        try {
+          bookTitle = await generateBookTitle(description, bookType, bookCategory);
+          toast.success("Book title generated!");
+        } catch (error) {
+          console.error("Failed to generate title:", error);
+          bookTitle = "My Book"; // Fallback title
+        }
+      }
+      
       // Prepare book data
       const bookData = {
-        title: title || "Auto-generated title",
+        title: bookTitle,
         description,
         type: bookType,
         category: bookCategory,

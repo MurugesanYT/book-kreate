@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from '@/contexts/AuthContext';
 import { ChevronLeft, BookOpen, Play, Check, Pencil, Loader2, Trash } from 'lucide-react';
 import { toast } from 'sonner';
-import { generateBookContent } from '@/lib/api';
+import { generateBookContent, generateBookPlan } from '@/lib/api';
 
 interface Credit {
   role: string;
@@ -40,9 +40,10 @@ const BookPlanPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
+  const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
   
   useEffect(() => {
-    const loadBookData = () => {
+    const loadBookData = async () => {
       try {
         const books = JSON.parse(localStorage.getItem('bookKreateBooks') || '[]');
         const foundBook = books.find((b: BookData) => b.id === bookId);
@@ -55,7 +56,7 @@ const BookPlanPage = () => {
           if (existingPlan) {
             setPlanItems(existingPlan);
           } else {
-            generateInitialPlan(foundBook);
+            await generateAIBookPlan(foundBook);
           }
         } else {
           toast.error("Book not found");
@@ -71,6 +72,23 @@ const BookPlanPage = () => {
     
     loadBookData();
   }, [bookId, navigate]);
+  
+  const generateAIBookPlan = async (bookData: BookData) => {
+    setIsGeneratingPlan(true);
+    toast.loading("Generating your book plan...");
+    
+    try {
+      const generatedPlan = await generateBookPlan(bookData);
+      setPlanItems(generatedPlan);
+      localStorage.setItem(`bookPlan_${bookId}`, JSON.stringify(generatedPlan));
+      toast.success("Book plan generated successfully!");
+    } catch (error) {
+      console.error("Error generating book plan:", error);
+      generateInitialPlan(bookData);
+    } finally {
+      setIsGeneratingPlan(false);
+    }
+  };
   
   const generateInitialPlan = (bookData: BookData) => {
     const newPlan: PlanItem[] = [
