@@ -23,7 +23,7 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
@@ -34,6 +34,14 @@ export const signInWithGoogle = async () => {
     return result.user;
   } catch (error) {
     console.error("Error signing in with Google:", error);
+    
+    // Specific handling for unauthorized domain error
+    if (error.code === 'auth/unauthorized-domain') {
+      throw new Error(
+        "Authentication domain not authorized. Please add this domain to your Firebase project's authorized domains."
+      );
+    }
+    
     throw error;
   }
 };
