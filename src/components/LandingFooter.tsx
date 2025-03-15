@@ -24,13 +24,13 @@ const LandingFooter = () => {
               <a href="https://x.com/_fan_boi_lm10_" className="text-slate-400 hover:text-white transition-colors">
                 <X size={20} />
               </a>
-              <a href="www.instagram.com/@_fan_boi_lm10_" className="text-slate-400 hover:text-white transition-colors">
+              <a href="https://www.instagram.com/@_fan_boi_lm10_" className="text-slate-400 hover:text-white transition-colors">
                 <Instagram size={20} />
               </a>
               <a href="#" className="text-slate-400 hover:text-white transition-colors">
                 <Linkedin size={20} />
               </a>
-              <a href="www.github.com/MurugesanYT" className="text-slate-400 hover:text-white transition-colors">
+              <a href="https://www.github.com/MurugesanYT" className="text-slate-400 hover:text-white transition-colors">
                 <Github size={20} />
               </a>
             </div>
