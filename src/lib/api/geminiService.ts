@@ -5,8 +5,8 @@ import { toast } from "sonner";
 const GEMINI_API_KEY = "AIzaSyDJ9lykUQGKZ5EB0P5GcsKjfjVbKlfoZVE";
 
 // Base URL for the Gemini API
-const API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
-const MODEL_NAME = "gemini-pro";
+const API_BASE_URL = "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent";
+const MODEL_NAME = "gemini-2.0-flash-001";
 
 // Function to call the Gemini API with improved error handling and retries
 export const generateWithGemini = async (prompt: string, maxTokens = 1024): Promise<string> => {
