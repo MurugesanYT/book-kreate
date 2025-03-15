@@ -47,7 +47,18 @@ export const generateBookTitle = async (description: string, type: string, categ
       console.error("Backup title generation also failed:", backupError);
     }
     
+    // Use a more descriptive fallback title based on the book type
+    const fallbackTitle = type === "Children's Story" 
+      ? "My Magical Story" 
+      : type === "Novel" 
+        ? "The Journey" 
+        : type === "Fantasy" 
+          ? "Realm of Wonder" 
+          : type === "Science Fiction" 
+            ? "Beyond the Stars" 
+            : "My Book";
+    
     toast.error("Failed to generate book title. Using generic title instead.");
-    return type === "Children's Story" ? "My Magical Story" : "My Book";
+    return fallbackTitle;
   }
 };

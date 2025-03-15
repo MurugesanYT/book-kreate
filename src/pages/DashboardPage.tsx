@@ -2,8 +2,20 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from '@/contexts/AuthContext';
-import { BookOpen, LogOut, PlusCircle, Clock, CheckCircle } from 'lucide-react';
+import { BookOpen, LogOut, PlusCircle, Clock, CheckCircle, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface BookSummary {
   id: string;
@@ -18,38 +30,39 @@ const DashboardPage = () => {
   const { currentUser, logOut, loading } = useAuth();
   const navigate = useNavigate();
   const [books, setBooks] = useState<BookSummary[]>([]);
+  const [bookToDelete, setBookToDelete] = useState<string | null>(null);
   
   useEffect(() => {
-    // Load books from localStorage
-    const loadBooks = () => {
-      try {
-        const storedBooks = JSON.parse(localStorage.getItem('bookKreateBooks') || '[]');
-        
-        // Calculate progress for each book
-        const booksWithProgress = storedBooks.map((book: any) => {
-          const planItems = JSON.parse(localStorage.getItem(`bookPlan_${book.id}`) || '[]');
-          const totalItems = planItems.length || 1;
-          const completedItems = planItems.filter((item: any) => item.status === 'completed').length;
-          const progress = Math.round((completedItems / totalItems) * 100);
-          
-          return {
-            id: book.id,
-            title: book.title,
-            type: book.type,
-            category: book.category,
-            timestamp: book.timestamp,
-            progress
-          };
-        });
-        
-        setBooks(booksWithProgress);
-      } catch (error) {
-        console.error("Error loading books:", error);
-      }
-    };
-    
     loadBooks();
   }, []);
+  
+  const loadBooks = () => {
+    try {
+      const storedBooks = JSON.parse(localStorage.getItem('bookKreateBooks') || '[]');
+      
+      // Calculate progress for each book
+      const booksWithProgress = storedBooks.map((book: any) => {
+        const planItems = JSON.parse(localStorage.getItem(`bookPlan_${book.id}`) || '[]');
+        const totalItems = planItems.length || 1;
+        const completedItems = planItems.filter((item: any) => item.status === 'completed').length;
+        const progress = Math.round((completedItems / totalItems) * 100);
+        
+        return {
+          id: book.id,
+          title: book.title,
+          type: book.type,
+          category: book.category,
+          timestamp: book.timestamp,
+          progress
+        };
+      });
+      
+      setBooks(booksWithProgress);
+    } catch (error) {
+      console.error("Error loading books:", error);
+      toast.error("Failed to load your books");
+    }
+  };
   
   const handleCreateBook = () => {
     navigate('/book/create');
@@ -57,6 +70,32 @@ const DashboardPage = () => {
   
   const handleViewBook = (bookId: string) => {
     navigate(`/book/plan/${bookId}`);
+  };
+
+  const handleDeleteBook = (bookId: string) => {
+    try {
+      // Get current books from localStorage
+      const storedBooks = JSON.parse(localStorage.getItem('bookKreateBooks') || '[]');
+      
+      // Filter out the book to delete
+      const updatedBooks = storedBooks.filter((book: any) => book.id !== bookId);
+      
+      // Save updated books list back to localStorage
+      localStorage.setItem('bookKreateBooks', JSON.stringify(updatedBooks));
+      
+      // Remove book plan data
+      localStorage.removeItem(`bookPlan_${bookId}`);
+      
+      // Update state to reflect changes
+      setBooks(books.filter(book => book.id !== bookId));
+      
+      toast.success("Book deleted successfully");
+    } catch (error) {
+      console.error("Error deleting book:", error);
+      toast.error("Failed to delete book");
+    } finally {
+      setBookToDelete(null);
+    }
   };
   
   if (loading) {
@@ -159,16 +198,56 @@ const DashboardPage = () => {
             {books.map((book) => (
               <div 
                 key={book.id} 
-                className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => handleViewBook(book.id)}
+                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
               >
                 <div className="h-3 bg-gradient-to-r from-book-purple to-book-orange"></div>
                 <div className="p-6">
-                  <h3 className="text-lg font-semibold text-book-darkText mb-1 line-clamp-1">
-                    {book.title || "Untitled Book"}
-                  </h3>
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 
+                      className="text-lg font-semibold text-book-darkText mb-1 line-clamp-1 cursor-pointer hover:text-book-purple transition-colors"
+                      onClick={() => handleViewBook(book.id)}
+                    >
+                      {book.title || "Untitled Book"}
+                    </h3>
+                    
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-red-500 hover:bg-red-50 hover:text-red-600 -mt-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setBookToDelete(book.id);
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Book</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete "{book.title}"? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction 
+                            className="bg-red-500 text-white hover:bg-red-600"
+                            onClick={() => handleDeleteBook(book.id)}
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                   
-                  <div className="flex flex-wrap gap-2 mb-4">
+                  <div 
+                    className="flex flex-wrap gap-2 mb-4 cursor-pointer"
+                    onClick={() => handleViewBook(book.id)}
+                  >
                     <span className="bg-book-purple/10 text-book-purple px-2 py-0.5 rounded-full text-xs">
                       {book.type}
                     </span>
@@ -177,7 +256,10 @@ const DashboardPage = () => {
                     </span>
                   </div>
                   
-                  <div className="flex items-center justify-between mb-2">
+                  <div 
+                    className="flex items-center justify-between mb-2 cursor-pointer"
+                    onClick={() => handleViewBook(book.id)}
+                  >
                     <span className="text-sm text-slate-500 flex items-center">
                       <Clock size={14} className="mr-1" />
                       {new Date(book.timestamp).toLocaleDateString()}
@@ -194,11 +276,24 @@ const DashboardPage = () => {
                     </span>
                   </div>
                   
-                  <div className="w-full bg-slate-200 rounded-full h-1.5">
+                  <div 
+                    className="w-full bg-slate-200 rounded-full h-1.5 cursor-pointer"
+                    onClick={() => handleViewBook(book.id)}
+                  >
                     <div 
                       className="bg-book-purple h-1.5 rounded-full" 
                       style={{ width: `${book.progress}%` }}
                     ></div>
+                  </div>
+                  
+                  <div className="mt-4 flex">
+                    <Button 
+                      className="w-full mt-2 bg-book-purple hover:bg-book-purple/90" 
+                      onClick={() => handleViewBook(book.id)}
+                    >
+                      <BookOpen size={14} className="mr-2" />
+                      Continue
+                    </Button>
                   </div>
                 </div>
               </div>

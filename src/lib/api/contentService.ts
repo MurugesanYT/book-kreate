@@ -15,10 +15,10 @@ export const generateBookContent = async (
   if (itemType === 'cover') {
     prompt = `Create a cover page for a ${book.type} book titled "${book.title}" in the ${book.category} category. This book is about: ${book.description}. Format the response using markdown with a prominent title and any subtitle or author information you can infer.`;
   } else if (itemType === 'chapter') {
-    prompt = `Write a chapter titled "${itemTitle}" for a ${book.type} book titled "${book.title}" in the ${book.category} category. 
-    ${itemDescription ? `This chapter is about: ${itemDescription}.` : ''} 
+    prompt = `Write a detailed chapter titled "${itemTitle}" for a ${book.type} book titled "${book.title}" in the ${book.category} category. 
+    ${itemDescription ? `This chapter covers: ${itemDescription}.` : ''} 
     The book overall is about: ${book.description}. 
-    Make it engaging, appropriate for the target audience, and at least 500 words in length. Format the response using markdown with proper headings, paragraphs, and any dialogue formatting if needed.`;
+    Make it engaging, appropriate for the ${book.type} genre, and at least 500 words in length. Format the response using markdown with proper headings, paragraphs, and any dialogue formatting if needed.`;
   } else if (itemType === 'credits') {
     // Create a credits list prompt including the book's contributors
     const creditsList = book.credits && book.credits.length > 0
@@ -47,18 +47,28 @@ export const generateBookContent = async (
     try {
       let simplePrompt = "";
       if (itemType === 'cover') {
-        simplePrompt = `Create a simple cover page for "${book.title}".`;
+        simplePrompt = `Create a simple cover page for "${book.title}" by using basic markdown formatting. Just include the title, the genre, and a brief subtitle.`;
       } else if (itemType === 'chapter') {
-        simplePrompt = `Write a brief chapter titled "${itemTitle}" for the book "${book.title}".`;
+        simplePrompt = `Write a brief chapter titled "${itemTitle}" for the book "${book.title}". Keep it simple but engaging, about 250 words.`;
       } else if (itemType === 'credits') {
-        simplePrompt = `Create a simple credits page for "${book.title}".`;
+        simplePrompt = `Create a simple credits page for "${book.title}" with basic markdown formatting.`;
       }
       
-      const backupContent = await generateWithGemini(simplePrompt, 1000);
+      const backupContent = await generateWithGemini(simplePrompt, 1500);
+      console.log(`Generated backup ${itemType} content successfully!`);
+      toast.success(`${itemTitle} content generated with simplified format.`);
       return backupContent;
     } catch (backupError) {
       console.error(`Backup generation also failed:`, backupError);
-      return `# ${itemTitle}\n\nContent generation failed. Please try again.\n\nThis may be due to a temporary issue with the AI service.`;
+      
+      // Provide a very basic fallback content
+      if (itemType === 'cover') {
+        return `# ${book.title}\n\n## A ${book.type} book in the ${book.category} category\n\n*Content generation failed. This is a placeholder cover page.*`;
+      } else if (itemType === 'chapter') {
+        return `# ${itemTitle}\n\n*Content generation failed. This is a placeholder chapter page.*\n\nThis chapter was meant to cover: ${itemDescription || "various aspects of the book"}.\n\nPlease try regenerating this content.`;
+      } else {
+        return `# Credits\n\n*Content generation failed. This is a placeholder credits page.*`;
+      }
     }
   }
 };

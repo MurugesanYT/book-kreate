@@ -56,14 +56,17 @@ export const generateWithGemini = async (prompt: string, maxTokens = 1024): Prom
         }
       );
 
-      const data = await response.json();
-      
       if (!response.ok) {
+        const data = await response.json().catch(() => ({ error: { message: "Failed to parse error response" } }));
         const errorMessage = data.error?.message || "Failed to generate content";
         console.error(`API error (attempt ${retries + 1}):`, errorMessage);
         throw new Error(errorMessage);
       }
 
+      const data = await response.json().catch(() => {
+        throw new Error("Failed to parse JSON response");
+      });
+      
       // Check if we have candidates in the response
       if (!data.candidates || data.candidates.length === 0) {
         throw new Error("No candidates returned from API");

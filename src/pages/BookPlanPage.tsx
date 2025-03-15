@@ -2,9 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/contexts/AuthContext';
-import { ChevronLeft, BookOpen, Play, Check, Pencil, Loader2, Trash, Info } from 'lucide-react';
+import { ChevronLeft, BookOpen, Play, Check, Pencil, Loader2, Trash, Info, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
-import { generateBookContent, generateBookPlan, BookData, PlanItem } from '@/lib/api';
+import { generateBookContent } from '@/lib/api/contentService';
+import { generateBookPlan } from '@/lib/api/planService';
+import { BookData, PlanItem } from '@/lib/api/types';
+import ReactMarkdown from 'react-markdown';
 
 const BookPlanPage = () => {
   const { currentUser } = useAuth();
@@ -22,6 +25,12 @@ const BookPlanPage = () => {
   useEffect(() => {
     const loadBookData = async () => {
       try {
+        if (!bookId) {
+          toast.error("Book ID is missing");
+          navigate('/dashboard');
+          return;
+        }
+        
         const books = JSON.parse(localStorage.getItem('bookKreateBooks') || '[]');
         const foundBook = books.find((b: BookData) => b.id === bookId);
         
@@ -30,7 +39,7 @@ const BookPlanPage = () => {
           
           const existingPlan = JSON.parse(localStorage.getItem(`bookPlan_${bookId}`) || 'null');
           
-          if (existingPlan) {
+          if (existingPlan && existingPlan.length > 0) {
             setPlanItems(existingPlan);
             // Set first completed item as selected item if any
             const firstCompleted = existingPlan.find((item: PlanItem) => item.status === 'completed');
@@ -66,6 +75,7 @@ const BookPlanPage = () => {
       toast.success("Book plan generated successfully with custom chapter titles!");
     } catch (error) {
       console.error("Error generating book plan:", error);
+      toast.error("Failed to generate a custom plan. Using a default plan instead.");
       generateInitialPlan(bookData);
     } finally {
       setIsGeneratingPlan(false);
@@ -101,7 +111,21 @@ const BookPlanPage = () => {
     
     setPlanItems(newPlan);
     
-    localStorage.setItem(`bookPlan_${bookId}`, JSON.stringify(newPlan));
+    if (bookId) {
+      localStorage.setItem(`bookPlan_${bookId}`, JSON.stringify(newPlan));
+    }
+  };
+  
+  const handleRegeneratePlan = async () => {
+    if (!book) return;
+    
+    // Confirm with user before regenerating
+    if (!window.confirm("This will replace your current plan with a new one. Any generated content will be lost. Continue?")) {
+      return;
+    }
+    
+    await generateAIBookPlan(book);
+    setSelectedItem(null);
   };
   
   const handleBackToDashboard = () => {
@@ -110,7 +134,7 @@ const BookPlanPage = () => {
   
   const handleGenerateContent = async (itemId: string) => {
     const item = planItems.find(item => item.id === itemId);
-    if (!item || item.status === 'completed') return;
+    if (!item || !book || item.status === 'completed') return;
     
     setIsGenerating(true);
     setActiveItemId(itemId);
@@ -164,6 +188,30 @@ const BookPlanPage = () => {
     }
   };
   
+  const handleRegenerateContent = async (itemId: string) => {
+    const item = planItems.find(item => item.id === itemId);
+    if (!item || !book) return;
+    
+    // Change the status back to pending
+    const updatedItems = planItems.map(i => 
+      i.id === itemId ? { ...i, status: 'pending' as const } : i
+    );
+    
+    setPlanItems(updatedItems);
+    localStorage.setItem(`bookPlan_${bookId}`, JSON.stringify(updatedItems));
+    
+    // If this was the selected item, keep it selected
+    if (selectedItem?.id === itemId) {
+      const updatedItem = updatedItems.find(i => i.id === itemId);
+      if (updatedItem) {
+        setSelectedItem(updatedItem);
+      }
+    }
+    
+    // Generate the content again
+    await handleGenerateContent(itemId);
+  };
+  
   const handleViewContent = (item: PlanItem) => {
     setSelectedItem(item);
     // Smooth scroll to the content section
@@ -175,6 +223,20 @@ const BookPlanPage = () => {
   const completedItems = planItems.filter(item => item.status === 'completed');
   
   const isBookComplete = planItems.length > 0 && planItems.every(item => item.status === 'completed');
+
+  // Helper function to safely render markdown content
+  const renderContent = (content: string | undefined) => {
+    if (!content) return <p>No content available</p>;
+
+    try {
+      return (
+        <ReactMarkdown>{content}</ReactMarkdown>
+      );
+    } catch (error) {
+      console.error("Error rendering markdown:", error);
+      return <div className="whitespace-pre-wrap">{content}</div>;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-book-lightGray">
@@ -215,20 +277,44 @@ const BookPlanPage = () => {
             </div>
           ) : book ? (
             <>
-              <h1 className="text-3xl font-bold text-book-darkText mt-4">
-                {book.title || "New Book"}
-              </h1>
-              <div className="flex flex-wrap gap-2 mt-2">
-                <span className="bg-book-purple/10 text-book-purple px-3 py-1 rounded-full text-sm">
-                  {book.type}
-                </span>
-                <span className="bg-book-orange/10 text-book-orange px-3 py-1 rounded-full text-sm">
-                  {book.category}
-                </span>
+              <div className="flex justify-between items-start mt-4">
+                <div>
+                  <h1 className="text-3xl font-bold text-book-darkText">
+                    {book.title || "New Book"}
+                  </h1>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <span className="bg-book-purple/10 text-book-purple px-3 py-1 rounded-full text-sm">
+                      {book.type}
+                    </span>
+                    <span className="bg-book-orange/10 text-book-orange px-3 py-1 rounded-full text-sm">
+                      {book.category}
+                    </span>
+                  </div>
+                  <p className="text-slate-600 mt-3 max-w-2xl">
+                    {book.description}
+                  </p>
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-book-purple border-book-purple"
+                  onClick={handleRegeneratePlan}
+                  disabled={isGeneratingPlan}
+                >
+                  {isGeneratingPlan ? (
+                    <>
+                      <Loader2 size={14} className="mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw size={14} className="mr-2" />
+                      Regenerate Plan
+                    </>
+                  )}
+                </Button>
               </div>
-              <p className="text-slate-600 mt-3 max-w-2xl">
-                {book.description}
-              </p>
             </>
           ) : (
             <div className="mt-4 text-red-500">Book not found</div>
@@ -350,17 +436,29 @@ const BookPlanPage = () => {
                             </p>
                           )}
                         </div>
-                        <Button
-                          variant={selectedItem?.id === item.id ? "default" : "ghost"}
-                          size="sm"
-                          className={selectedItem?.id === item.id 
-                            ? "bg-book-purple text-white hover:bg-book-purple/90" 
-                            : "text-book-purple hover:bg-book-purple/10"}
-                          onClick={() => handleViewContent(item)}
-                        >
-                          <Pencil size={14} className="mr-1" />
-                          View
-                        </Button>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-book-orange hover:bg-book-orange/10"
+                            onClick={() => handleRegenerateContent(item.id)}
+                            disabled={isGenerating}
+                          >
+                            <RefreshCw size={14} className="mr-1" />
+                            Redo
+                          </Button>
+                          <Button
+                            variant={selectedItem?.id === item.id ? "default" : "ghost"}
+                            size="sm"
+                            className={selectedItem?.id === item.id 
+                              ? "bg-book-purple text-white hover:bg-book-purple/90" 
+                              : "text-book-purple hover:bg-book-purple/10"}
+                            onClick={() => handleViewContent(item)}
+                          >
+                            <Pencil size={14} className="mr-1" />
+                            View
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -392,20 +490,24 @@ const BookPlanPage = () => {
                 </span>
               </div>
               
-              <div 
-                className="prose max-w-none"
-                dangerouslySetInnerHTML={{ 
-                  __html: (selectedItem.content || 'No content available')
-                    .replace(/\n/g, '<br>')
-                    // Basic markdown support for headers
-                    .replace(/# (.*?)(?:<br>|$)/g, '<h1>$1</h1>')
-                    .replace(/## (.*?)(?:<br>|$)/g, '<h2>$1</h2>')
-                    .replace(/### (.*?)(?:<br>|$)/g, '<h3>$1</h3>')
-                    // Basic markdown support for bold and italic
-                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                }}
-              />
+              <div className="prose max-w-none">
+                {renderContent(selectedItem.content)}
+              </div>
+              
+              {selectedItem.status === 'completed' && (
+                <div className="mt-4 flex justify-end">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-book-orange border-book-orange"
+                    onClick={() => handleRegenerateContent(selectedItem.id)}
+                    disabled={isGenerating}
+                  >
+                    <RefreshCw size={14} className="mr-2" />
+                    Regenerate Content
+                  </Button>
+                </div>
+              )}
             </div>
           )}
           
