@@ -1,7 +1,7 @@
 
 import { toast } from "sonner";
 import { generateWithGemini } from "./geminiService";
-import { BookData, PlanItem } from "./types";
+import { BookData, PlanItem, BookItemType } from "./types";
 
 // Function to generate a book plan with descriptive chapter titles
 export const generateBookPlan = async (book: BookData): Promise<PlanItem[]> => {
@@ -35,20 +35,20 @@ export const generateBookPlan = async (book: BookData): Promise<PlanItem[]> => {
       {
         id: `item_${Date.now()}_cover`,
         title: 'Cover Page',
-        type: 'cover' as const,
+        type: 'cover' as BookItemType,
         status: 'pending' as const
       },
       ...chapterPlan.map((chapter: any, index: number) => ({
         id: `item_${Date.now()}_${index+1}`,
         title: chapter.title,
         description: chapter.description || `Content for ${chapter.title}`,
-        type: 'chapter' as const,
+        type: 'chapter' as BookItemType,
         status: 'pending' as const
       })),
       {
         id: `item_${Date.now()}_credits`,
         title: 'Credits Page',
-        type: 'credits' as const,
+        type: 'credits' as BookItemType,
         status: 'pending' as const
       }
     ];
@@ -63,7 +63,7 @@ export const generateBookPlan = async (book: BookData): Promise<PlanItem[]> => {
       {
         id: `item_${Date.now()}_cover`,
         title: 'Cover Page',
-        type: 'cover' as const,
+        type: 'cover' as BookItemType,
         status: 'pending' as const
       }
     ];
@@ -73,7 +73,7 @@ export const generateBookPlan = async (book: BookData): Promise<PlanItem[]> => {
         id: `item_${Date.now()}_${i}`,
         title: `Chapter ${i}`,
         description: `Default content for Chapter ${i}`,
-        type: 'chapter' as const,
+        type: 'chapter' as BookItemType,
         status: 'pending' as const
       });
     }
@@ -81,7 +81,7 @@ export const generateBookPlan = async (book: BookData): Promise<PlanItem[]> => {
     defaultPlan.push({
       id: `item_${Date.now()}_credits`,
       title: 'Credits Page',
-      type: 'credits' as const,
+      type: 'credits' as BookItemType,
       status: 'pending' as const
     });
     
