@@ -1,36 +1,10 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/contexts/AuthContext';
 import { ChevronLeft, BookOpen, Play, Check, Pencil, Loader2, Trash, Info } from 'lucide-react';
 import { toast } from 'sonner';
-import { generateBookContent, generateBookPlan } from '@/lib/api';
-
-interface Credit {
-  role: string;
-  name: string;
-}
-
-interface BookData {
-  id: string;
-  title: string;
-  description: string;
-  type: string;
-  category: string;
-  credits: Credit[];
-  needsGeneratedTitle: boolean;
-  timestamp: string;
-}
-
-interface PlanItem {
-  id: string;
-  title: string;
-  type: 'cover' | 'chapter' | 'credits';
-  status: 'pending' | 'ongoing' | 'completed';
-  description?: string;
-  content?: string;
-}
+import { generateBookContent, generateBookPlan, BookData, PlanItem } from '@/lib/api';
 
 const BookPlanPage = () => {
   const { currentUser } = useAuth();
@@ -121,9 +95,9 @@ const BookPlanPage = () => {
     newPlan.push({
       id: `item_${Date.now()}_credits`,
       title: 'Credits Page',
-      type: 'credits',
-      status: 'pending'
-    });
+        type: 'credits',
+        status: 'pending'
+      });
     
     setPlanItems(newPlan);
     
