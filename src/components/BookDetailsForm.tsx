@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -53,6 +54,7 @@ const BookDetailsForm = () => {
     { role: 'Author', name: '' }
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
 
   // Get categories based on selected book type
   const getCategories = () => {
@@ -74,6 +76,38 @@ const BookDetailsForm = () => {
     const updatedCredits = [...credits];
     updatedCredits[index][field] = value;
     setCredits(updatedCredits);
+  };
+
+  // Handle generating title
+  const handleGenerateTitle = async () => {
+    if (!description) {
+      toast.error("Please provide a description first to generate a title.");
+      return;
+    }
+    
+    if (!bookType) {
+      toast.error("Please select a book type first.");
+      return;
+    }
+    
+    if (!bookCategory) {
+      toast.error("Please select a book category first.");
+      return;
+    }
+    
+    setIsGeneratingTitle(true);
+    
+    try {
+      toast.loading("Generating a title based on your description...");
+      const generatedTitle = await generateBookTitle(description, bookType, bookCategory);
+      setTitle(generatedTitle);
+      toast.success("Book title generated successfully!");
+    } catch (error) {
+      console.error("Failed to generate title:", error);
+      toast.error("Failed to generate title. Please try again or create your own.");
+    } finally {
+      setIsGeneratingTitle(false);
+    }
   };
 
   // Handle form submission
@@ -149,7 +183,26 @@ const BookDetailsForm = () => {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         <div>
-          <Label htmlFor="title">Book Title (Optional)</Label>
+          <div className="flex justify-between items-end mb-1">
+            <Label htmlFor="title">Book Title (Optional)</Label>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm"
+              onClick={handleGenerateTitle}
+              disabled={isGeneratingTitle || !description || !bookType || !bookCategory}
+              className="text-xs"
+            >
+              {isGeneratingTitle ? (
+                <>
+                  <div className="h-3 w-3 border-t-2 border-current rounded-full animate-spin mr-1"></div>
+                  Generating...
+                </>
+              ) : (
+                <>Generate Title</>
+              )}
+            </Button>
+          </div>
           <Input
             id="title"
             placeholder="Leave blank for AI to generate"
@@ -157,7 +210,7 @@ const BookDetailsForm = () => {
             onChange={(e) => setTitle(e.target.value)}
           />
           <p className="text-sm text-slate-500 mt-1">
-            If left blank, AI will generate a title based on your description
+            You can generate a title based on your description, or let AI create one when you submit
           </p>
         </div>
         

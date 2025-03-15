@@ -1,8 +1,9 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/contexts/AuthContext';
-import { ChevronLeft, BookOpen, Play, Check, Pencil, Loader2, Trash } from 'lucide-react';
+import { ChevronLeft, BookOpen, Play, Check, Pencil, Loader2, Trash, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateBookContent, generateBookPlan } from '@/lib/api';
 
@@ -27,6 +28,7 @@ interface PlanItem {
   title: string;
   type: 'cover' | 'chapter' | 'credits';
   status: 'pending' | 'ongoing' | 'completed';
+  description?: string;
   content?: string;
 }
 
@@ -41,6 +43,7 @@ const BookPlanPage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeItemId, setActiveItemId] = useState<string | null>(null);
   const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<PlanItem | null>(null);
   
   useEffect(() => {
     const loadBookData = async () => {
@@ -55,6 +58,11 @@ const BookPlanPage = () => {
           
           if (existingPlan) {
             setPlanItems(existingPlan);
+            // Set first completed item as selected item if any
+            const firstCompleted = existingPlan.find((item: PlanItem) => item.status === 'completed');
+            if (firstCompleted) {
+              setSelectedItem(firstCompleted);
+            }
           } else {
             await generateAIBookPlan(foundBook);
           }
@@ -75,13 +83,13 @@ const BookPlanPage = () => {
   
   const generateAIBookPlan = async (bookData: BookData) => {
     setIsGeneratingPlan(true);
-    toast.loading("Generating your book plan...");
+    toast.loading("Generating your book plan with custom chapter titles...");
     
     try {
       const generatedPlan = await generateBookPlan(bookData);
       setPlanItems(generatedPlan);
       localStorage.setItem(`bookPlan_${bookId}`, JSON.stringify(generatedPlan));
-      toast.success("Book plan generated successfully!");
+      toast.success("Book plan generated successfully with custom chapter titles!");
     } catch (error) {
       console.error("Error generating book plan:", error);
       generateInitialPlan(bookData);
@@ -104,6 +112,7 @@ const BookPlanPage = () => {
       newPlan.push({
         id: `item_${Date.now()}_${i}`,
         title: `Chapter ${i}`,
+        description: `Default content for Chapter ${i}`,
         type: 'chapter',
         status: 'pending'
       });
@@ -139,7 +148,14 @@ const BookPlanPage = () => {
       setPlanItems(updatedItems);
       localStorage.setItem(`bookPlan_${bookId}`, JSON.stringify(updatedItems));
       
-      const generatedContent = await generateBookContent(book, item.type, item.title);
+      toast.loading(`Generating content for ${item.title}...`);
+      
+      const generatedContent = await generateBookContent(
+        book, 
+        item.type, 
+        item.title,
+        item.description
+      );
       
       const completedItems = planItems.map(item => 
         item.id === itemId 
@@ -149,6 +165,13 @@ const BookPlanPage = () => {
       
       setPlanItems(completedItems);
       localStorage.setItem(`bookPlan_${bookId}`, JSON.stringify(completedItems));
+      
+      // Set the newly completed item as the selected item
+      const completedItem = completedItems.find(i => i.id === itemId);
+      if (completedItem) {
+        setSelectedItem(completedItem);
+      }
+      
       toast.success(`${item.title} content generated successfully!`);
       
     } catch (error) {
@@ -165,6 +188,12 @@ const BookPlanPage = () => {
       setIsGenerating(false);
       setActiveItemId(null);
     }
+  };
+  
+  const handleViewContent = (item: PlanItem) => {
+    setSelectedItem(item);
+    // Smooth scroll to the content section
+    document.getElementById('output-section')?.scrollIntoView({ behavior: 'smooth' });
   };
   
   const pendingItems = planItems.filter(item => item.status === 'pending');
@@ -251,22 +280,29 @@ const BookPlanPage = () => {
                   {pendingItems.map((item) => (
                     <div 
                       key={item.id} 
-                      className="border border-slate-200 rounded-md p-3 flex justify-between items-center"
+                      className="border border-slate-200 rounded-md p-3"
                     >
-                      <div>
-                        <span className="font-medium text-book-darkText">{item.title}</span>
-                        <p className="text-sm text-slate-500">{item.type}</p>
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <span className="font-medium text-book-darkText">{item.title}</span>
+                          <p className="text-sm text-slate-500">{item.type}</p>
+                          {item.description && item.type === 'chapter' && (
+                            <p className="text-xs text-slate-500 mt-1 italic">
+                              {item.description}
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-green-600 border-green-200 hover:bg-green-50 shrink-0 ml-2"
+                          onClick={() => handleGenerateContent(item.id)}
+                          disabled={isGenerating}
+                        >
+                          <Play size={14} className="mr-1" />
+                          Generate
+                        </Button>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-green-600 border-green-200 hover:bg-green-50"
-                        onClick={() => handleGenerateContent(item.id)}
-                        disabled={isGenerating}
-                      >
-                        <Play size={14} className="mr-1" />
-                        Generate
-                      </Button>
                     </div>
                   ))}
                 </div>
@@ -293,7 +329,10 @@ const BookPlanPage = () => {
                       className="border border-slate-200 rounded-md p-3"
                     >
                       <div className="flex justify-between items-center mb-2">
-                        <span className="font-medium text-book-darkText">{item.title}</span>
+                        <div>
+                          <span className="font-medium text-book-darkText">{item.title}</span>
+                          <p className="text-sm text-slate-500">{item.type}</p>
+                        </div>
                         <div className="bg-blue-100 text-blue-600 p-1 rounded-full">
                           <Loader2 size={16} className="animate-spin" />
                         </div>
@@ -325,29 +364,30 @@ const BookPlanPage = () => {
                   {completedItems.map((item) => (
                     <div 
                       key={item.id} 
-                      className="border border-slate-200 rounded-md p-3 flex justify-between items-center"
+                      className={`border ${selectedItem?.id === item.id ? 'border-book-purple bg-book-purple/5' : 'border-slate-200'} rounded-md p-3`}
                     >
-                      <div>
-                        <span className="font-medium text-book-darkText">{item.title}</span>
-                        <p className="text-sm text-slate-500">{item.type}</p>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <span className="font-medium text-book-darkText">{item.title}</span>
+                          <p className="text-sm text-slate-500">{item.type}</p>
+                          {item.description && item.type === 'chapter' && (
+                            <p className="text-xs text-slate-500 mt-1 italic">
+                              {item.description}
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          variant={selectedItem?.id === item.id ? "default" : "ghost"}
+                          size="sm"
+                          className={selectedItem?.id === item.id 
+                            ? "bg-book-purple text-white hover:bg-book-purple/90" 
+                            : "text-book-purple hover:bg-book-purple/10"}
+                          onClick={() => handleViewContent(item)}
+                        >
+                          <Pencil size={14} className="mr-1" />
+                          View
+                        </Button>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-book-purple hover:bg-book-purple/10"
-                        onClick={() => {
-                          document.getElementById('output-section')?.scrollIntoView({ behavior: 'smooth' });
-                          
-                          const outputEl = document.getElementById('output-content');
-                          if (outputEl) {
-                            outputEl.innerHTML = (item.content || '').replace(/\n/g, '<br>');
-                            outputEl.setAttribute('data-item-id', item.id);
-                          }
-                        }}
-                      >
-                        <Pencil size={14} className="mr-1" />
-                        View
-                      </Button>
                     </div>
                   ))}
                 </div>
@@ -361,21 +401,35 @@ const BookPlanPage = () => {
             Book Content Preview
           </h2>
           
-          {completedItems.length === 0 ? (
+          {!selectedItem ? (
             <div className="border-2 border-dashed border-slate-200 rounded-lg p-8 text-center">
               <BookOpen className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-700">No content generated yet</h3>
+              <h3 className="text-lg font-medium text-slate-700">No content selected</h3>
               <p className="text-slate-500 mt-2 max-w-md mx-auto">
-                Generate content for your book chapters using the "Generate" button in the Pending Tasks section.
+                Generate content for your book chapters using the "Generate" button, then click "View" to see it here.
               </p>
             </div>
           ) : (
-            <div className="border border-slate-200 rounded-lg p-4 min-h-[300px]">
+            <div className="border border-slate-200 rounded-lg p-6">
+              <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+                <h3 className="text-lg font-medium text-book-purple">{selectedItem.title}</h3>
+                <span className="bg-book-purple/10 text-book-purple text-xs px-3 py-1 rounded-full">
+                  {selectedItem.type}
+                </span>
+              </div>
+              
               <div 
-                id="output-content"
                 className="prose max-w-none"
                 dangerouslySetInnerHTML={{ 
-                  __html: (completedItems[0]?.content || '').replace(/\n/g, '<br>') 
+                  __html: (selectedItem.content || 'No content available')
+                    .replace(/\n/g, '<br>')
+                    // Basic markdown support for headers
+                    .replace(/# (.*?)(?:<br>|$)/g, '<h1>$1</h1>')
+                    .replace(/## (.*?)(?:<br>|$)/g, '<h2>$1</h2>')
+                    .replace(/### (.*?)(?:<br>|$)/g, '<h3>$1</h3>')
+                    // Basic markdown support for bold and italic
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
                 }}
               />
             </div>
