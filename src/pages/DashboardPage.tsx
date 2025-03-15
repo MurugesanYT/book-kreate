@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -74,6 +73,8 @@ const DashboardPage = () => {
 
   const handleDeleteBook = (bookId: string) => {
     try {
+      console.log("Deleting book with ID:", bookId);
+      
       // Get current books from localStorage
       const storedBooks = JSON.parse(localStorage.getItem('bookKreateBooks') || '[]');
       
@@ -178,7 +179,6 @@ const DashboardPage = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Create New Book Card */}
             <div 
               className="bg-white rounded-lg shadow-md p-6 border-2 border-dashed border-book-purple/30 flex flex-col items-center justify-center text-center cursor-pointer hover:border-book-purple transition-colors"
               onClick={handleCreateBook}
@@ -194,7 +194,6 @@ const DashboardPage = () => {
               </p>
             </div>
             
-            {/* Book Cards */}
             {books.map((book) => (
               <div 
                 key={book.id} 
@@ -216,10 +215,6 @@ const DashboardPage = () => {
                           variant="ghost" 
                           size="sm" 
                           className="text-red-500 hover:bg-red-50 hover:text-red-600 -mt-1"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setBookToDelete(book.id);
-                          }}
                         >
                           <Trash2 size={16} />
                         </Button>

@@ -7,7 +7,7 @@ export const generateBookTitle = async (description: string, type: string, categ
   try {
     console.log("Generating book title for:", { description, type, category });
     
-    const prompt = `Generate a creative and engaging title for a ${type} book in the ${category} category with the following description: "${description}". The title should be catchy, relevant to the content, and not include any quotation marks. Return only the title text, nothing else.`;
+    const prompt = `Generate a creative and engaging title for a ${type} book in the ${category} category with the following description: "${description}". The title should be catchy, relevant to the content, and not include any quotation marks. Return ONLY the title text, nothing else.`;
     
     // Increase max tokens to ensure we get a complete title
     const title = await generateWithGemini(prompt, 100);
@@ -34,7 +34,7 @@ export const generateBookTitle = async (description: string, type: string, categ
     
     // Try one more time with a simpler prompt
     try {
-      const simplePrompt = `Create a short, catchy title for a ${type} book about: ${description}. Return only the title.`;
+      const simplePrompt = `Create a short, catchy title for a ${type} book about: ${description}. Return ONLY the title text.`;
       const backupTitle = await generateWithGemini(simplePrompt, 50);
       const cleanedBackupTitle = backupTitle.trim().replace(/["']/g, '');
       

@@ -14,9 +14,11 @@ export const generateWithGemini = async (prompt: string, maxTokens = 1024): Prom
   let retries = 0;
   let lastError: Error | null = null;
 
+  console.log("Starting API call to Gemini with prompt:", prompt.substring(0, 100) + "...");
+
   while (retries <= maxRetries) {
     try {
-      console.log(`Generating content with prompt (attempt ${retries + 1}):`, prompt.substring(0, 100) + "...");
+      console.log(`Generating content with Gemini (attempt ${retries + 1})`);
       
       // Add a small delay between retries to avoid rate limiting
       if (retries > 0) {
@@ -58,13 +60,19 @@ export const generateWithGemini = async (prompt: string, maxTokens = 1024): Prom
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({ error: { message: "Failed to parse error response" } }));
-        const errorMessage = data.error?.message || "Failed to generate content";
+        const errorMessage = data.error?.message || `Failed to generate content: ${response.status}`;
         console.error(`API error (attempt ${retries + 1}):`, errorMessage);
         throw new Error(errorMessage);
       }
 
       const data = await response.json().catch(() => {
         throw new Error("Failed to parse JSON response");
+      });
+      
+      console.log("Received response from Gemini API", { 
+        status: response.status,
+        hasData: !!data,
+        hasCandidates: data?.candidates?.length > 0
       });
       
       // Check if we have candidates in the response
@@ -84,6 +92,7 @@ export const generateWithGemini = async (prompt: string, maxTokens = 1024): Prom
         throw new Error("Received invalid response format from API");
       }
 
+      console.log("Successfully generated content with Gemini, length:", textContent.length);
       return textContent;
     } catch (error) {
       console.error(`Error generating content (attempt ${retries + 1}):`, error);
@@ -91,7 +100,7 @@ export const generateWithGemini = async (prompt: string, maxTokens = 1024): Prom
       retries++;
       
       if (retries > maxRetries) {
-        console.error("All retries failed, giving up.");
+        console.error("All retries failed for Gemini API call, giving up.");
         throw lastError;
       }
     }

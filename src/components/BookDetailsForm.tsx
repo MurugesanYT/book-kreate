@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -98,7 +99,9 @@ const BookDetailsForm = () => {
     
     try {
       toast.loading("Generating a title based on your description...");
+      console.log("Calling generateBookTitle with:", { description, bookType, bookCategory });
       const generatedTitle = await generateBookTitle(description, bookType, bookCategory);
+      console.log("Generated title:", generatedTitle);
       setTitle(generatedTitle);
       toast.success("Book title generated successfully!");
     } catch (error) {
@@ -137,11 +140,14 @@ const BookDetailsForm = () => {
       if (!title) {
         toast.loading("Generating a title for your book...");
         try {
+          console.log("Calling generateBookTitle on submit with:", { description, bookType, bookCategory });
           bookTitle = await generateBookTitle(description, bookType, bookCategory);
+          console.log("Generated title on submit:", bookTitle);
           toast.success("Book title generated!");
         } catch (error) {
-          console.error("Failed to generate title:", error);
-          bookTitle = "My Book"; // Fallback title
+          console.error("Failed to generate title on submit:", error);
+          toast.error("Could not generate title. Using default title.");
+          bookTitle = `${bookType} Story`; // Improved fallback title
         }
       }
       

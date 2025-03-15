@@ -20,10 +20,26 @@ export const generateBookPlan = async (book: BookData): Promise<PlanItem[]> => {
     console.log("Generating book plan with prompt:", prompt.substring(0, 150) + "...");
     const planText = await generateWithGemini(prompt, 1000);
     
+    console.log("Raw plan text received:", planText);
+    
     // Extract just the JSON part in case there's any extra text
     const jsonMatch = planText.match(/\[\s*\{.*\}\s*\]/s);
     if (!jsonMatch) {
       console.error("Failed to extract valid JSON from response:", planText);
+      
+      // Try a more direct approach - attempt to parse the entire response as JSON
+      try {
+        const chapterPlan = JSON.parse(planText);
+        if (Array.isArray(chapterPlan)) {
+          console.log("Successfully parsed JSON array directly");
+          
+          // Create a complete plan with cover and credits
+          return createCompletePlan(book, chapterPlan);
+        }
+      } catch (parseError) {
+        console.error("Could not parse entire response as JSON either:", parseError);
+      }
+      
       throw new Error("Failed to generate valid chapter plan");
     }
     
@@ -31,30 +47,7 @@ export const generateBookPlan = async (book: BookData): Promise<PlanItem[]> => {
       const chapterPlan = JSON.parse(jsonMatch[0]);
       console.log("Generated chapter plan:", chapterPlan);
       
-      // Create a complete plan with cover and credits
-      const completePlan = [
-        {
-          id: `item_${Date.now()}_cover`,
-          title: 'Cover Page',
-          type: 'cover' as BookItemType,
-          status: 'pending' as const
-        },
-        ...chapterPlan.map((chapter: any, index: number) => ({
-          id: `item_${Date.now()}_${index+1}`,
-          title: chapter.title,
-          description: chapter.description || `Content for ${chapter.title}`,
-          type: 'chapter' as BookItemType,
-          status: 'pending' as const
-        })),
-        {
-          id: `item_${Date.now()}_credits`,
-          title: 'Credits Page',
-          type: 'credits' as BookItemType,
-          status: 'pending' as const
-        }
-      ];
-      
-      return completePlan;
+      return createCompletePlan(book, chapterPlan);
     } catch (error) {
       console.error("Error parsing AI response as JSON:", error);
       throw new Error("Generated plan was not in valid JSON format");
@@ -64,32 +57,64 @@ export const generateBookPlan = async (book: BookData): Promise<PlanItem[]> => {
     toast.error("Failed to generate a custom book plan. Using default plan instead.");
     
     // Return default plan if generation fails
-    const defaultPlanItems: PlanItem[] = [
-      {
-        id: `item_${Date.now()}_cover`,
-        title: 'Cover Page',
-        type: 'cover' as BookItemType,
-        status: 'pending' as const
-      }
-    ];
-    
-    for (let i = 1; i <= 5; i++) {
-      defaultPlanItems.push({
-        id: `item_${Date.now()}_${i}`,
-        title: `Chapter ${i}`,
-        description: `Default content for Chapter ${i}`,
-        type: 'chapter' as BookItemType,
-        status: 'pending' as const
-      });
-    }
-    
-    defaultPlanItems.push({
-      id: `item_${Date.now()}_credits`,
+    return createDefaultPlan();
+  }
+};
+
+// Helper function to create a complete plan with cover and credits
+const createCompletePlan = (book: BookData, chapterPlan: any[]): PlanItem[] => {
+  const timestamp = Date.now();
+  return [
+    {
+      id: `item_${timestamp}_cover`,
+      title: 'Cover Page',
+      type: 'cover' as BookItemType,
+      status: 'pending' as const
+    },
+    ...chapterPlan.map((chapter: any, index: number) => ({
+      id: `item_${timestamp}_${index+1}`,
+      title: chapter.title || `Chapter ${index+1}`,
+      description: chapter.description || `Content for ${chapter.title || `Chapter ${index+1}`}`,
+      type: 'chapter' as BookItemType,
+      status: 'pending' as const
+    })),
+    {
+      id: `item_${timestamp}_credits`,
       title: 'Credits Page',
       type: 'credits' as BookItemType,
       status: 'pending' as const
+    }
+  ];
+};
+
+// Create a default plan if generation fails
+const createDefaultPlan = (): PlanItem[] => {
+  const timestamp = Date.now();
+  const defaultPlanItems: PlanItem[] = [
+    {
+      id: `item_${timestamp}_cover`,
+      title: 'Cover Page',
+      type: 'cover' as BookItemType,
+      status: 'pending' as const
+    }
+  ];
+  
+  for (let i = 1; i <= 5; i++) {
+    defaultPlanItems.push({
+      id: `item_${timestamp}_${i}`,
+      title: `Chapter ${i}`,
+      description: `Default content for Chapter ${i}`,
+      type: 'chapter' as BookItemType,
+      status: 'pending' as const
     });
-    
-    return defaultPlanItems;
   }
+  
+  defaultPlanItems.push({
+    id: `item_${timestamp}_credits`,
+    title: 'Credits Page',
+    type: 'credits' as BookItemType,
+    status: 'pending' as const
+  });
+  
+  return defaultPlanItems;
 };
