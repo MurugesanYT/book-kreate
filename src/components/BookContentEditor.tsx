@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { jsPDF } from 'jspdf';
 import { Button } from '@/components/ui/button';
@@ -311,11 +310,6 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
         creator: 'Book-Kreate',
         author: 'Book-Kreate User'
       });
-      
-      // Handle quality settings
-      if (exportQuality === 'high') {
-        // Enhanced quality settings are already applied through font size and spacing
-      }
       
       // Save the PDF
       doc.save(`${editedBook.title.replace(/\s+/g, '_')}.pdf`);
