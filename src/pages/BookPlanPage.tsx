@@ -1,526 +1,201 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
-import { useAuth } from '@/contexts/AuthContext';
-import { ChevronLeft, BookOpen, Play, Check, Pencil, Loader2, Trash, Info, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { generateBookContent } from '@/lib/api/contentService';
-import { generateBookPlan } from '@/lib/api/planService';
-import { BookData, PlanItem } from '@/lib/api/types';
-import ReactMarkdown from 'react-markdown';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getBook, updateBook } from '@/lib/api';
+import BookContentEditor from '@/components/BookContentEditor';
+
+interface Task {
+  id: string;
+  title: string;
+  type: string;
+  status: 'pending' | 'inProgress' | 'completed';
+}
 
 const BookPlanPage = () => {
-  const { currentUser } = useAuth();
-  const navigate = useNavigate();
   const { bookId } = useParams<{ bookId: string }>();
-  
-  const [book, setBook] = useState<BookData | null>(null);
-  const [planItems, setPlanItems] = useState<PlanItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [activeItemId, setActiveItemId] = useState<string | null>(null);
-  const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<PlanItem | null>(null);
-  
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const [book, setBook] = useState<any>(null);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    const loadBookData = async () => {
-      try {
-        if (!bookId) {
-          toast.error("Book ID is missing");
-          navigate('/dashboard');
-          return;
-        }
-        
-        const books = JSON.parse(localStorage.getItem('bookKreateBooks') || '[]');
-        const foundBook = books.find((b: BookData) => b.id === bookId);
-        
-        if (foundBook) {
-          setBook(foundBook);
-          
-          const existingPlan = JSON.parse(localStorage.getItem(`bookPlan_${bookId}`) || 'null');
-          
-          if (existingPlan && existingPlan.length > 0) {
-            setPlanItems(existingPlan);
-            // Set first completed item as selected item if any
-            const firstCompleted = existingPlan.find((item: PlanItem) => item.status === 'completed');
-            if (firstCompleted) {
-              setSelectedItem(firstCompleted);
-            }
-          } else {
-            await generateAIBookPlan(foundBook);
-          }
-        } else {
-          toast.error("Book not found");
-          navigate('/dashboard');
-        }
-      } catch (error) {
-        console.error("Error loading book data:", error);
-        toast.error("Failed to load book data");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadBookData();
-  }, [bookId, navigate]);
-  
-  const generateAIBookPlan = async (bookData: BookData) => {
-    setIsGeneratingPlan(true);
-    toast.loading("Generating your book plan with custom chapter titles...");
-    
-    try {
-      const generatedPlan = await generateBookPlan(bookData);
-      setPlanItems(generatedPlan);
-      localStorage.setItem(`bookPlan_${bookId}`, JSON.stringify(generatedPlan));
-      toast.success("Book plan generated successfully with custom chapter titles!");
-    } catch (error) {
-      console.error("Error generating book plan:", error);
-      toast.error("Failed to generate a custom plan. Using a default plan instead.");
-      generateInitialPlan(bookData);
-    } finally {
-      setIsGeneratingPlan(false);
-    }
-  };
-  
-  const generateInitialPlan = (bookData: BookData) => {
-    const newPlan: PlanItem[] = [
-      {
-        id: `item_${Date.now()}_cover`,
-        title: 'Cover Page',
-        type: 'cover',
-        status: 'pending'
-      }
-    ];
-    
-    for (let i = 1; i <= 5; i++) {
-      newPlan.push({
-        id: `item_${Date.now()}_${i}`,
-        title: `Chapter ${i}`,
-        description: `Default content for Chapter ${i}`,
-        type: 'chapter',
-        status: 'pending'
-      });
-    }
-    
-    newPlan.push({
-      id: `item_${Date.now()}_credits`,
-      title: 'Credits Page',
-        type: 'credits',
-        status: 'pending'
-      });
-    
-    setPlanItems(newPlan);
-    
     if (bookId) {
-      localStorage.setItem(`bookPlan_${bookId}`, JSON.stringify(newPlan));
+      fetchBookData(bookId);
     }
-  };
-  
-  const handleRegeneratePlan = async () => {
-    if (!book) return;
-    
-    // Confirm with user before regenerating
-    if (!window.confirm("This will replace your current plan with a new one. Any generated content will be lost. Continue?")) {
-      return;
-    }
-    
-    await generateAIBookPlan(book);
-    setSelectedItem(null);
-  };
-  
-  const handleBackToDashboard = () => {
-    navigate('/dashboard');
-  };
-  
-  const handleGenerateContent = async (itemId: string) => {
-    const item = planItems.find(item => item.id === itemId);
-    if (!item || !book || item.status === 'completed') return;
-    
-    setIsGenerating(true);
-    setActiveItemId(itemId);
-    
+  }, [bookId]);
+
+  const fetchBookData = async (id: string) => {
+    setLoading(true);
     try {
-      const updatedItems = planItems.map(item => 
-        item.id === itemId ? { ...item, status: 'ongoing' as const } : item
-      );
-      setPlanItems(updatedItems);
-      localStorage.setItem(`bookPlan_${bookId}`, JSON.stringify(updatedItems));
-      
-      toast.loading(`Generating content for ${item.title}...`);
-      
-      const generatedContent = await generateBookContent(
-        book, 
-        item.type, 
-        item.title,
-        item.description
-      );
-      
-      const completedItems = planItems.map(item => 
-        item.id === itemId 
-          ? { ...item, status: 'completed' as const, content: generatedContent } 
-          : item
-      );
-      
-      setPlanItems(completedItems);
-      localStorage.setItem(`bookPlan_${bookId}`, JSON.stringify(completedItems));
-      
-      // Set the newly completed item as the selected item
-      const completedItem = completedItems.find(i => i.id === itemId);
-      if (completedItem) {
-        setSelectedItem(completedItem);
-      }
-      
-      toast.success(`${item.title} content generated successfully!`);
-      
-    } catch (error) {
-      console.error("Error generating content:", error);
-      toast.error("Failed to generate content. Please try again.");
-      
-      const revertedItems = planItems.map(item => 
-        item.id === itemId ? { ...item, status: 'pending' as const } : item
-      );
-      setPlanItems(revertedItems);
-      localStorage.setItem(`bookPlan_${bookId}`, JSON.stringify(revertedItems));
-      
+      const bookData = await getBook(id);
+      setBook(bookData);
+      setTasks(bookData.tasks || []);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load book');
+      toast.error(err.message || 'Failed to load book');
     } finally {
-      setIsGenerating(false);
-      setActiveItemId(null);
+      setLoading(false);
     }
   };
-  
-  const handleRegenerateContent = async (itemId: string) => {
-    const item = planItems.find(item => item.id === itemId);
-    if (!item || !book) return;
-    
-    // Change the status back to pending
-    const updatedItems = planItems.map(i => 
-      i.id === itemId ? { ...i, status: 'pending' as const } : i
+
+  const updateBookMutation = useMutation(updateBook, {
+    onSuccess: () => {
+      queryClient.invalidateQueries(['book', bookId]);
+      toast.success('Book updated successfully!');
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to update book: ${error.message || 'Unknown error'}`);
+    },
+  });
+
+  const handleMarkAsComplete = (taskId: string) => {
+    const updatedTasks = tasks.map(task =>
+      task.id === taskId ? { ...task, status: 'completed' } : task
     );
-    
-    setPlanItems(updatedItems);
-    localStorage.setItem(`bookPlan_${bookId}`, JSON.stringify(updatedItems));
-    
-    // If this was the selected item, keep it selected
-    if (selectedItem?.id === itemId) {
-      const updatedItem = updatedItems.find(i => i.id === itemId);
-      if (updatedItem) {
-        setSelectedItem(updatedItem);
-      }
-    }
-    
-    // Generate the content again
-    await handleGenerateContent(itemId);
+    setTasks(updatedTasks);
+    updateBookWithTasks(updatedTasks);
   };
-  
-  const handleViewContent = (item: PlanItem) => {
-    setSelectedItem(item);
-    // Smooth scroll to the content section
-    document.getElementById('output-section')?.scrollIntoView({ behavior: 'smooth' });
+
+  const handleDeleteTask = (taskId: string) => {
+    const updatedTasks = tasks.filter(task => task.id !== taskId);
+    setTasks(updatedTasks);
+    updateBookWithTasks(updatedTasks);
   };
-  
-  const pendingItems = planItems.filter(item => item.status === 'pending');
-  const ongoingItems = planItems.filter(item => item.status === 'ongoing');
-  const completedItems = planItems.filter(item => item.status === 'completed');
-  
-  const isBookComplete = planItems.length > 0 && planItems.every(item => item.status === 'completed');
 
-  // Helper function to safely render markdown content
-  const renderContent = (content: string | undefined) => {
-    if (!content) return <p>No content available</p>;
-
-    try {
-      return (
-        <ReactMarkdown>{content}</ReactMarkdown>
-      );
-    } catch (error) {
-      console.error("Error rendering markdown:", error);
-      return <div className="whitespace-pre-wrap">{content}</div>;
+  const updateBookWithTasks = (updatedTasks: Task[]) => {
+    if (bookId && book) {
+      updateBookMutation.mutate({ ...book, id: bookId, tasks: updatedTasks });
     }
   };
+
+  const handleSaveBookContent = (updatedBook: any) => {
+    setBook(updatedBook);
+    // Here you would typically save to your backend/database
+  };
+
+  const pendingTasks = tasks.filter(task => task.status === 'pending');
+  const inProgressTasks = tasks.filter(task => task.status === 'inProgress');
+
+  if (loading) {
+    return <div className="text-center py-8">Loading book plan...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-8 text-red-500">Error: {error}</div>;
+  }
 
   return (
-    <div className="min-h-screen bg-book-lightGray">
-      <header className="bg-white shadow-sm border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center">
-            <span className="text-xl font-bold bg-gradient-to-r from-book-purple to-book-orange bg-clip-text text-transparent">
-              Book-Kreate
-            </span>
+    <div className="min-h-screen bg-slate-50">
+      <div className="container mx-auto py-8">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">{book?.title || 'Book Plan'}</h1>
+            <p className="text-slate-500">{book?.genre}</p>
           </div>
-          
-          <div className="flex items-center space-x-4">
-            {currentUser && currentUser.photoURL && (
-              <img 
-                src={currentUser.photoURL} 
-                alt={currentUser.displayName || "User"} 
-                className="w-10 h-10 rounded-full border-2 border-book-purple"
-              />
-            )}
-          </div>
-        </div>
-      </header>
-      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-8">
-          <Button 
-            variant="ghost" 
-            className="text-book-purple hover:bg-book-purple/10"
-            onClick={handleBackToDashboard}
-          >
-            <ChevronLeft size={16} className="mr-2" />
+          <Button onClick={() => navigate('/dashboard')} variant="outline">
             Back to Dashboard
           </Button>
-          
-          {isLoading ? (
-            <div className="mt-4 flex justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-book-purple" />
-            </div>
-          ) : book ? (
-            <>
-              <div className="flex justify-between items-start mt-4">
-                <div>
-                  <h1 className="text-3xl font-bold text-book-darkText">
-                    {book.title || "New Book"}
-                  </h1>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    <span className="bg-book-purple/10 text-book-purple px-3 py-1 rounded-full text-sm">
-                      {book.type}
-                    </span>
-                    <span className="bg-book-orange/10 text-book-orange px-3 py-1 rounded-full text-sm">
-                      {book.category}
-                    </span>
-                  </div>
-                  <p className="text-slate-600 mt-3 max-w-2xl">
-                    {book.description}
-                  </p>
-                </div>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-book-purple border-book-purple"
-                  onClick={handleRegeneratePlan}
-                  disabled={isGeneratingPlan}
-                >
-                  {isGeneratingPlan ? (
-                    <>
-                      <Loader2 size={14} className="mr-2 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw size={14} className="mr-2" />
-                      Regenerate Plan
-                    </>
-                  )}
-                </Button>
-              </div>
-            </>
-          ) : (
-            <div className="mt-4 text-red-500">Book not found</div>
-          )}
         </div>
-        
-        {!isLoading && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold mb-4 text-book-darkText flex items-center">
-                <div className="bg-yellow-100 text-yellow-600 p-1 rounded-full mr-2">
-                  <BookOpen size={18} />
-                </div>
-                Pending Tasks
-              </h2>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle>Description</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>{book?.description}</p>
+              </CardContent>
+            </Card>
+
+            {/* Tasks Section */}
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold mb-4">Tasks</h2>
               
-              {pendingItems.length === 0 ? (
-                <p className="text-slate-500 text-center py-4">
-                  No pending tasks
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {pendingItems.map((item) => (
-                    <div 
-                      key={item.id} 
-                      className="border border-slate-200 rounded-md p-3"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <span className="font-medium text-book-darkText">{item.title}</span>
-                          <p className="text-sm text-slate-500">{item.type}</p>
-                          {item.description && item.type === 'chapter' && (
-                            <p className="text-xs text-slate-500 mt-1 italic">
-                              {item.description}
-                            </p>
-                          )}
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-green-600 border-green-200 hover:bg-green-50 shrink-0 ml-2"
-                          onClick={() => handleGenerateContent(item.id)}
-                          disabled={isGenerating}
-                        >
-                          <Play size={14} className="mr-1" />
-                          Generate
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold mb-4 text-book-darkText flex items-center">
-                <div className="bg-blue-100 text-blue-600 p-1 rounded-full mr-2">
-                  <Loader2 size={18} />
-                </div>
-                In Progress
-              </h2>
-              
-              {ongoingItems.length === 0 ? (
-                <p className="text-slate-500 text-center py-4">
-                  No tasks in progress
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {ongoingItems.map((item) => (
-                    <div 
-                      key={item.id} 
-                      className="border border-slate-200 rounded-md p-3"
-                    >
-                      <div className="flex justify-between items-center mb-2">
-                        <div>
-                          <span className="font-medium text-book-darkText">{item.title}</span>
-                          <p className="text-sm text-slate-500">{item.type}</p>
-                        </div>
-                        <div className="bg-blue-100 text-blue-600 p-1 rounded-full">
-                          <Loader2 size={16} className="animate-spin" />
-                        </div>
-                      </div>
-                      <p className="text-sm text-slate-500">Generating content...</p>
-                      <div className="w-full bg-slate-200 rounded-full h-1.5 mt-2">
-                        <div className="bg-book-purple h-1.5 rounded-full w-3/4 animate-pulse"></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold mb-4 text-book-darkText flex items-center">
-                <div className="bg-green-100 text-green-600 p-1 rounded-full mr-2">
-                  <Check size={18} />
-                </div>
-                Completed
-              </h2>
-              
-              {completedItems.length === 0 ? (
-                <p className="text-slate-500 text-center py-4">
-                  No completed tasks yet
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {completedItems.map((item) => (
-                    <div 
-                      key={item.id} 
-                      className={`border ${selectedItem?.id === item.id ? 'border-book-purple bg-book-purple/5' : 'border-slate-200'} rounded-md p-3`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <span className="font-medium text-book-darkText">{item.title}</span>
-                          <p className="text-sm text-slate-500">{item.type}</p>
-                          {item.description && item.type === 'chapter' && (
-                            <p className="text-xs text-slate-500 mt-1 italic">
-                              {item.description}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-book-orange hover:bg-book-orange/10"
-                            onClick={() => handleRegenerateContent(item.id)}
-                            disabled={isGenerating}
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle>Pending Tasks</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {pendingTasks.length > 0 ? (
+                    <ul className="space-y-4">
+                      {pendingTasks.map((task) => (
+                        <li key={task.id} className="flex items-start justify-between border-b pb-3">
+                          <div>
+                            <div className="font-medium">{task.title}</div>
+                            <div className="text-sm text-gray-500">{task.type}</div>
+                          </div>
+                          <Button 
+                            size="sm" 
+                            onClick={() => handleMarkAsComplete(task.id)}
                           >
-                            <RefreshCw size={14} className="mr-1" />
-                            Redo
+                            Mark Complete
                           </Button>
-                          <Button
-                            variant={selectedItem?.id === item.id ? "default" : "ghost"}
-                            size="sm"
-                            className={selectedItem?.id === item.id 
-                              ? "bg-book-purple text-white hover:bg-book-purple/90" 
-                              : "text-book-purple hover:bg-book-purple/10"}
-                            onClick={() => handleViewContent(item)}
-                          >
-                            <Pencil size={14} className="mr-1" />
-                            View
-                          </Button>
-                        </div>
-                      </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="text-center py-8 text-slate-500">
+                      No pending tasks
                     </div>
-                  ))}
-                </div>
-              )}
+                  )}
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>In Progress</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {inProgressTasks.length > 0 ? (
+                    <ul className="space-y-4">
+                      {inProgressTasks.map((task) => (
+                        <li key={task.id} className="flex items-start justify-between border-b pb-3">
+                          <div>
+                            <div className="font-medium">{task.title}</div>
+                            <div className="text-sm text-gray-500">{task.type}</div>
+                          </div>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleDeleteTask(task.id)}
+                          >
+                            Delete
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="text-center py-8 text-slate-500">
+                      No tasks in progress
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </div>
-        )}
-        
-        <div id="output-section" className="mt-8 bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4 text-book-darkText">
-            Book Content Preview
-          </h2>
           
-          {!selectedItem ? (
-            <div className="border-2 border-dashed border-slate-200 rounded-lg p-8 text-center">
-              <BookOpen className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-700">No content selected</h3>
-              <p className="text-slate-500 mt-2 max-w-md mx-auto">
-                Generate content for your book chapters using the "Generate" button, then click "View" to see it here.
-              </p>
-            </div>
-          ) : (
-            <div className="border border-slate-200 rounded-lg p-6">
-              <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
-                <h3 className="text-lg font-medium text-book-purple">{selectedItem.title}</h3>
-                <span className="bg-book-purple/10 text-book-purple text-xs px-3 py-1 rounded-full">
-                  {selectedItem.type}
-                </span>
-              </div>
-              
-              <div className="prose max-w-none">
-                {renderContent(selectedItem.content)}
-              </div>
-              
-              {selectedItem.status === 'completed' && (
-                <div className="mt-4 flex justify-end">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-book-orange border-book-orange"
-                    onClick={() => handleRegenerateContent(selectedItem.id)}
-                    disabled={isGenerating}
-                  >
-                    <RefreshCw size={14} className="mr-2" />
-                    Regenerate Content
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-          
-          {isBookComplete && (
-            <div className="mt-6 flex justify-center">
-              <Button className="bg-book-purple hover:bg-book-purple/90">
-                <BookOpen className="mr-2" />
-                Export Complete Book
-              </Button>
-            </div>
-          )}
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Book Content Editor</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {book && (
+                  <BookContentEditor book={book} onSave={handleSaveBookContent} />
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };
