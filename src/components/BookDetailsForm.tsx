@@ -151,13 +151,21 @@ const BookDetailsForm = () => {
         }
       }
       
+      // Ensure all credits have both role and name
+      const validCredits = credits.filter(credit => credit.role && credit.name);
+      
+      // If no valid credits, add a default author credit
+      if (validCredits.length === 0) {
+        validCredits.push({ role: 'Author', name: 'Anonymous' });
+      }
+      
       // Prepare book data
       const bookData = {
         title: bookTitle,
         description,
         type: bookType,
         category: bookCategory,
-        credits: credits.filter(credit => credit.role && credit.name),
+        credits: validCredits,
         needsGeneratedTitle: !title,
         timestamp: new Date().toISOString()
       };

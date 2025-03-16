@@ -57,7 +57,7 @@ export const generateBookPlan = async (book: BookData): Promise<PlanItem[]> => {
     toast.error("Failed to generate a custom book plan. Using default plan instead.");
     
     // Return default plan if generation fails
-    return createDefaultPlan();
+    return createDefaultPlan(book);
   }
 };
 
@@ -87,8 +87,8 @@ const createCompletePlan = (book: BookData, chapterPlan: any[]): PlanItem[] => {
   ];
 };
 
-// Create a default plan if generation fails
-const createDefaultPlan = (): PlanItem[] => {
+// Create a default plan if generation fails - now includes book title and info
+const createDefaultPlan = (book: BookData): PlanItem[] => {
   const timestamp = Date.now();
   const defaultPlanItems: PlanItem[] = [
     {
@@ -102,8 +102,8 @@ const createDefaultPlan = (): PlanItem[] => {
   for (let i = 1; i <= 5; i++) {
     defaultPlanItems.push({
       id: `item_${timestamp}_${i}`,
-      title: `Chapter ${i}`,
-      description: `Default content for Chapter ${i}`,
+      title: `Chapter ${i}: The Journey Continues`,
+      description: `Default content for Chapter ${i} of "${book.title}"`,
       type: 'chapter' as BookItemType,
       status: 'pending' as const
     });

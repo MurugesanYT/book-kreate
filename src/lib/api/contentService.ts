@@ -25,10 +25,10 @@ export const generateBookContent = async (
       ? book.credits
           .filter((credit: any) => credit.role && credit.name)
           .map((credit: any) => `${credit.role}: ${credit.name}`)
-          .join(", ")
+          .join("\n")
       : "Author: Anonymous";
     
-    prompt = `Create a credits page for a ${book.type} book titled "${book.title}". Include the following contributors: ${creditsList}. Format it nicely with markdown, including appropriate headings and layout. Only include the formatted credits page content.`;
+    prompt = `Create a credits page for a ${book.type} book titled "${book.title}". Include the following contributors:\n${creditsList}\n\nFormat it nicely with markdown, including appropriate headings and layout. Only include the formatted credits page content.`;
   }
   
   console.log(`Generating content for ${itemType} "${itemTitle}" with prompt:`, prompt.substring(0, 150) + "...");
@@ -51,7 +51,15 @@ export const generateBookContent = async (
       } else if (itemType === 'chapter') {
         simplePrompt = `Write a brief chapter titled "${itemTitle}" for the book "${book.title}". Keep it simple but engaging, about 250 words.`;
       } else if (itemType === 'credits') {
-        simplePrompt = `Create a simple credits page for "${book.title}" with markdown formatting.`;
+        // Include actual credits in the fallback
+        const creditsList = book.credits && book.credits.length > 0
+          ? book.credits
+              .filter((credit: any) => credit.role && credit.name)
+              .map((credit: any) => `${credit.role}: ${credit.name}`)
+              .join("\n")
+          : "Author: Anonymous";
+        
+        simplePrompt = `Create a simple credits page for "${book.title}" with markdown formatting. Include:\n${creditsList}`;
       }
       
       const backupContent = await generateWithGemini(simplePrompt, 2000);
@@ -61,13 +69,21 @@ export const generateBookContent = async (
     } catch (backupError) {
       console.error(`Backup generation also failed:`, backupError);
       
-      // Provide a very basic fallback content
+      // Provide a very basic fallback content with actual book data
       if (itemType === 'cover') {
-        return `# ${book.title}\n\n## A ${book.type} book in the ${book.category} category\n\n*Content generation failed. This is a placeholder cover page.*`;
+        return `# ${book.title}\n\n## A ${book.type} book in the ${book.category} category\n\n*${book.description}*`;
       } else if (itemType === 'chapter') {
-        return `# ${itemTitle}\n\n*Content generation failed. This is a placeholder chapter page.*\n\nThis chapter was meant to cover: ${itemDescription || "various aspects of the book"}.\n\nPlease try regenerating this content.`;
+        return `# ${itemTitle}\n\n*This chapter was meant to cover: ${itemDescription || "various aspects of the book"}.*\n\nPlease try regenerating this content.`;
       } else {
-        return `# Credits\n\n*Content generation failed. This is a placeholder credits page.*`;
+        // Ensure credits include actual data
+        const creditsContent = book.credits && book.credits.length > 0
+          ? book.credits
+              .filter((credit: any) => credit.role && credit.name)
+              .map((credit: any) => `- **${credit.role}**: ${credit.name}`)
+              .join("\n")
+          : "- **Author**: Anonymous";
+          
+        return `# Credits\n\n${creditsContent}`;
       }
     }
   }
