@@ -4,4 +4,5 @@ export * from './geminiService';
 export * from './titleService';
 export * from './planService';
 export * from './contentService';
+export * from './bookService';
 export * from './types';

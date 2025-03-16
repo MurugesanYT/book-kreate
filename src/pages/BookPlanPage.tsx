@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ interface Task {
   title: string;
   type: string;
   status: 'pending' | 'inProgress' | 'completed';
+  description?: string;
 }
 
 const BookPlanPage = () => {
@@ -35,7 +37,14 @@ const BookPlanPage = () => {
     try {
       const bookData = await getBook(id);
       setBook(bookData);
-      setTasks(bookData.tasks || []);
+      // Ensure the tasks from the API match our Task interface
+      if (bookData.tasks) {
+        const typedTasks = bookData.tasks.map((task: any) => ({
+          ...task,
+          status: task.status as 'pending' | 'inProgress' | 'completed'
+        }));
+        setTasks(typedTasks);
+      }
       setError(null);
     } catch (err: any) {
       setError(err.message || 'Failed to load book');
@@ -45,9 +54,10 @@ const BookPlanPage = () => {
     }
   };
 
-  const updateBookMutation = useMutation(updateBook, {
+  const updateBookMutation = useMutation({
+    mutationFn: updateBook,
     onSuccess: () => {
-      queryClient.invalidateQueries(['book', bookId]);
+      queryClient.invalidateQueries({ queryKey: ['book', bookId] });
       toast.success('Book updated successfully!');
     },
     onError: (error: any) => {
@@ -57,7 +67,7 @@ const BookPlanPage = () => {
 
   const handleMarkAsComplete = (taskId: string) => {
     const updatedTasks = tasks.map(task =>
-      task.id === taskId ? { ...task, status: 'completed' } : task
+      task.id === taskId ? { ...task, status: 'completed' as const } : task
     );
     setTasks(updatedTasks);
     updateBookWithTasks(updatedTasks);
