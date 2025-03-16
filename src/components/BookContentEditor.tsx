@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { jsPDF } from 'jspdf';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
-import { Download, Save } from 'lucide-react';
+import { Download, Save, Settings } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Chapter {
   title: string;
@@ -31,6 +34,14 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
   const [editedBook, setEditedBook] = useState<Book>(book);
   const [activeTab, setActiveTab] = useState<string>('edit');
   const [exportQuality, setExportQuality] = useState<'standard' | 'high'>('standard');
+  const [pdfOptions, setPdfOptions] = useState({
+    showPageNumbers: true,
+    includeMargins: true,
+    fontFamily: 'helvetica',
+    fontSize: 12,
+    advancedSettings: false
+  });
+  const [isExporting, setIsExporting] = useState(false);
 
   // Update local state when props change (e.g., when content is generated)
   React.useEffect(() => {
@@ -68,6 +79,7 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
 
   const exportToPdf = () => {
     try {
+      setIsExporting(true);
       // Create new PDF with better settings
       const doc = new jsPDF({
         orientation: 'portrait',
@@ -77,76 +89,94 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
       
       // Define better typography and layout
       const pageWidth = doc.internal.pageSize.getWidth();
-      const margin = 20;
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = pdfOptions.includeMargins ? 20 : 10;
       const contentWidth = pageWidth - (margin * 2);
       
+      // Set font based on quality settings
+      const fontFamily = pdfOptions.fontFamily;
+      doc.setFont(fontFamily, 'normal');
+      
+      // Calculate optimal font size based on quality
+      const baseFontSize = exportQuality === 'high' ? pdfOptions.fontSize : 12;
+      
       // Add title page with improved layout
-      doc.setFontSize(28);
-      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(baseFontSize * 2.3);
+      doc.setFont(fontFamily, 'bold');
       doc.text(editedBook.title, pageWidth / 2, 60, { align: 'center' });
       
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(baseFontSize * 1.3);
+      doc.setFont(fontFamily, 'italic');
       doc.text(editedBook.genre, pageWidth / 2, 75, { align: 'center' });
       
       // Add description
       if (editedBook.description) {
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(baseFontSize);
+        doc.setFont(fontFamily, 'normal');
         const descLines = doc.splitTextToSize(editedBook.description, contentWidth);
         doc.text(descLines, pageWidth / 2, 100, { align: 'center' });
       }
       
       // Add cover content
       if (editedBook.coverPage) {
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(baseFontSize);
+        doc.setFont(fontFamily, 'normal');
         const coverText = editedBook.coverPage.split('\n');
         let yPos = 140;
         coverText.forEach(line => {
           if (line.trim()) {
             // Check for markdown headers to adjust font
             if (line.startsWith('# ')) {
-              doc.setFontSize(18);
-              doc.setFont('helvetica', 'bold');
+              doc.setFontSize(baseFontSize * 1.5);
+              doc.setFont(fontFamily, 'bold');
               doc.text(line.replace('# ', ''), margin, yPos);
             } else if (line.startsWith('## ')) {
-              doc.setFontSize(16);
-              doc.setFont('helvetica', 'bold');
+              doc.setFontSize(baseFontSize * 1.3);
+              doc.setFont(fontFamily, 'bold');
               doc.text(line.replace('## ', ''), margin, yPos);
             } else if (line.startsWith('### ')) {
-              doc.setFontSize(14);
-              doc.setFont('helvetica', 'bold');
+              doc.setFontSize(baseFontSize * 1.2);
+              doc.setFont(fontFamily, 'bold');
               doc.text(line.replace('### ', ''), margin, yPos);
             } else {
-              doc.setFontSize(12);
-              doc.setFont('helvetica', 'normal');
+              doc.setFontSize(baseFontSize);
+              doc.setFont(fontFamily, 'normal');
               
               // For regular text, wrap to fit page width
               const wrappedText = doc.splitTextToSize(line, contentWidth);
               doc.text(wrappedText, margin, yPos);
-              yPos += 6 * wrappedText.length;
+              yPos += (baseFontSize * 0.5) * wrappedText.length;
               return;
             }
-            yPos += 8;
+            yPos += baseFontSize * 0.7;
           } else {
-            yPos += 4; // Add spacing for empty lines
+            yPos += baseFontSize * 0.3; // Add spacing for empty lines
           }
         });
       }
       
+      let pageNumber = 1;
+      
       // Add chapters with better formatting
       editedBook.chapters.forEach((chapter, index) => {
         doc.addPage();
+        pageNumber++;
+        
+        // Add page number if enabled
+        if (pdfOptions.showPageNumbers) {
+          doc.setFontSize(baseFontSize * 0.8);
+          doc.setFont(fontFamily, 'normal');
+          doc.text(`${pageNumber}`, pageWidth - margin, pageHeight - margin/2);
+        }
         
         // Chapter heading
-        doc.setFontSize(20);
-        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(baseFontSize * 1.7);
+        doc.setFont(fontFamily, 'bold');
         doc.text(`Chapter ${index + 1}: ${chapter.title}`, margin, 30);
         
         // Chapter content with better text processing
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(baseFontSize);
+        doc.setFont(fontFamily, 'normal');
         
         // Process content with better line handling
         const contentLines = chapter.content.split('\n');
@@ -155,33 +185,33 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
         
         contentLines.forEach(line => {
           // Reset font for each line
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(12);
+          doc.setFont(fontFamily, 'normal');
+          doc.setFontSize(baseFontSize);
           
           // Skip empty lines but add spacing
           if (!line.trim()) {
-            yPos += 4;
+            yPos += baseFontSize * 0.3;
             return;
           }
           
           // Handle markdown headers
           if (line.startsWith('# ')) {
-            doc.setFontSize(18);
-            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(baseFontSize * 1.5);
+            doc.setFont(fontFamily, 'bold');
             doc.text(line.replace('# ', ''), margin, yPos);
-            yPos += 8;
+            yPos += baseFontSize * 0.7;
             return;
           } else if (line.startsWith('## ')) {
-            doc.setFontSize(16);
-            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(baseFontSize * 1.3);
+            doc.setFont(fontFamily, 'bold');
             doc.text(line.replace('## ', ''), margin, yPos);
-            yPos += 7;
+            yPos += baseFontSize * 0.6;
             return;
           } else if (line.startsWith('### ')) {
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(baseFontSize * 1.2);
+            doc.setFont(fontFamily, 'bold');
             doc.text(line.replace('### ', ''), margin, yPos);
-            yPos += 6;
+            yPos += baseFontSize * 0.5;
             return;
           }
           
@@ -190,12 +220,12 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
             const listText = line.replace(/^[\*\-\+]\s/, '• ');
             const wrappedText = doc.splitTextToSize(listText, contentWidth - 5);
             doc.text(wrappedText, margin + 5, yPos);
-            yPos += 6 * wrappedText.length;
+            yPos += baseFontSize * 0.5 * wrappedText.length;
             isInList = true;
             return;
           } else if (isInList) {
             // Add extra space after lists
-            yPos += 2;
+            yPos += baseFontSize * 0.2;
             isInList = false;
           }
           
@@ -203,57 +233,74 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
           const wrappedText = doc.splitTextToSize(line, contentWidth);
           
           // Check if we need a new page
-          if (yPos + (wrappedText.length * 6) > 270) {
+          if (yPos + (wrappedText.length * baseFontSize * 0.5) > pageHeight - margin) {
             doc.addPage();
-            yPos = 20;
+            pageNumber++;
+            yPos = margin;
+            
+            // Add page number if enabled
+            if (pdfOptions.showPageNumbers) {
+              doc.setFontSize(baseFontSize * 0.8);
+              doc.setFont(fontFamily, 'normal');
+              doc.text(`${pageNumber}`, pageWidth - margin, pageHeight - margin/2);
+            }
           }
           
           doc.text(wrappedText, margin, yPos);
-          yPos += 6 * wrappedText.length;
+          yPos += baseFontSize * 0.5 * wrappedText.length;
         });
       });
       
       // Add credits page with better formatting
       if (editedBook.creditsPage) {
         doc.addPage();
-        doc.setFontSize(22);
-        doc.setFont('helvetica', 'bold');
+        pageNumber++;
+        
+        // Add page number if enabled
+        if (pdfOptions.showPageNumbers) {
+          doc.setFontSize(baseFontSize * 0.8);
+          doc.setFont(fontFamily, 'normal');
+          doc.text(`${pageNumber}`, pageWidth - margin, pageHeight - margin/2);
+        }
+        
+        doc.setFontSize(baseFontSize * 1.8);
+        doc.setFont(fontFamily, 'bold');
         doc.text("Credits", pageWidth / 2, 30, { align: 'center' });
         
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(baseFontSize);
+        doc.setFont(fontFamily, 'normal');
         
         const creditsText = editedBook.creditsPage.split('\n');
         let yPos = 50;
         
         creditsText.forEach(line => {
           if (!line.trim()) {
-            yPos += 4;
+            yPos += baseFontSize * 0.3;
             return;
           }
           
           // Process credit lines
           if (line.startsWith('# ')) {
-            doc.setFontSize(18);
-            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(baseFontSize * 1.5);
+            doc.setFont(fontFamily, 'bold');
             doc.text(line.replace('# ', ''), pageWidth / 2, yPos, { align: 'center' });
           } else if (line.startsWith('## ')) {
-            doc.setFontSize(16);
-            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(baseFontSize * 1.3);
+            doc.setFont(fontFamily, 'bold');
             doc.text(line.replace('## ', ''), pageWidth / 2, yPos, { align: 'center' });
           } else if (line.startsWith('- **')) {
             // Format credit entries nicely
             const cleanLine = line.replace(/\*\*/g, '').replace('- ', '');
-            doc.setFont('helvetica', 'normal');
+            doc.setFont(fontFamily, 'normal');
             doc.text(cleanLine, pageWidth / 2, yPos, { align: 'center' });
           } else {
-            doc.setFont('helvetica', 'normal');
+            doc.setFont(fontFamily, 'normal');
             const wrappedText = doc.splitTextToSize(line, contentWidth);
             doc.text(wrappedText, margin, yPos);
-            yPos += (wrappedText.length - 1) * 6;
+            yPos += (wrappedText.length - 1) * baseFontSize * 0.5;
           }
           
-          yPos += 6;
+          yPos += baseFontSize * 0.5;
         });
       }
       
@@ -267,8 +314,7 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
       
       // Handle quality settings
       if (exportQuality === 'high') {
-        // For high quality, we can adjust other settings instead of compress
-        // jsPDF doesn't support compress in setProperties, so we'll use other methods for quality
+        // Enhanced quality settings are already applied through font size and spacing
       }
       
       // Save the PDF
@@ -277,6 +323,8 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
     } catch (error) {
       console.error('Error exporting PDF:', error);
       toast.error('Failed to export PDF');
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -371,19 +419,91 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
           
           <Card>
             <CardHeader>
-              <CardTitle>PDF Export Options</CardTitle>
+              <CardTitle className="flex items-center gap-2">PDF Export Options <Settings size={18} /></CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center space-x-2">
-                <label className="font-medium">PDF Quality:</label>
-                <select 
-                  className="px-3 py-2 border rounded-md"
-                  value={exportQuality}
-                  onChange={(e) => setExportQuality(e.target.value as 'standard' | 'high')}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <label className="font-medium">PDF Quality:</label>
+                  <select 
+                    className="px-3 py-2 border rounded-md"
+                    value={exportQuality}
+                    onChange={(e) => setExportQuality(e.target.value as 'standard' | 'high')}
+                  >
+                    <option value="standard">Standard</option>
+                    <option value="high">High Quality</option>
+                  </select>
+                </div>
+                
+                <Collapsible 
+                  open={pdfOptions.advancedSettings}
+                  onOpenChange={(open) => setPdfOptions({...pdfOptions, advancedSettings: open})}
+                  className="w-full space-y-2"
                 >
-                  <option value="standard">Standard</option>
-                  <option value="high">High Quality</option>
-                </select>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="outline" className="w-full justify-between">
+                      Advanced Options
+                      <span className={`transition-transform duration-200 ${
+                        pdfOptions.advancedSettings ? 'rotate-180' : ''
+                      }`}>
+                        ▼
+                      </span>
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-3 pt-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="page-numbers" 
+                        checked={pdfOptions.showPageNumbers}
+                        onCheckedChange={(checked) => 
+                          setPdfOptions({...pdfOptions, showPageNumbers: !!checked})
+                        }
+                      />
+                      <label htmlFor="page-numbers" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Show page numbers
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="margins" 
+                        checked={pdfOptions.includeMargins}
+                        onCheckedChange={(checked) => 
+                          setPdfOptions({...pdfOptions, includeMargins: !!checked})
+                        }
+                      />
+                      <label htmlFor="margins" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Include wider margins
+                      </label>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium">Font Family:</label>
+                      <select 
+                        className="w-full px-3 py-2 border rounded-md text-sm"
+                        value={pdfOptions.fontFamily}
+                        onChange={(e) => setPdfOptions({...pdfOptions, fontFamily: e.target.value})}
+                      >
+                        <option value="helvetica">Helvetica</option>
+                        <option value="times">Times</option>
+                        <option value="courier">Courier</option>
+                      </select>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <label className="text-sm font-medium">Base Font Size:</label>
+                      <select 
+                        className="w-full px-3 py-2 border rounded-md text-sm"
+                        value={pdfOptions.fontSize}
+                        onChange={(e) => setPdfOptions({...pdfOptions, fontSize: Number(e.target.value)})}
+                      >
+                        <option value="10">Small (10pt)</option>
+                        <option value="12">Medium (12pt)</option>
+                        <option value="14">Large (14pt)</option>
+                      </select>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
             </CardContent>
             <CardFooter className="flex justify-end space-x-2">
@@ -391,9 +511,23 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
                 <Save size={16} className="mr-2" />
                 Save
               </Button>
-              <Button onClick={exportToPdf} variant="secondary" className="flex items-center gap-2">
-                <Download size={16} />
-                Export as PDF
+              <Button 
+                onClick={exportToPdf} 
+                variant="secondary" 
+                className="flex items-center gap-2"
+                disabled={isExporting}
+              >
+                {isExporting ? (
+                  <>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <Download size={16} />
+                    Export as PDF
+                  </>
+                )}
               </Button>
             </CardFooter>
           </Card>
