@@ -15,6 +15,19 @@ import BookCreationPage from "./pages/BookCreationPage";
 import BookPlanPage from "./pages/BookPlanPage";
 import NotFound from "./pages/NotFound";
 
+// Content Pages
+import AboutPage from "./pages/about/AboutPage";
+import FeaturesPage from "./pages/features/FeaturesPage";
+import BlogPage from "./pages/blog/BlogPage";
+import HelpCenterPage from "./pages/support/HelpCenterPage";
+import FAQPage from "./pages/support/FAQPage";
+import ContactPage from "./pages/support/ContactPage";
+import StatusPage from "./pages/support/StatusPage";
+import TermsPage from "./pages/legal/TermsPage";
+import PrivacyPage from "./pages/legal/PrivacyPage";
+import CookiePage from "./pages/legal/CookiePage";
+import LicensesPage from "./pages/legal/LicensesPage";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -51,6 +64,24 @@ const App = () => (
                 </RequireAuth>
               } 
             />
+            
+            {/* Content Pages */}
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/features" element={<FeaturesPage />} />
+            <Route path="/blog" element={<BlogPage />} />
+            
+            {/* Support Pages */}
+            <Route path="/help" element={<HelpCenterPage />} />
+            <Route path="/faq" element={<FAQPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/status" element={<StatusPage />} />
+            
+            {/* Legal Pages */}
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/cookies" element={<CookiePage />} />
+            <Route path="/licenses" element={<LicensesPage />} />
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
