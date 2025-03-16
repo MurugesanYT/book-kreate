@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getBook, updateBook } from '@/lib/api';
+import { getBook, updateBook, generateBookContent } from '@/lib/api';
 import BookContentEditor from '@/components/BookContentEditor';
+import { Loader2 } from 'lucide-react';
 
 interface Task {
   id: string;
@@ -25,6 +26,7 @@ const BookPlanPage = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [generatingContent, setGeneratingContent] = useState<string | null>(null);
 
   useEffect(() => {
     if (bookId) {
@@ -65,6 +67,77 @@ const BookPlanPage = () => {
     },
   });
 
+  const handleGenerateContent = async (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task || !book) return;
+    
+    setGeneratingContent(taskId);
+    
+    try {
+      // Mark task as in progress
+      const updatedTasks = tasks.map(t => 
+        t.id === taskId ? { ...t, status: 'inProgress' as const } : t
+      );
+      setTasks(updatedTasks);
+      updateBookWithTasks(updatedTasks);
+      
+      // Generate content based on task type
+      const generatedContent = await generateBookContent(
+        book,
+        task.type as any,
+        task.title,
+        task.description
+      );
+      
+      // Update the book content based on task type
+      const updatedBook = { ...book };
+      
+      if (task.type === 'cover') {
+        updatedBook.coverPage = generatedContent;
+      } else if (task.type === 'chapter') {
+        // Find matching chapter or create a new one
+        const chapterIndex = updatedBook.chapters.findIndex(
+          (ch: any) => ch.title === task.title
+        );
+        
+        if (chapterIndex >= 0) {
+          updatedBook.chapters[chapterIndex].content = generatedContent;
+        } else {
+          updatedBook.chapters.push({
+            title: task.title,
+            content: generatedContent
+          });
+        }
+      } else if (task.type === 'credits') {
+        updatedBook.creditsPage = generatedContent;
+      }
+      
+      // Mark task as completed
+      const finalTasks = updatedTasks.map(t => 
+        t.id === taskId ? { ...t, status: 'completed' as const } : t
+      );
+      
+      // Update book and tasks
+      setBook(updatedBook);
+      setTasks(finalTasks);
+      updateBookMutation.mutate({ ...updatedBook, id: bookId, tasks: finalTasks });
+      
+      toast.success(`Generated content for ${task.title}`);
+    } catch (err: any) {
+      console.error("Content generation error:", err);
+      toast.error(`Failed to generate content: ${err.message || 'Unknown error'}`);
+      
+      // Revert task to pending on error
+      const revertedTasks = tasks.map(t => 
+        t.id === taskId ? { ...t, status: 'pending' as const } : t
+      );
+      setTasks(revertedTasks);
+      updateBookWithTasks(revertedTasks);
+    } finally {
+      setGeneratingContent(null);
+    }
+  };
+
   const handleMarkAsComplete = (taskId: string) => {
     const updatedTasks = tasks.map(task =>
       task.id === taskId ? { ...task, status: 'completed' as const } : task
@@ -87,11 +160,15 @@ const BookPlanPage = () => {
 
   const handleSaveBookContent = (updatedBook: any) => {
     setBook(updatedBook);
-    // Here you would typically save to your backend/database
+    // Update the backend with the book changes
+    if (bookId) {
+      updateBookMutation.mutate({ ...updatedBook, id: bookId, tasks });
+    }
   };
 
   const pendingTasks = tasks.filter(task => task.status === 'pending');
   const inProgressTasks = tasks.filter(task => task.status === 'inProgress');
+  const completedTasks = tasks.filter(task => task.status === 'completed');
 
   if (loading) {
     return <div className="text-center py-8">Loading book plan...</div>;
@@ -141,13 +218,34 @@ const BookPlanPage = () => {
                           <div>
                             <div className="font-medium">{task.title}</div>
                             <div className="text-sm text-gray-500">{task.type}</div>
+                            {task.description && (
+                              <div className="text-sm mt-1 text-gray-600">{task.description}</div>
+                            )}
                           </div>
-                          <Button 
-                            size="sm" 
-                            onClick={() => handleMarkAsComplete(task.id)}
-                          >
-                            Mark Complete
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm"
+                              variant="default"
+                              onClick={() => handleGenerateContent(task.id)}
+                              disabled={!!generatingContent}
+                            >
+                              {generatingContent === task.id ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Generating...
+                                </>
+                              ) : (
+                                "Generate"
+                              )}
+                            </Button>
+                            <Button 
+                              size="sm"
+                              variant="outline" 
+                              onClick={() => handleMarkAsComplete(task.id)}
+                            >
+                              Mark Complete
+                            </Button>
+                          </div>
                         </li>
                       ))}
                     </ul>
@@ -159,7 +257,7 @@ const BookPlanPage = () => {
                 </CardContent>
               </Card>
               
-              <Card>
+              <Card className="mb-6">
                 <CardHeader>
                   <CardTitle>In Progress</CardTitle>
                 </CardHeader>
@@ -172,9 +270,37 @@ const BookPlanPage = () => {
                             <div className="font-medium">{task.title}</div>
                             <div className="text-sm text-gray-500">{task.type}</div>
                           </div>
+                          <div className="flex items-center">
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            <span className="text-sm text-gray-500">Generating...</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="text-center py-8 text-slate-500">
+                      No tasks in progress
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Completed Tasks</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {completedTasks.length > 0 ? (
+                    <ul className="space-y-4">
+                      {completedTasks.map((task) => (
+                        <li key={task.id} className="flex items-start justify-between border-b pb-3">
+                          <div>
+                            <div className="font-medium">{task.title}</div>
+                            <div className="text-sm text-gray-500">{task.type}</div>
+                          </div>
                           <Button 
                             size="sm" 
-                            variant="outline"
+                            variant="destructive"
                             onClick={() => handleDeleteTask(task.id)}
                           >
                             Delete
@@ -184,7 +310,7 @@ const BookPlanPage = () => {
                     </ul>
                   ) : (
                     <div className="text-center py-8 text-slate-500">
-                      No tasks in progress
+                      No completed tasks
                     </div>
                   )}
                 </CardContent>

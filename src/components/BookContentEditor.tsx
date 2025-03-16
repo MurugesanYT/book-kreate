@@ -31,6 +31,11 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
   const [editedBook, setEditedBook] = useState<Book>(book);
   const [activeTab, setActiveTab] = useState<string>('edit');
 
+  // Update local state when props change (e.g., when content is generated)
+  React.useEffect(() => {
+    setEditedBook(book);
+  }, [book]);
+
   const handleContentChange = (index: number, newContent: string) => {
     const updatedChapters = [...editedBook.chapters];
     updatedChapters[index] = { ...updatedChapters[index], content: newContent };
