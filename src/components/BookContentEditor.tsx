@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { jsPDF } from 'jspdf';
 import { Button } from '@/components/ui/button';
@@ -74,7 +73,6 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
-        compress: true,
       });
       
       // Define better typography and layout
@@ -267,11 +265,10 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
         author: 'Book-Kreate User'
       });
       
-      // Apply quality settings
+      // Handle quality settings
       if (exportQuality === 'high') {
-        doc.setProperties({
-          compress: false
-        });
+        // For high quality, we can adjust other settings instead of compress
+        // jsPDF doesn't support compress in setProperties, so we'll use other methods for quality
       }
       
       // Save the PDF
