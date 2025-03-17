@@ -260,7 +260,7 @@ const DashboardPage = () => {
                 </h2>
                 <p className="text-slate-600 mb-6 max-w-md mx-auto">
                   {activeTab === 'all' 
-                    ? "You haven't created any books yet. Get started by clicking the "Create New Book" button."
+                    ? "You haven't created any books yet. Get started by clicking the \"Create New Book\" button."
                     : activeTab === 'completed' 
                       ? "You haven't completed any books yet. Keep working on your in-progress books!"
                       : "You don't have any books in progress. Start creating a new book!"}
@@ -333,7 +333,7 @@ const DashboardPage = () => {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Delete Book</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Are you sure you want to delete "{book.title}"? This action cannot be undone.
+                                Are you sure you want to delete &quot;{book.title}&quot;? This action cannot be undone.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
