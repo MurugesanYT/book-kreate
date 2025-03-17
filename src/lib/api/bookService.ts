@@ -16,11 +16,19 @@ const BOOKS_COLLECTION = 'books';
 const BOOK_PLANS_COLLECTION = 'bookPlans';
 
 // Define extended types for documents with additional properties
-interface BookDocument extends BookData {
+export interface BookDocument extends BookData {
   chapters?: any[];
   tasks?: PlanItem[];
   coverPage?: string;
   creditsPage?: string;
+  userId?: string;
+}
+
+// Type for BookPlan document from Firestore
+interface BookPlanDocument {
+  bookId?: string;
+  items?: PlanItem[];
+  userId?: string;
 }
 
 // Function to get a book by ID
@@ -43,7 +51,7 @@ export const getBook = async (bookId: string): Promise<BookDocument> => {
     
     // Get the book plan if it exists
     try {
-      const bookPlan = await getDocument(BOOK_PLANS_COLLECTION, bookId);
+      const bookPlan = await getDocument(BOOK_PLANS_COLLECTION, bookId) as BookPlanDocument | null;
       if (bookPlan && bookPlan.items) {
         book.tasks = bookPlan.items as PlanItem[];
       }

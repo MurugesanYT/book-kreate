@@ -59,7 +59,7 @@ const DashboardPage = () => {
           const bookPlan = await getDocument('bookPlans', book.id);
           
           // Handle potentially missing properties safely
-          const planItems = bookPlan && 'items' in bookPlan ? bookPlan.items || [] : [];
+          const planItems = bookPlan && 'items' in bookPlan ? (bookPlan.items as any[] || []) : [];
           const totalItems = planItems.length || 1;
           const completedItems = planItems.filter((item: any) => item.status === 'completed').length;
           const progress = Math.round((completedItems / totalItems) * 100);

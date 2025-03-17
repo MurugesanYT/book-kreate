@@ -116,7 +116,7 @@ export const getDocument = async (collectionPath: string, docId: string) => {
   try {
     const docSnap = await getDoc(doc(db, collectionPath, docId));
     if (docSnap.exists()) {
-      return { id: docSnap.id, ...docSnap.data() };
+      return { id: docSnap.id, ...docSnap.data() as Record<string, any> };
     } else {
       return null;
     }
@@ -152,7 +152,7 @@ export const getDocuments = async (collectionPath: string, userId?: string) => {
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
+      ...doc.data() as Record<string, any>
     }));
   } catch (error) {
     console.error(`Error getting documents from ${collectionPath}:`, error);
