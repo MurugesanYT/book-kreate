@@ -42,7 +42,6 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
   });
   const [isExporting, setIsExporting] = useState(false);
 
-  // Update local state when props change (e.g., when content is generated)
   React.useEffect(() => {
     setEditedBook(book);
   }, [book]);
@@ -79,244 +78,87 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
   const exportToPdf = () => {
     try {
       setIsExporting(true);
-      // Create new PDF with better settings
+      
       const doc = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
       });
       
-      // Define better typography and layout
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = pdfOptions.includeMargins ? 20 : 10;
       const contentWidth = pageWidth - (margin * 2);
       
-      // Set font based on quality settings
-      const fontFamily = pdfOptions.fontFamily;
-      doc.setFont(fontFamily, 'normal');
+      const fontFamily = pdfOptions.fontFamily || 'helvetica';
+      doc.setFont(fontFamily);
       
-      // Calculate optimal font size based on quality
-      const baseFontSize = exportQuality === 'high' ? pdfOptions.fontSize : 12;
+      const baseFontSize = pdfOptions.fontSize || 12;
       
-      // Add title page with improved layout
-      doc.setFontSize(baseFontSize * 2.3);
-      doc.setFont(fontFamily, 'bold');
-      doc.text(editedBook.title, pageWidth / 2, 60, { align: 'center' });
+      doc.setFontSize(baseFontSize * 2);
+      doc.text(editedBook.title || 'Untitled Book', pageWidth / 2, 60, { align: 'center' });
       
-      doc.setFontSize(baseFontSize * 1.3);
-      doc.setFont(fontFamily, 'italic');
-      doc.text(editedBook.genre, pageWidth / 2, 75, { align: 'center' });
+      doc.setFontSize(baseFontSize * 1.2);
+      doc.text(editedBook.genre || 'No Genre', pageWidth / 2, 75, { align: 'center' });
       
-      // Add description
       if (editedBook.description) {
         doc.setFontSize(baseFontSize);
-        doc.setFont(fontFamily, 'normal');
         const descLines = doc.splitTextToSize(editedBook.description, contentWidth);
         doc.text(descLines, pageWidth / 2, 100, { align: 'center' });
       }
       
-      // Add cover content
       if (editedBook.coverPage) {
+        doc.addPage();
+        doc.setFontSize(baseFontSize * 1.5);
+        doc.text("Cover Page", pageWidth / 2, 30, { align: 'center' });
+        
         doc.setFontSize(baseFontSize);
-        doc.setFont(fontFamily, 'normal');
-        const coverText = editedBook.coverPage.split('\n');
-        let yPos = 140;
-        coverText.forEach(line => {
-          if (line.trim()) {
-            // Check for markdown headers to adjust font
-            if (line.startsWith('# ')) {
-              doc.setFontSize(baseFontSize * 1.5);
-              doc.setFont(fontFamily, 'bold');
-              doc.text(line.replace('# ', ''), margin, yPos);
-            } else if (line.startsWith('## ')) {
-              doc.setFontSize(baseFontSize * 1.3);
-              doc.setFont(fontFamily, 'bold');
-              doc.text(line.replace('## ', ''), margin, yPos);
-            } else if (line.startsWith('### ')) {
-              doc.setFontSize(baseFontSize * 1.2);
-              doc.setFont(fontFamily, 'bold');
-              doc.text(line.replace('### ', ''), margin, yPos);
-            } else {
-              doc.setFontSize(baseFontSize);
-              doc.setFont(fontFamily, 'normal');
-              
-              // For regular text, wrap to fit page width
-              const wrappedText = doc.splitTextToSize(line, contentWidth);
-              doc.text(wrappedText, margin, yPos);
-              yPos += (baseFontSize * 0.5) * wrappedText.length;
-              return;
-            }
-            yPos += baseFontSize * 0.7;
-          } else {
-            yPos += baseFontSize * 0.3; // Add spacing for empty lines
+        const coverLines = doc.splitTextToSize(editedBook.coverPage, contentWidth);
+        doc.text(coverLines, margin, 50);
+      }
+      
+      if (editedBook.chapters && editedBook.chapters.length > 0) {
+        editedBook.chapters.forEach((chapter, index) => {
+          doc.addPage();
+          
+          if (pdfOptions.showPageNumbers) {
+            doc.setFontSize(baseFontSize * 0.8);
+            doc.text(`${index + 2}`, pageWidth - margin, pageHeight - margin/2);
+          }
+          
+          doc.setFontSize(baseFontSize * 1.5);
+          doc.text(`Chapter ${index + 1}: ${chapter.title}`, margin, 30);
+          
+          if (chapter.content) {
+            doc.setFontSize(baseFontSize);
+            const contentLines = doc.splitTextToSize(chapter.content, contentWidth);
+            doc.text(contentLines, margin, 45);
           }
         });
       }
       
-      let pageNumber = 1;
-      
-      // Add chapters with better formatting
-      editedBook.chapters.forEach((chapter, index) => {
-        doc.addPage();
-        pageNumber++;
-        
-        // Add page number if enabled
-        if (pdfOptions.showPageNumbers) {
-          doc.setFontSize(baseFontSize * 0.8);
-          doc.setFont(fontFamily, 'normal');
-          doc.text(`${pageNumber}`, pageWidth - margin, pageHeight - margin/2);
-        }
-        
-        // Chapter heading
-        doc.setFontSize(baseFontSize * 1.7);
-        doc.setFont(fontFamily, 'bold');
-        doc.text(`Chapter ${index + 1}: ${chapter.title}`, margin, 30);
-        
-        // Chapter content with better text processing
-        doc.setFontSize(baseFontSize);
-        doc.setFont(fontFamily, 'normal');
-        
-        // Process content with better line handling
-        const contentLines = chapter.content.split('\n');
-        let yPos = 45;
-        let isInList = false;
-        
-        contentLines.forEach(line => {
-          // Reset font for each line
-          doc.setFont(fontFamily, 'normal');
-          doc.setFontSize(baseFontSize);
-          
-          // Skip empty lines but add spacing
-          if (!line.trim()) {
-            yPos += baseFontSize * 0.3;
-            return;
-          }
-          
-          // Handle markdown headers
-          if (line.startsWith('# ')) {
-            doc.setFontSize(baseFontSize * 1.5);
-            doc.setFont(fontFamily, 'bold');
-            doc.text(line.replace('# ', ''), margin, yPos);
-            yPos += baseFontSize * 0.7;
-            return;
-          } else if (line.startsWith('## ')) {
-            doc.setFontSize(baseFontSize * 1.3);
-            doc.setFont(fontFamily, 'bold');
-            doc.text(line.replace('## ', ''), margin, yPos);
-            yPos += baseFontSize * 0.6;
-            return;
-          } else if (line.startsWith('### ')) {
-            doc.setFontSize(baseFontSize * 1.2);
-            doc.setFont(fontFamily, 'bold');
-            doc.text(line.replace('### ', ''), margin, yPos);
-            yPos += baseFontSize * 0.5;
-            return;
-          }
-          
-          // Handle list items
-          if (line.match(/^[\*\-\+]\s/)) {
-            const listText = line.replace(/^[\*\-\+]\s/, '• ');
-            const wrappedText = doc.splitTextToSize(listText, contentWidth - 5);
-            doc.text(wrappedText, margin + 5, yPos);
-            yPos += baseFontSize * 0.5 * wrappedText.length;
-            isInList = true;
-            return;
-          } else if (isInList) {
-            // Add extra space after lists
-            yPos += baseFontSize * 0.2;
-            isInList = false;
-          }
-          
-          // Handle regular text with proper wrapping
-          const wrappedText = doc.splitTextToSize(line, contentWidth);
-          
-          // Check if we need a new page
-          if (yPos + (wrappedText.length * baseFontSize * 0.5) > pageHeight - margin) {
-            doc.addPage();
-            pageNumber++;
-            yPos = margin;
-            
-            // Add page number if enabled
-            if (pdfOptions.showPageNumbers) {
-              doc.setFontSize(baseFontSize * 0.8);
-              doc.setFont(fontFamily, 'normal');
-              doc.text(`${pageNumber}`, pageWidth - margin, pageHeight - margin/2);
-            }
-          }
-          
-          doc.text(wrappedText, margin, yPos);
-          yPos += baseFontSize * 0.5 * wrappedText.length;
-        });
-      });
-      
-      // Add credits page with better formatting
       if (editedBook.creditsPage) {
         doc.addPage();
-        pageNumber++;
-        
-        // Add page number if enabled
-        if (pdfOptions.showPageNumbers) {
-          doc.setFontSize(baseFontSize * 0.8);
-          doc.setFont(fontFamily, 'normal');
-          doc.text(`${pageNumber}`, pageWidth - margin, pageHeight - margin/2);
-        }
-        
-        doc.setFontSize(baseFontSize * 1.8);
-        doc.setFont(fontFamily, 'bold');
+        doc.setFontSize(baseFontSize * 1.5);
         doc.text("Credits", pageWidth / 2, 30, { align: 'center' });
         
         doc.setFontSize(baseFontSize);
-        doc.setFont(fontFamily, 'normal');
-        
-        const creditsText = editedBook.creditsPage.split('\n');
-        let yPos = 50;
-        
-        creditsText.forEach(line => {
-          if (!line.trim()) {
-            yPos += baseFontSize * 0.3;
-            return;
-          }
-          
-          // Process credit lines
-          if (line.startsWith('# ')) {
-            doc.setFontSize(baseFontSize * 1.5);
-            doc.setFont(fontFamily, 'bold');
-            doc.text(line.replace('# ', ''), pageWidth / 2, yPos, { align: 'center' });
-          } else if (line.startsWith('## ')) {
-            doc.setFontSize(baseFontSize * 1.3);
-            doc.setFont(fontFamily, 'bold');
-            doc.text(line.replace('## ', ''), pageWidth / 2, yPos, { align: 'center' });
-          } else if (line.startsWith('- **')) {
-            // Format credit entries nicely
-            const cleanLine = line.replace(/\*\*/g, '').replace('- ', '');
-            doc.setFont(fontFamily, 'normal');
-            doc.text(cleanLine, pageWidth / 2, yPos, { align: 'center' });
-          } else {
-            doc.setFont(fontFamily, 'normal');
-            const wrappedText = doc.splitTextToSize(line, contentWidth);
-            doc.text(wrappedText, margin, yPos);
-            yPos += (wrappedText.length - 1) * baseFontSize * 0.5;
-          }
-          
-          yPos += baseFontSize * 0.5;
-        });
+        const creditsLines = doc.splitTextToSize(editedBook.creditsPage, contentWidth);
+        doc.text(creditsLines, margin, 50);
       }
       
-      // Set PDF properties
       doc.setProperties({
-        title: editedBook.title,
-        subject: editedBook.description,
+        title: editedBook.title || 'Untitled Book',
+        subject: editedBook.description || 'Book exported from Book-Kreate',
         creator: 'Book-Kreate',
         author: 'Book-Kreate User'
       });
       
-      // Save the PDF
-      doc.save(`${editedBook.title.replace(/\s+/g, '_')}.pdf`);
+      doc.save(`${(editedBook.title || 'book').replace(/\s+/g, '_')}.pdf`);
       toast.success('PDF exported successfully');
     } catch (error) {
       console.error('Error exporting PDF:', error);
-      toast.error('Failed to export PDF');
+      toast.error('Failed to export PDF. Please try again.');
     } finally {
       setIsExporting(false);
     }
