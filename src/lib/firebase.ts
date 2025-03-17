@@ -81,13 +81,15 @@ export const subscribeToAuthChanges = (callback: (user: FirebaseUser | null) => 
 };
 
 // Firestore helpers
-export const createDocument = async (collectionPath: string, docId: string, data: any) => {
+export const createDocument = async (collectionPath: string, docId: string, data: Record<string, any>) => {
   try {
-    await setDoc(doc(db, collectionPath, docId), {
+    const docData = {
       ...data,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
-    });
+    };
+    
+    await setDoc(doc(db, collectionPath, docId), docData);
     return docId;
   } catch (error) {
     console.error(`Error creating document in ${collectionPath}:`, error);
@@ -95,12 +97,14 @@ export const createDocument = async (collectionPath: string, docId: string, data
   }
 };
 
-export const updateDocument = async (collectionPath: string, docId: string, data: any) => {
+export const updateDocument = async (collectionPath: string, docId: string, data: Record<string, any>) => {
   try {
-    await updateDoc(doc(db, collectionPath, docId), {
+    const updateData = {
       ...data,
       updatedAt: serverTimestamp()
-    });
+    };
+    
+    await updateDoc(doc(db, collectionPath, docId), updateData);
     return true;
   } catch (error) {
     console.error(`Error updating document in ${collectionPath}:`, error);

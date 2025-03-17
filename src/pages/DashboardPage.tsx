@@ -57,7 +57,9 @@ const DashboardPage = () => {
         try {
           // Try to get the book plan from Firebase
           const bookPlan = await getDocument('bookPlans', book.id);
-          const planItems = bookPlan?.items || [];
+          
+          // Handle potentially missing properties safely
+          const planItems = bookPlan && 'items' in bookPlan ? bookPlan.items || [] : [];
           const totalItems = planItems.length || 1;
           const completedItems = planItems.filter((item: any) => item.status === 'completed').length;
           const progress = Math.round((completedItems / totalItems) * 100);
