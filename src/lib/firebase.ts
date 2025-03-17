@@ -1,35 +1,38 @@
 
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { 
-  getAuth, 
-  GoogleAuthProvider, 
-  signInWithPopup, 
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
-  onAuthStateChanged,
-  User as FirebaseUser
+  GoogleAuthProvider,
+  signInWithPopup,
+  UserCredential,
+  updateProfile,
+  User,
+  onAuthStateChanged
 } from "firebase/auth";
-import { 
-  getFirestore, 
-  collection, 
-  doc, 
-  setDoc, 
-  getDoc, 
-  getDocs, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  orderBy,
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  getDoc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
   serverTimestamp,
-  Timestamp,
-  DocumentData 
+  DocumentData,
+  DocumentReference,
+  CollectionReference
 } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
-// Your web app's Firebase configuration
+// Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDY0MqFKd-byDk880Ane3R4vc-2FQOsHEc",
+  apiKey: "AIzaSyBc3cYoLkj0c2SQnEJOmLNzFyqXZY6clMs",
   authDomain: "book-kreate.firebaseapp.com",
   projectId: "book-kreate",
   storageBucket: "book-kreate.appspot.com",
@@ -40,124 +43,136 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
-const auth = getAuth(app);
 const db = getFirestore(app);
+const auth = getAuth(app);
 const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
 
-// Sign in with Google
-export const signInWithGoogle = async () => {
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    return result.user;
-  } catch (error) {
-    console.error("Error signing in with Google:", error);
-    
-    // Specific handling for unauthorized domain error
-    if (error.code === 'auth/unauthorized-domain') {
-      throw new Error(
-        "Authentication domain not authorized. Please add this domain to your Firebase project's authorized domains."
-      );
-    }
-    
-    throw error;
-  }
+// Auth functions
+const signIn = (email: string, password: string): Promise<UserCredential> => {
+  return signInWithEmailAndPassword(auth, email, password);
 };
 
-// Sign out
-export const signOut = async () => {
-  try {
-    await firebaseSignOut(auth);
-  } catch (error) {
-    console.error("Error signing out:", error);
-    throw error;
-  }
+const signUp = async (email: string, password: string, displayName: string): Promise<UserCredential> => {
+  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+  await updateProfile(userCredential.user, { displayName });
+  return userCredential;
 };
 
-// Auth state listener
-export const subscribeToAuthChanges = (callback: (user: FirebaseUser | null) => void) => {
+const signOut = (): Promise<void> => {
+  return firebaseSignOut(auth);
+};
+
+const signInWithGoogle = (): Promise<UserCredential> => {
+  return signInWithPopup(auth, googleProvider);
+};
+
+// Create document
+const createDocument = async (
+  collectionName: string,
+  documentId: string,
+  data: Record<string, any>
+): Promise<void> => {
+  const docRef = doc(db, collectionName, documentId);
+  await setDoc(docRef, {
+    ...data,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  });
+};
+
+// Update document
+const updateDocument = async (
+  collectionName: string,
+  documentId: string,
+  data: Record<string, any>
+): Promise<void> => {
+  const docRef = doc(db, collectionName, documentId);
+  await updateDoc(docRef, {
+    ...data,
+    updatedAt: serverTimestamp()
+  });
+};
+
+// Delete document
+const deleteDocument = async (
+  collectionName: string,
+  documentId: string
+): Promise<void> => {
+  const docRef = doc(db, collectionName, documentId);
+  await deleteDoc(docRef);
+};
+
+// Get document
+const getDocument = async (
+  collectionName: string,
+  documentId: string
+): Promise<Record<string, any> | null> => {
+  const docRef = doc(db, collectionName, documentId);
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    return {
+      ...data,
+      id: documentId,
+    };
+  }
+  
+  return null;
+};
+
+// Get documents by user ID
+const getDocuments = async (
+  collectionName: string,
+  userId: string
+): Promise<Record<string, any>[]> => {
+  const q = query(
+    collection(db, collectionName),
+    where("userId", "==", userId)
+  );
+  
+  const querySnapshot = await getDocs(q);
+  const documents: Record<string, any>[] = [];
+  
+  querySnapshot.forEach((doc) => {
+    documents.push({
+      ...doc.data(),
+      id: doc.id,
+    });
+  });
+  
+  return documents;
+};
+
+// File storage functions
+const uploadFile = async (
+  path: string,
+  file: File
+): Promise<string> => {
+  const storageRef = ref(storage, path);
+  await uploadBytes(storageRef, file);
+  return getDownloadURL(storageRef);
+};
+
+// Listen to auth state changes
+const onAuthChange = (callback: (user: User | null) => void): () => void => {
   return onAuthStateChanged(auth, callback);
 };
 
-// Firestore helpers
-export const createDocument = async (collectionPath: string, docId: string, data: Record<string, any>) => {
-  try {
-    const docData = {
-      ...data,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    };
-    
-    await setDoc(doc(db, collectionPath, docId), docData);
-    return docId;
-  } catch (error) {
-    console.error(`Error creating document in ${collectionPath}:`, error);
-    throw error;
-  }
+export {
+  auth,
+  db,
+  storage,
+  signIn,
+  signUp,
+  signOut,
+  signInWithGoogle,
+  createDocument,
+  updateDocument,
+  deleteDocument,
+  getDocument,
+  getDocuments,
+  uploadFile,
+  onAuthChange,
 };
-
-export const updateDocument = async (collectionPath: string, docId: string, data: Record<string, any>) => {
-  try {
-    const updateData = {
-      ...data,
-      updatedAt: serverTimestamp()
-    };
-    
-    await updateDoc(doc(db, collectionPath, docId), updateData);
-    return true;
-  } catch (error) {
-    console.error(`Error updating document in ${collectionPath}:`, error);
-    throw error;
-  }
-};
-
-export const getDocument = async (collectionPath: string, docId: string) => {
-  try {
-    const docSnap = await getDoc(doc(db, collectionPath, docId));
-    if (docSnap.exists()) {
-      return { id: docSnap.id, ...docSnap.data() as Record<string, any> };
-    } else {
-      return null;
-    }
-  } catch (error) {
-    console.error(`Error getting document from ${collectionPath}:`, error);
-    throw error;
-  }
-};
-
-export const deleteDocument = async (collectionPath: string, docId: string) => {
-  try {
-    await deleteDoc(doc(db, collectionPath, docId));
-    return true;
-  } catch (error) {
-    console.error(`Error deleting document from ${collectionPath}:`, error);
-    throw error;
-  }
-};
-
-export const getDocuments = async (collectionPath: string, userId?: string) => {
-  try {
-    let q;
-    if (userId) {
-      q = query(
-        collection(db, collectionPath),
-        where("userId", "==", userId),
-        orderBy("createdAt", "desc")
-      );
-    } else {
-      q = query(collection(db, collectionPath), orderBy("createdAt", "desc"));
-    }
-    
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data() as Record<string, any>
-    }));
-  } catch (error) {
-    console.error(`Error getting documents from ${collectionPath}:`, error);
-    throw error;
-  }
-};
-
-export { app, auth, db, storage, analytics };

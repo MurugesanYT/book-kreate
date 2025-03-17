@@ -1,4 +1,3 @@
-
 // Book service to handle book operations
 import { toast } from "sonner";
 import { BookData, PlanItem } from "./types";
@@ -17,6 +16,7 @@ const BOOK_PLANS_COLLECTION = 'bookPlans';
 
 // Define extended types for documents with additional properties
 export interface BookDocument extends BookData {
+  id: string;
   chapters?: any[];
   tasks?: PlanItem[];
   coverPage?: string;
@@ -35,35 +35,32 @@ interface BookPlanDocument {
 export const getBook = async (bookId: string): Promise<BookDocument> => {
   try {
     // Get the book from Firebase
-    const bookDoc = await getDocument(BOOKS_COLLECTION, bookId);
+    const bookDoc = await getDocument(BOOKS_COLLECTION, bookId) as BookDocument | null;
     
     if (!bookDoc) {
       throw new Error("Book not found");
     }
     
-    // Cast the document to our extended type
-    const book = bookDoc as BookDocument;
-    
     // Ensure book structure is complete
-    if (!book.chapters) {
-      book.chapters = [];
+    if (!bookDoc.chapters) {
+      bookDoc.chapters = [];
     }
     
     // Get the book plan if it exists
     try {
       const bookPlan = await getDocument(BOOK_PLANS_COLLECTION, bookId) as BookPlanDocument | null;
       if (bookPlan && bookPlan.items) {
-        book.tasks = bookPlan.items as PlanItem[];
+        bookDoc.tasks = bookPlan.items;
       }
     } catch (error) {
       console.log("No plan found, will generate one.");
     }
     
     // Generate a plan if no tasks exist
-    if (!book.tasks) {
-      console.log("No tasks found, generating plan for book:", book.title);
-      const plan = await generateBookPlan(book);
-      book.tasks = plan;
+    if (!bookDoc.tasks) {
+      console.log("No tasks found, generating plan for book:", bookDoc.title);
+      const plan = await generateBookPlan(bookDoc);
+      bookDoc.tasks = plan;
       
       // Store the generated plan in Firebase
       await createDocument(BOOK_PLANS_COLLECTION, bookId, {
@@ -73,7 +70,7 @@ export const getBook = async (bookId: string): Promise<BookDocument> => {
       });
     }
     
-    return book;
+    return bookDoc;
   } catch (error) {
     console.error("Error fetching book:", error);
     toast.error("Failed to load book");
@@ -84,13 +81,18 @@ export const getBook = async (bookId: string): Promise<BookDocument> => {
 // Function to update a book
 export const updateBook = async (book: BookDocument): Promise<void> => {
   try {
-    // Update the book in Firebase
-    await updateDocument(BOOKS_COLLECTION, book.id, book);
+    // Clone book without tasks to keep Firestore documents clean
+    const { tasks, ...bookWithoutTasks } = book;
     
-    // If tasks are included, update the book plan
-    if (book.tasks) {
+    // Update the book in Firebase
+    await updateDocument(BOOKS_COLLECTION, book.id, bookWithoutTasks);
+    
+    // If tasks are included, update the book plan separately
+    if (tasks && tasks.length > 0) {
       await updateDocument(BOOK_PLANS_COLLECTION, book.id, {
-        items: book.tasks
+        items: tasks,
+        bookId: book.id,
+        userId: book.userId || auth.currentUser?.uid
       });
     }
     
@@ -158,10 +160,27 @@ export const createBook = async (bookData: Partial<BookData>): Promise<string> =
       type: bookData.type || '',
       category: bookData.category || '',
       credits: bookData.credits || [],
-      timestamp: bookData.timestamp || new Date().toISOString()
+      timestamp: bookData.timestamp || new Date().toISOString(),
+      chapters: []
     };
     
+    // Create the book document
     await createDocument(BOOKS_COLLECTION, bookId, newBook);
+    
+    // Generate a book plan immediately
+    try {
+      const plan = await generateBookPlan(newBook);
+      
+      // Store the generated plan in Firebase
+      await createDocument(BOOK_PLANS_COLLECTION, bookId, {
+        bookId,
+        items: plan,
+        userId: auth.currentUser.uid
+      });
+    } catch (planError) {
+      console.error("Error generating initial plan:", planError);
+      // We'll continue even if plan generation fails - it will be generated on demand later
+    }
     
     return bookId;
   } catch (error) {

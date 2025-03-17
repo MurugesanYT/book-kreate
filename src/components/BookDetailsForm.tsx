@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -105,9 +106,11 @@ const BookDetailsForm = () => {
       const generatedTitle = await generateBookTitle(description, bookType, bookCategory);
       console.log("Generated title:", generatedTitle);
       setTitle(generatedTitle);
+      toast.dismiss();
       toast.success("Book title generated successfully!");
     } catch (error) {
       console.error("Failed to generate title:", error);
+      toast.dismiss();
       toast.error("Failed to generate title. Please try again or create your own.");
     } finally {
       setIsGeneratingTitle(false);
@@ -141,7 +144,7 @@ const BookDetailsForm = () => {
     }
     
     setIsSubmitting(true);
-    toast.loading("Creating your book plan...");
+    const toastId = toast.loading("Creating your book plan...");
     
     try {
       // If title is not provided, generate one using AI
@@ -153,7 +156,6 @@ const BookDetailsForm = () => {
           console.log("Generated title on submit:", bookTitle);
         } catch (error) {
           console.error("Failed to generate title on submit:", error);
-          toast.error("Could not generate title. Using default title.");
           bookTitle = `${bookType} Story`; // Improved fallback title
         }
       }
@@ -182,14 +184,14 @@ const BookDetailsForm = () => {
       // Save book to Firebase
       const bookId = await createBook(bookData);
       
-      toast.dismiss();
+      toast.dismiss(toastId);
       toast.success("Book details saved successfully!");
       
       // Navigate to the book planning page
       navigate(`/book/plan/${bookId}`);
     } catch (error) {
       console.error("Error saving book:", error);
-      toast.dismiss();
+      toast.dismiss(toastId);
       toast.error("Failed to save book details. Please try again.");
     } finally {
       setIsSubmitting(false);
