@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { BookText, Sparkles, Clock, Layout, BookOpen, Palette, Layers, Edit3 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { BookText, Sparkles, Clock, Layout, BookOpen, Palette, Layers, Edit3, ArrowRight } from 'lucide-react';
 
 const features = [
   {
