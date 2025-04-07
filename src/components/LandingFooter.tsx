@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, X, Instagram, Linkedin, Github } from 'lucide-react';
+import { Facebook, X, Instagram, Github, Mail, MapPin } from 'lucide-react';
 
 const LandingFooter = () => {
   return (
@@ -18,19 +18,16 @@ const LandingFooter = () => {
               Transform your ideas into beautifully crafted books with the power of AI.
             </p>
             <div className="flex space-x-4">
-              <a href="https://www.facebook.com/profile.php?id=61574131919351" className="text-slate-400 hover:text-white transition-colors">
+              <a href="https://www.facebook.com/profile.php?id=61574131919351" className="text-slate-400 hover:text-white transition-colors" aria-label="Facebook">
                 <Facebook size={20} />
               </a>
-              <a href="https://x.com/_fan_boi_lm10_" className="text-slate-400 hover:text-white transition-colors">
+              <a href="https://x.com/_fan_boi_lm10_" className="text-slate-400 hover:text-white transition-colors" aria-label="X">
                 <X size={20} />
               </a>
-              <a href="https://www.instagram.com/@_fan_boi_lm10_" className="text-slate-400 hover:text-white transition-colors">
+              <a href="https://www.instagram.com/@_fan_boi_lm10_" className="text-slate-400 hover:text-white transition-colors" aria-label="Instagram">
                 <Instagram size={20} />
               </a>
-              <a href="#" className="text-slate-400 hover:text-white transition-colors">
-                <Linkedin size={20} />
-              </a>
-              <a href="https://www.github.com/MurugesanYT" className="text-slate-400 hover:text-white transition-colors">
+              <a href="https://www.github.com/MurugesanYT" className="text-slate-400 hover:text-white transition-colors" aria-label="Github">
                 <Github size={20} />
               </a>
             </div>
@@ -57,13 +54,25 @@ const LandingFooter = () => {
           </div>
           
           <div>
-            <h3 className="text-lg font-semibold mb-4">Legal</h3>
-            <ul className="space-y-2">
-              <li><Link to="/terms" className="text-slate-400 hover:text-white transition-colors">Terms of Service</Link></li>
-              <li><Link to="/privacy" className="text-slate-400 hover:text-white transition-colors">Privacy Policy</Link></li>
-              <li><Link to="/cookies" className="text-slate-400 hover:text-white transition-colors">Cookie Policy</Link></li>
-              <li><Link to="/licenses" className="text-slate-400 hover:text-white transition-colors">Licenses</Link></li>
+            <h3 className="text-lg font-semibold mb-4">Contact</h3>
+            <ul className="space-y-4">
+              <li className="flex items-start">
+                <Mail size={18} className="text-book-orange mt-1 mr-2" />
+                <span className="text-slate-400">youvegottabefreakingkiddingme@gmail.com</span>
+              </li>
+              <li className="flex items-start">
+                <MapPin size={18} className="text-book-orange mt-1 mr-2" />
+                <span className="text-slate-400">We're currently remote-only and hope to establish a physical office soon.</span>
+              </li>
             </ul>
+            
+            <div className="mt-6">
+              <h4 className="text-lg font-semibold mb-2">Legal</h4>
+              <ul className="space-y-2">
+                <li><Link to="/terms" className="text-slate-400 hover:text-white transition-colors">Terms of Service</Link></li>
+                <li><Link to="/privacy" className="text-slate-400 hover:text-white transition-colors">Privacy Policy</Link></li>
+              </ul>
+            </div>
           </div>
         </div>
         

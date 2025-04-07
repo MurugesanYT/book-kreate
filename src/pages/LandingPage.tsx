@@ -7,6 +7,9 @@ import HowItWorksSection from '../components/HowItWorksSection';
 import TestimonialsSection from '../components/TestimonialsSection';
 import CTASection from '../components/CTASection';
 import LandingFooter from '../components/LandingFooter';
+import FAQSection from '../components/FAQSection';
+import StatsSection from '../components/StatsSection';
+import PricingSection from '../components/PricingSection';
 
 const LandingPage = () => {
   return (
@@ -14,9 +17,12 @@ const LandingPage = () => {
       <LandingHeader />
       <main>
         <HeroSection />
+        <StatsSection />
         <FeaturesSection />
         <HowItWorksSection />
+        <PricingSection />
         <TestimonialsSection />
+        <FAQSection />
         <CTASection />
       </main>
       <LandingFooter />
