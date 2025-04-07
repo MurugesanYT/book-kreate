@@ -54,7 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           "This app is running on a domain not authorized in Firebase. Please add this domain to your Firebase project's authorized domains list."
         );
       } else {
-        toast.error("Failed to sign in. Please try again.");
+        toast.error(`Failed to sign in: ${error.message || 'Unknown error'}`);
       }
       
       return null;
@@ -65,13 +65,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await signOut();
       toast.success("Successfully signed out!");
-    } catch (error) {
-      toast.error("Failed to sign out. Please try again.");
+    } catch (error: any) {
+      toast.error(`Failed to sign out: ${error.message || 'Unknown error'}`);
       console.error("Sign out error:", error);
     }
   };
 
-  const value = {
+  const value: AuthContextType = {
     currentUser,
     loading,
     signIn,

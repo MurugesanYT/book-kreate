@@ -9,6 +9,7 @@ import LandingFooter from '@/components/LandingFooter';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { BookOpen, Info, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from 'sonner';
 
 const AuthPage = () => {
   const { currentUser, signIn, loading } = useAuth();
@@ -28,14 +29,18 @@ const AuthPage = () => {
   }, []);
 
   const handleSignIn = async () => {
+    if (isSigningIn) return; // Prevent multiple clicks
+    
     setIsSigningIn(true);
     try {
       const result = await signIn();
       if (result && result.user) {
+        // Success is already handled by toast in AuthContext
         navigate('/dashboard');
       }
-    } catch (error) {
-      console.error("Sign in error:", error);
+    } catch (error: any) {
+      // Error is already handled by toast in AuthContext
+      console.error("Sign in error in component:", error);
     } finally {
       setIsSigningIn(false);
     }

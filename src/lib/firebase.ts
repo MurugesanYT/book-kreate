@@ -65,6 +65,9 @@ const signOut = (): Promise<void> => {
 
 const signInWithGoogle = async (): Promise<UserCredential> => {
   try {
+    googleProvider.setCustomParameters({
+      prompt: 'select_account'
+    });
     return await signInWithPopup(auth, googleProvider);
   } catch (error) {
     console.error("Error in signInWithGoogle:", error);
