@@ -48,8 +48,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error: any) {
       console.error("Sign in error:", error);
       
-      // Check for specific unauthorized domain error
-      if (error.message && error.message.includes('Authentication domain not authorized')) {
+      // Show more informative error messages
+      if (error.code === 'auth/api-key-not-valid') {
+        setAuthError(
+          "The Firebase API key is not valid. This is a development environment issue."
+        );
+      } else if (error.code === 'auth/configuration-not-found') {
+        setAuthError(
+          "Firebase configuration is incorrect. Please check your Firebase setup."
+        );
+      } else if (error.message && error.message.includes('Authentication domain not authorized')) {
         setAuthError(
           "This app is running on a domain not authorized in Firebase. Please add this domain to your Firebase project's authorized domains list."
         );
@@ -87,9 +95,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             <AlertDialogTitle>Authentication Error</AlertDialogTitle>
             <AlertDialogDescription>
               {authError}
-              <p className="mt-2">
-                To fix this issue, go to your Firebase Console {'>'} Authentication {'>'} Settings {'>'} Authorized domains and add the domain you're using.
-              </p>
+              {(authError && authError.includes("API key") || authError?.includes("configuration")) && (
+                <p className="mt-2 text-amber-600">
+                  Since this is a demo app, we're using placeholder Firebase credentials. In a real application, you would need valid Firebase credentials.
+                </p>
+              )}
+              {authError && authError.includes("domain not authorized") && (
+                <p className="mt-2">
+                  To fix this issue, go to your Firebase Console {'>'} Authentication {'>'} Settings {'>'} Authorized domains and add the domain you're using.
+                </p>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

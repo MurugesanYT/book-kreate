@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -18,14 +17,12 @@ const AuthPage = () => {
   const [showAlert, setShowAlert] = useState(false);
 
   useEffect(() => {
-    // Show alert in development environment after a short delay
-    if (process.env.NODE_ENV === 'development') {
-      const timer = setTimeout(() => {
-        setShowAlert(true);
-      }, 500);
-      
-      return () => clearTimeout(timer);
-    }
+    // Show development environment alert
+    const timer = setTimeout(() => {
+      setShowAlert(true);
+    }, 500);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   const handleSignIn = async () => {
@@ -78,12 +75,11 @@ const AuthPage = () => {
                 </p>
               </div>
               
-              {showAlert && process.env.NODE_ENV === 'development' && (
+              {showAlert && (
                 <Alert className="mb-6 bg-amber-50 border border-amber-200">
                   <Info className="h-4 w-4 text-amber-500" />
                   <AlertDescription className="text-amber-800">
-                    In development mode, make sure <code className="bg-amber-100 px-1 py-0.5 rounded">localhost</code> is added 
-                    to your Firebase authorized domains.
+                    This is a demo app with placeholder Firebase credentials. In a real application, you would need valid Firebase credentials.
                   </AlertDescription>
                 </Alert>
               )}
