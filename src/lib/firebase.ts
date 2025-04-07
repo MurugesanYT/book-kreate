@@ -63,8 +63,13 @@ const signOut = (): Promise<void> => {
   return firebaseSignOut(auth);
 };
 
-const signInWithGoogle = (): Promise<UserCredential> => {
-  return signInWithPopup(auth, googleProvider);
+const signInWithGoogle = async (): Promise<UserCredential> => {
+  try {
+    return await signInWithPopup(auth, googleProvider);
+  } catch (error) {
+    console.error("Error in signInWithGoogle:", error);
+    throw error; // Re-throw to handle in calling code
+  }
 };
 
 // Create document

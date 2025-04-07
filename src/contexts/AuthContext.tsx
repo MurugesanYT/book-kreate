@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const result = await signInWithGoogle();
       toast.success("Successfully signed in!");
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Sign in error:", error);
       
       // Check for specific unauthorized domain error

@@ -30,8 +30,8 @@ const AuthPage = () => {
   const handleSignIn = async () => {
     setIsSigningIn(true);
     try {
-      const user = await signIn();
-      if (user) {
+      const result = await signIn();
+      if (result && result.user) {
         navigate('/dashboard');
       }
     } catch (error) {
