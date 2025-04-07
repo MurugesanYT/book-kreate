@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { BookText, Sparkles, Clock, Layout, BookOpen, Palette, Layers, Edit3, ArrowRight } from 'lucide-react';
+import { Separator } from "@/components/ui/separator";
 
 const features = [
   {
@@ -48,7 +49,7 @@ const features = [
 
 const FeaturesSection = () => {
   return (
-    <section className="py-20 px-4 md:px-6 bg-white">
+    <section className="py-24 px-4 md:px-6 bg-gradient-to-b from-white to-book-lightPurple/5">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-book-purple to-book-orange bg-clip-text text-transparent">
@@ -57,12 +58,16 @@ const FeaturesSection = () => {
           <p className="text-lg text-slate-600 max-w-3xl mx-auto">
             Book-Kreate combines cutting-edge AI technology with intuitive design to make book creation accessible to everyone.
           </p>
+          <div className="flex justify-center mt-6">
+            <Separator className="w-24 bg-gradient-to-r from-book-purple to-book-orange h-1 rounded-full" />
+          </div>
         </div>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => (
-            <div key={index} className="group">
-              <div className="book-card p-6 hover:border-book-purple/40 transition-all duration-300 h-full rounded-lg hover:shadow-lg hover:-translate-y-1">
+            <div key={index} className="group transition-all duration-300 relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-book-purple/5 to-book-orange/5 rounded-lg transform scale-95 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-300"></div>
+              <div className="book-card p-6 hover:border-book-purple/40 transition-all duration-300 h-full rounded-lg hover:shadow-lg hover:-translate-y-1 relative z-10">
                 <div className="p-3 bg-gradient-to-br from-book-purple/10 to-book-orange/10 rounded-full w-fit mb-4 group-hover:from-book-purple/20 group-hover:to-book-orange/20 transition-colors duration-300">
                   {feature.icon}
                 </div>

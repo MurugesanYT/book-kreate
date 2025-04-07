@@ -18,16 +18,16 @@ const LandingFooter = () => {
               Transform your ideas into beautifully crafted books with the power of AI.
             </p>
             <div className="flex space-x-4">
-              <a href="https://www.facebook.com/profile.php?id=61574131919351" className="text-slate-400 hover:text-white transition-colors" aria-label="Facebook">
+              <a href="https://www.facebook.com/profile.php?id=61574131919351" className="text-slate-400 hover:text-white transition-colors" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
                 <Facebook size={20} />
               </a>
-              <a href="https://x.com/_fan_boi_lm10_" className="text-slate-400 hover:text-white transition-colors" aria-label="X">
+              <a href="https://x.com/_fan_boi_lm10_" className="text-slate-400 hover:text-white transition-colors" aria-label="X" target="_blank" rel="noopener noreferrer">
                 <X size={20} />
               </a>
-              <a href="https://www.instagram.com/@_fan_boi_lm10_" className="text-slate-400 hover:text-white transition-colors" aria-label="Instagram">
+              <a href="https://www.instagram.com/@_fan_boi_lm10_" className="text-slate-400 hover:text-white transition-colors" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
                 <Instagram size={20} />
               </a>
-              <a href="https://www.github.com/MurugesanYT" className="text-slate-400 hover:text-white transition-colors" aria-label="Github">
+              <a href="https://www.github.com/MurugesanYT" className="text-slate-400 hover:text-white transition-colors" aria-label="Github" target="_blank" rel="noopener noreferrer">
                 <Github size={20} />
               </a>
             </div>

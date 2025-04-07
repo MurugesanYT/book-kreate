@@ -15,13 +15,13 @@ const LandingPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <LandingHeader />
-      <main>
+      <main className="flex-1">
         <HeroSection />
         <StatsSection />
         <FeaturesSection />
         <HowItWorksSection />
-        <PricingSection />
         <TestimonialsSection />
+        <PricingSection />
         <FAQSection />
         <CTASection />
       </main>
