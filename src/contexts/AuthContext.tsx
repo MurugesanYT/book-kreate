@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
   User as FirebaseUser,
+  UserCredential,
   onAuthStateChanged 
 } from 'firebase/auth';
 import { auth, signInWithGoogle, signOut } from '@/lib/firebase';
@@ -19,7 +20,7 @@ import {
 interface AuthContextType {
   currentUser: FirebaseUser | null;
   loading: boolean;
-  signIn: () => Promise<FirebaseUser | null>;
+  signIn: () => Promise<UserCredential | null>;
   logOut: () => Promise<void>;
 }
 
@@ -41,9 +42,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async () => {
     try {
-      const user = await signInWithGoogle();
+      const result = await signInWithGoogle();
       toast.success("Successfully signed in!");
-      return user;
+      return result;
     } catch (error) {
       console.error("Sign in error:", error);
       

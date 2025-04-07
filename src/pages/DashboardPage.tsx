@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const DashboardPage = () => {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logOut } = useAuth();
   const navigate = useNavigate();
   const [books, setBooks] = useState<BookDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +50,7 @@ const DashboardPage = () => {
 
   const handleLogout = async () => {
     try {
-      await logout();
+      await logOut();
       navigate('/');
     } catch (error) {
       console.error("Logout failed:", error);
