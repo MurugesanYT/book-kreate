@@ -13,10 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { BookOpen, Plus, Trash2, Sparkles, Wand2 } from 'lucide-react';
+import { BookOpen, Plus, Trash2 } from 'lucide-react';
 import { generateBookTitle } from '@/lib/api';
-import { createBook } from '@/lib/api/bookService';
-import { useAuth } from '@/contexts/AuthContext';
 
 // Book types
 const BOOK_TYPES = [
@@ -48,17 +46,16 @@ interface Credit {
 
 const BookDetailsForm = () => {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [bookType, setBookType] = useState('');
   const [bookCategory, setBookCategory] = useState('');
   const [credits, setCredits] = useState<Credit[]>([
-    { role: 'Author', name: currentUser?.displayName || '' }
+    { role: 'Author', name: '' }
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
-  
+
   // Get categories based on selected book type
   const getCategories = () => {
     return BOOK_CATEGORIES[bookType] || DEFAULT_CATEGORIES;
@@ -106,11 +103,9 @@ const BookDetailsForm = () => {
       const generatedTitle = await generateBookTitle(description, bookType, bookCategory);
       console.log("Generated title:", generatedTitle);
       setTitle(generatedTitle);
-      toast.dismiss();
       toast.success("Book title generated successfully!");
     } catch (error) {
       console.error("Failed to generate title:", error);
-      toast.dismiss();
       toast.error("Failed to generate title. Please try again or create your own.");
     } finally {
       setIsGeneratingTitle(false);
@@ -137,25 +132,21 @@ const BookDetailsForm = () => {
       return;
     }
     
-    if (!currentUser) {
-      toast.error("You must be logged in to create a book.");
-      navigate('/auth');
-      return;
-    }
-    
     setIsSubmitting(true);
-    const toastId = toast.loading("Creating your book plan...");
     
     try {
       // If title is not provided, generate one using AI
       let bookTitle = title;
       if (!title) {
+        toast.loading("Generating a title for your book...");
         try {
           console.log("Calling generateBookTitle on submit with:", { description, bookType, bookCategory });
           bookTitle = await generateBookTitle(description, bookType, bookCategory);
           console.log("Generated title on submit:", bookTitle);
+          toast.success("Book title generated!");
         } catch (error) {
           console.error("Failed to generate title on submit:", error);
+          toast.error("Could not generate title. Using default title.");
           bookTitle = `${bookType} Story`; // Improved fallback title
         }
       }
@@ -165,7 +156,7 @@ const BookDetailsForm = () => {
       
       // If no valid credits, add a default author credit
       if (validCredits.length === 0) {
-        validCredits.push({ role: 'Author', name: currentUser.displayName || 'Anonymous' });
+        validCredits.push({ role: 'Author', name: 'Anonymous' });
       }
       
       // Prepare book data
@@ -176,22 +167,25 @@ const BookDetailsForm = () => {
         category: bookCategory,
         credits: validCredits,
         needsGeneratedTitle: !title,
-        userId: currentUser.uid,
-        timestamp: new Date().toISOString(),
-        chapters: []
+        timestamp: new Date().toISOString()
       };
       
-      // Save book to Firebase
-      const bookId = await createBook(bookData);
+      // For now, we'll just store it in localStorage as a demo
+      // In a real app, this would go to a database
+      const existingBooks = JSON.parse(localStorage.getItem('bookKreateBooks') || '[]');
+      const bookId = `book_${Date.now()}`;
       
-      toast.dismiss(toastId);
+      localStorage.setItem('bookKreateBooks', JSON.stringify([
+        ...existingBooks,
+        { id: bookId, ...bookData }
+      ]));
+      
       toast.success("Book details saved successfully!");
       
       // Navigate to the book planning page
       navigate(`/book/plan/${bookId}`);
     } catch (error) {
       console.error("Error saving book:", error);
-      toast.dismiss(toastId);
       toast.error("Failed to save book details. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -200,28 +194,25 @@ const BookDetailsForm = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-5">
+      <div className="space-y-4">
         <div>
-          <div className="flex justify-between items-end mb-1.5">
-            <Label htmlFor="title" className="text-book-darkText font-medium">Book Title (Optional)</Label>
+          <div className="flex justify-between items-end mb-1">
+            <Label htmlFor="title">Book Title (Optional)</Label>
             <Button 
               type="button" 
               variant="outline" 
               size="sm"
               onClick={handleGenerateTitle}
               disabled={isGeneratingTitle || !description || !bookType || !bookCategory}
-              className="text-xs gap-1.5 hover:bg-book-purple/10 hover:text-book-purple border-book-purple/30"
+              className="text-xs"
             >
               {isGeneratingTitle ? (
                 <>
-                  <div className="h-3 w-3 border-t-2 border-current rounded-full animate-spin"></div>
+                  <div className="h-3 w-3 border-t-2 border-current rounded-full animate-spin mr-1"></div>
                   Generating...
                 </>
               ) : (
-                <>
-                  <Wand2 size={14} />
-                  Generate Title
-                </>
+                <>Generate Title</>
               )}
             </Button>
           </div>
@@ -230,30 +221,29 @@ const BookDetailsForm = () => {
             placeholder="Leave blank for AI to generate"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="bg-white border-slate-300 focus-visible:ring-book-purple"
           />
-          <p className="text-sm text-slate-500 mt-1.5">
+          <p className="text-sm text-slate-500 mt-1">
             You can generate a title based on your description, or let AI create one when you submit
           </p>
         </div>
         
         <div>
-          <Label htmlFor="description" className="text-book-darkText font-medium mb-1.5 block">
+          <Label htmlFor="description" className="text-book-darkText font-medium">
             Book Description <span className="text-red-500">*</span>
           </Label>
           <Textarea
             id="description"
             placeholder="Describe your book idea in detail. The more specific, the better the result!"
-            className="h-32 bg-white border-slate-300 focus-visible:ring-book-purple resize-none"
+            className="h-32"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             required
           />
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="bookType" className="text-book-darkText font-medium mb-1.5 block">
+            <Label htmlFor="bookType" className="text-book-darkText font-medium">
               Book Type <span className="text-red-500">*</span>
             </Label>
             <Select 
@@ -264,7 +254,7 @@ const BookDetailsForm = () => {
               }}
               required
             >
-              <SelectTrigger id="bookType" className="bg-white border-slate-300 focus:ring-book-purple">
+              <SelectTrigger id="bookType">
                 <SelectValue placeholder="Select book type" />
               </SelectTrigger>
               <SelectContent>
@@ -278,7 +268,7 @@ const BookDetailsForm = () => {
           </div>
           
           <div>
-            <Label htmlFor="bookCategory" className="text-book-darkText font-medium mb-1.5 block">
+            <Label htmlFor="bookCategory" className="text-book-darkText font-medium">
               Book Category <span className="text-red-500">*</span>
             </Label>
             <Select 
@@ -287,7 +277,7 @@ const BookDetailsForm = () => {
               disabled={!bookType}
               required
             >
-              <SelectTrigger id="bookCategory" className="bg-white border-slate-300 focus:ring-book-purple">
+              <SelectTrigger id="bookCategory">
                 <SelectValue placeholder={bookType ? "Select category" : "Select book type first"} />
               </SelectTrigger>
               <SelectContent>
@@ -309,9 +299,8 @@ const BookDetailsForm = () => {
               variant="outline" 
               size="sm"
               onClick={handleAddCredit}
-              className="hover:bg-book-purple/10 hover:text-book-purple border-book-purple/30"
             >
-              <Plus size={14} className="mr-1" />
+              <Plus size={16} className="mr-1" />
               Add Credit
             </Button>
           </div>
@@ -323,13 +312,13 @@ const BookDetailsForm = () => {
                   placeholder="Role (e.g., Author, Illustrator)"
                   value={credit.role}
                   onChange={(e) => handleUpdateCredit(index, 'role', e.target.value)}
-                  className="flex-1 bg-white border-slate-300 focus-visible:ring-book-purple"
+                  className="flex-1"
                 />
                 <Input
                   placeholder="Name"
                   value={credit.name}
                   onChange={(e) => handleUpdateCredit(index, 'name', e.target.value)}
-                  className="flex-1 bg-white border-slate-300 focus-visible:ring-book-purple"
+                  className="flex-1"
                 />
                 {credits.length > 1 && (
                   <Button 
@@ -353,7 +342,7 @@ const BookDetailsForm = () => {
       
       <Button 
         type="submit" 
-        className="w-full py-6 bg-gradient-to-r from-book-purple to-book-purple/90 hover:opacity-90 shadow-md"
+        className="w-full py-6 bg-book-purple hover:bg-book-purple/90"
         disabled={isSubmitting}
       >
         {isSubmitting ? (
@@ -363,7 +352,7 @@ const BookDetailsForm = () => {
           </div>
         ) : (
           <>
-            <Sparkles className="mr-2" />
+            <BookOpen className="mr-2" />
             Create Book Plan
           </>
         )}
