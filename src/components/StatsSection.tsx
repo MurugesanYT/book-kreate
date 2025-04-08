@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Users, BookText, Star, Activity } from 'lucide-react';
+import { Users, BookText, Star, Activity, Code, Heart, Coffee, Brain } from 'lucide-react';
 import { Separator } from "@/components/ui/separator";
 
 const stats = [
@@ -27,6 +27,25 @@ const stats = [
     value: "99.9%",
     label: "Uptime",
     description: "Reliable platform available whenever you need it"
+  }
+];
+
+const developerFacts = [
+  {
+    icon: <Code className="h-6 w-6 text-book-purple" />,
+    text: "1 passionate developer"
+  },
+  {
+    icon: <Heart className="h-6 w-6 text-book-purple" />,
+    text: "Made with love"
+  },
+  {
+    icon: <Coffee className="h-6 w-6 text-book-purple" />,
+    text: "Fueled by coffee"
+  },
+  {
+    icon: <Brain className="h-6 w-6 text-book-purple" />,
+    text: "Powered by AI"
   }
 ];
 
@@ -77,10 +96,34 @@ const StatsSection = () => {
           ))}
         </div>
         
-        <div className="mt-16 text-center">
-          <p className="text-slate-600 italic">
-            "Book-Kreate is an independent project developed by a single creator with a passion for AI and creativity."
-          </p>
+        <div className="mt-16 bg-gradient-to-r from-book-purple/5 to-book-orange/5 rounded-xl p-8 border border-book-purple/10">
+          <div className="text-center mb-8">
+            <h3 className="text-2xl font-bold mb-2 text-book-darkText">Solo Creator Project</h3>
+            <p className="text-slate-600">
+              Book-Kreate is an independent project developed with passion and dedication by a single creator.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {developerFacts.map((fact, index) => (
+              <div key={index} className="flex flex-col items-center text-center group">
+                <div className="p-3 bg-white rounded-full shadow-md mb-3 group-hover:shadow-lg transition-all duration-300 group-hover:-translate-y-1">
+                  {fact.icon}
+                </div>
+                <p className="text-slate-700 font-medium">{fact.text}</p>
+              </div>
+            ))}
+          </div>
+          
+          <div className="text-center mt-8">
+            <p className="text-slate-600 italic">
+              "Building Book-Kreate has been my passion project, bringing AI-powered book creation to everyone."
+            </p>
+            <div className="mt-4 inline-flex items-center px-4 py-2 rounded-full bg-book-purple/10 text-book-purple text-sm font-medium">
+              <Heart size={16} className="mr-2 text-book-orange animate-pulse" />
+              <span>Made with love and lots of coffee</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>

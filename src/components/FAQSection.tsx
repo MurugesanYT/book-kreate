@@ -31,6 +31,14 @@ const faqs = [
   {
     question: "Do I need writing experience to use Book-Kreate?",
     answer: "Not at all! Book-Kreate is designed to be accessible to everyone, regardless of writing experience. Simply describe what you want, and our AI will handle the technical aspects of crafting a well-structured book."
+  },
+  {
+    question: "Who created Book-Kreate?",
+    answer: "Book-Kreate is a solo project created by a passionate developer who wanted to make book creation accessible to everyone through AI. It's built with love and dedication by one person who believes in democratizing the publishing process."
+  },
+  {
+    question: "Do you have a physical office location?",
+    answer: "Currently, Book-Kreate operates remotely without a physical office. As the project grows, we hope to establish a physical office location in the future. For now, you can reach us through email at youvegottabefreakingkiddingme@gmail.com or through social media."
   }
 ];
 
@@ -39,7 +47,7 @@ const FAQSection = () => {
     <section className="py-20 px-4 md:px-6 bg-white">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-book-purple to-book-orange bg-clip-text text-transparent">
             Frequently Asked Questions
           </h2>
           <p className="text-lg text-slate-600">
@@ -49,11 +57,11 @@ const FAQSection = () => {
         
         <Accordion type="single" collapsible className="w-full">
           {faqs.map((faq, index) => (
-            <AccordionItem key={index} value={`item-${index}`}>
-              <AccordionTrigger className="text-left text-lg font-medium">
+            <AccordionItem key={index} value={`item-${index}`} className="border border-book-purple/10 rounded-lg mb-4 overflow-hidden">
+              <AccordionTrigger className="text-left text-lg font-medium px-6 py-4 hover:bg-book-purple/5">
                 {faq.question}
               </AccordionTrigger>
-              <AccordionContent className="text-slate-600">
+              <AccordionContent className="text-slate-600 px-6 py-4 bg-gradient-to-r from-book-purple/5 to-transparent">
                 {faq.answer}
               </AccordionContent>
             </AccordionItem>
