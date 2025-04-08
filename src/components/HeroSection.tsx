@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { ArrowRight, BookOpen, Wand2 } from 'lucide-react';
+import { ArrowRight, BookOpen, Wand2, Check, Sparkles } from 'lucide-react';
 
 const HeroSection = () => {
   return (
@@ -25,21 +25,35 @@ const HeroSection = () => {
             
             <div className="flex flex-col sm:flex-row gap-4">
               <Link to="/auth">
-                <Button className="btn-accent text-base font-medium flex items-center h-12 px-6 shadow-lg hover:shadow-xl transition-all duration-300">
+                <Button className="btn-accent text-base font-medium flex items-center h-12 px-6 shadow-lg hover:shadow-xl transition-all duration-300 group">
                   Get Started Free
-                  <ArrowRight size={18} className="ml-2" />
+                  <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
               <Link to="/about">
-                <Button variant="outline" className="text-base font-medium border-book-purple text-book-purple hover:bg-book-purple/10 flex items-center h-12 px-6">
-                  <BookOpen size={18} className="mr-2" />
+                <Button variant="outline" className="text-base font-medium border-book-purple text-book-purple hover:bg-book-purple/10 flex items-center h-12 px-6 group">
+                  <BookOpen size={18} className="mr-2 group-hover:scale-110 transition-transform" />
                   Learn More
                 </Button>
               </Link>
             </div>
             
-            <div className="pt-4 text-sm text-slate-500">
-              No credit card required • Free tier available
+            <div className="flex flex-col space-y-2 pt-6">
+              <div className="text-sm text-slate-500 mb-2">No credit card required • Free tier available</div>
+              <div className="flex space-x-4">
+                <div className="flex items-center text-slate-700 text-sm">
+                  <Check size={16} className="mr-1.5 text-book-orange" />
+                  <span>Instant Access</span>
+                </div>
+                <div className="flex items-center text-slate-700 text-sm">
+                  <Check size={16} className="mr-1.5 text-book-orange" />
+                  <span>AI Assistance</span>
+                </div>
+                <div className="flex items-center text-slate-700 text-sm">
+                  <Check size={16} className="mr-1.5 text-book-orange" />
+                  <span>Export Ready</span>
+                </div>
+              </div>
             </div>
           </div>
           
@@ -77,7 +91,14 @@ const HeroSection = () => {
                 <div className="h-4 w-4/6 bg-slate-100 rounded"></div>
               </div>
               
-              <div className="mt-6 h-10 w-28 bg-book-purple/10 rounded"></div>
+              <div className="mt-6 flex">
+                <div className="h-10 w-28 bg-book-purple/10 rounded mr-3 flex items-center justify-center">
+                  <Sparkles size={16} className="text-book-purple animate-pulse" />
+                </div>
+                <div className="h-10 w-28 bg-book-orange/10 rounded flex items-center justify-center">
+                  <BookOpen size={16} className="text-book-orange animate-pulse" />
+                </div>
+              </div>
             </div>
             <div className="absolute inset-0 bg-book-lightPurple/20 rounded-lg transform rotate-6 z-0"></div>
             <div className="absolute inset-0 bg-book-orange/10 rounded-lg transform -rotate-3 z-0"></div>
