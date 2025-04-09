@@ -18,6 +18,9 @@ export interface BookData {
   needsGeneratedTitle?: boolean;
   timestamp: string;
   template?: string | null;
+  coverImageUrl?: string;
+  fontFamily?: string;
+  colorScheme?: string;
 }
 
 export interface ChapterItem {
@@ -32,4 +35,17 @@ export interface PlanItem {
   status: 'pending' | 'ongoing' | 'completed';
   description?: string;
   content?: string;
+}
+
+// PDF Export types
+export interface PDFExportOptions {
+  showPageNumbers: boolean;
+  includeMargins: boolean; 
+  fontFamily: string;
+  fontSize: number;
+  headerFooter: boolean;
+  coverPage: boolean;
+  colorScheme: 'default' | 'elegant' | 'modern' | 'classic' | 'vibrant';
+  pageSize: 'a4' | 'letter' | 'legal';
+  orientation: 'portrait' | 'landscape';
 }
