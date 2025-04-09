@@ -28,67 +28,70 @@ import PrivacyPage from "./pages/legal/PrivacyPage";
 import CookiePage from "./pages/legal/CookiePage";
 import LicensesPage from "./pages/legal/LicensesPage";
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route 
-              path="/dashboard" 
-              element={
-                <RequireAuth>
-                  <DashboardPage />
-                </RequireAuth>
-              } 
-            />
-            <Route 
-              path="/book/create" 
-              element={
-                <RequireAuth>
-                  <BookCreationPage />
-                </RequireAuth>
-              } 
-            />
-            <Route 
-              path="/book/plan/:bookId" 
-              element={
-                <RequireAuth>
-                  <BookPlanPage />
-                </RequireAuth>
-              } 
-            />
-            
-            {/* Content Pages */}
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/features" element={<FeaturesPage />} />
-            <Route path="/blog" element={<BlogPage />} />
-            
-            {/* Support Pages */}
-            <Route path="/help" element={<HelpCenterPage />} />
-            <Route path="/faq" element={<FAQPage />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/status" element={<StatusPage />} />
-            
-            {/* Legal Pages */}
-            <Route path="/terms" element={<TermsPage />} />
-            <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/cookies" element={<CookiePage />} />
-            <Route path="/licenses" element={<LicensesPage />} />
-            
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  // Move the QueryClient instantiation inside the component
+  const queryClient = new QueryClient();
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/auth" element={<AuthPage />} />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <RequireAuth>
+                    <DashboardPage />
+                  </RequireAuth>
+                } 
+              />
+              <Route 
+                path="/book/create" 
+                element={
+                  <RequireAuth>
+                    <BookCreationPage />
+                  </RequireAuth>
+                } 
+              />
+              <Route 
+                path="/book/plan/:bookId" 
+                element={
+                  <RequireAuth>
+                    <BookPlanPage />
+                  </RequireAuth>
+                } 
+              />
+              
+              {/* Content Pages */}
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/features" element={<FeaturesPage />} />
+              <Route path="/blog" element={<BlogPage />} />
+              
+              {/* Support Pages */}
+              <Route path="/help" element={<HelpCenterPage />} />
+              <Route path="/faq" element={<FAQPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="/status" element={<StatusPage />} />
+              
+              {/* Legal Pages */}
+              <Route path="/terms" element={<TermsPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/cookies" element={<CookiePage />} />
+              <Route path="/licenses" element={<LicensesPage />} />
+              
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
