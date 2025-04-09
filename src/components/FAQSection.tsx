@@ -34,11 +34,11 @@ const faqs = [
   },
   {
     question: "Who created Book-Kreate?",
-    answer: "Book-Kreate is a solo project created by a passionate developer who wanted to make book creation accessible to everyone through AI. It's built with love and dedication by one person who believes in democratizing the publishing process."
+    answer: "Book-Kreate was created by M.Kabilan, a passionate developer who wanted to make book creation accessible to everyone through AI. It's a solo project built with love and dedication to democratize the publishing process."
   },
   {
     question: "Do you have a physical office location?",
-    answer: "Currently, Book-Kreate operates remotely without a physical office. As the project grows, we hope to establish a physical office location in the future. For now, you can reach us through email at youvegottabefreakingkiddingme@gmail.com or through social media."
+    answer: "Currently, Book-Kreate operates remotely without a physical office. As the project grows, we hope to establish a physical office location in the future. For now, you can reach us through email or through our social media channels."
   }
 ];
 

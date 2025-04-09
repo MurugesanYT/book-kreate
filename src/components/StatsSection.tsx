@@ -100,7 +100,7 @@ const StatsSection = () => {
           <div className="text-center mb-8">
             <h3 className="text-2xl font-bold mb-2 text-book-darkText">Solo Creator Project</h3>
             <p className="text-slate-600">
-              Book-Kreate is an independent project developed with passion and dedication by a single creator.
+              Book-Kreate is an independent project developed with passion and dedication by M.Kabilan.
             </p>
           </div>
           

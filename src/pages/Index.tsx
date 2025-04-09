@@ -105,7 +105,7 @@ const Index = () => {
       <div className="absolute bottom-6 left-0 right-0 text-center">
         <div className="inline-flex items-center px-4 py-2 rounded-full bg-book-purple/10 text-book-purple text-sm font-medium mb-2">
           <Heart size={14} className="mr-2 text-book-orange animate-pulse" />
-          <span>Solo project created by one passionate developer</span>
+          <span>Solo project created by M.Kabilan</span>
         </div>
         <p className="text-sm text-slate-500">&copy; {new Date().getFullYear()} Book-Kreate. All rights reserved.</p>
       </div>

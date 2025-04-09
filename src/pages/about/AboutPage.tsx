@@ -101,49 +101,23 @@ const AboutPage = () => {
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-book-darkText mb-4">Our Team</h2>
+              <h2 className="text-3xl font-bold text-book-darkText mb-4">Meet the Founder</h2>
               <p className="text-slate-600 max-w-3xl mx-auto">
-                Meet the passionate individuals behind Book-Kreate who are dedicated to revolutionizing book creation.
+                Book-Kreate is a solo project created by a passionate developer dedicated to revolutionizing book creation.
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <div className="bg-book-lightGray p-6 rounded-lg">
+            <div className="flex justify-center">
+              <div className="bg-book-lightGray p-6 rounded-lg max-w-md">
                 <img 
-                  src="https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=922&q=80" 
-                  alt="CEO" 
+                  src="https://ibb.co/TDdX5dzW" 
+                  alt="M.Kabilan - Founder & CEO" 
                   className="w-full h-64 object-cover rounded-md mb-4"
                 />
-                <h3 className="text-xl font-semibold text-book-darkText">Maya Johnson</h3>
+                <h3 className="text-xl font-semibold text-book-darkText">M.Kabilan</h3>
                 <p className="text-book-purple mb-2">Founder & CEO</p>
                 <p className="text-slate-600 text-sm">
-                  Former novelist and tech entrepreneur passionate about making book creation accessible to everyone.
-                </p>
-              </div>
-              
-              <div className="bg-book-lightGray p-6 rounded-lg">
-                <img 
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80" 
-                  alt="CTO" 
-                  className="w-full h-64 object-cover rounded-md mb-4"
-                />
-                <h3 className="text-xl font-semibold text-book-darkText">David Chen</h3>
-                <p className="text-book-purple mb-2">CTO</p>
-                <p className="text-slate-600 text-sm">
-                  AI researcher and engineer with expertise in natural language processing and generative models.
-                </p>
-              </div>
-              
-              <div className="bg-book-lightGray p-6 rounded-lg">
-                <img 
-                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=688&q=80" 
-                  alt="Editor" 
-                  className="w-full h-64 object-cover rounded-md mb-4"
-                />
-                <h3 className="text-xl font-semibold text-book-darkText">Elena Rodriguez</h3>
-                <p className="text-book-purple mb-2">Head of Content</p>
-                <p className="text-slate-600 text-sm">
-                  Former publishing editor with 15+ years of experience helping authors develop engaging stories.
+                  Passionate developer and writer who created Book-Kreate to make book creation accessible to everyone through the power of AI.
                 </p>
               </div>
             </div>
