@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { BookOpen, Plus, Trash2 } from 'lucide-react';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { BookOpen, Plus, Trash2, LayoutTemplate, Sparkles } from 'lucide-react';
 import { generateBookTitle } from '@/lib/api';
+import { allBookTemplates, getTemplatesByType, BookTemplate } from '@/lib/bookTemplates';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 // Book types
 const BOOK_TYPES = [
@@ -55,11 +63,24 @@ const BookDetailsForm = () => {
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
+  const [activeTab, setActiveTab] = useState("custom");
+  const [availableTemplates, setAvailableTemplates] = useState<BookTemplate[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<BookTemplate | null>(null);
 
   // Get categories based on selected book type
   const getCategories = () => {
     return BOOK_CATEGORIES[bookType] || DEFAULT_CATEGORIES;
   };
+
+  // Update available templates when book type changes
+  useEffect(() => {
+    if (bookType) {
+      const templates = getTemplatesByType(bookType);
+      setAvailableTemplates(templates);
+    } else {
+      setAvailableTemplates([]);
+    }
+  }, [bookType]);
 
   // Handle adding a new credit
   const handleAddCredit = () => {
@@ -110,6 +131,27 @@ const BookDetailsForm = () => {
     } finally {
       setIsGeneratingTitle(false);
     }
+  };
+
+  // Handle template selection
+  const handleSelectTemplate = (template: BookTemplate) => {
+    setSelectedTemplate(template);
+    
+    // Apply template data
+    if (template) {
+      setBookType(template.type);
+      setBookCategory(template.category);
+      setDescription(template.description);
+      
+      // Optionally set the title
+      if (!title) {
+        setTitle(template.title);
+      }
+    }
+    
+    // Switch to the custom tab after selecting a template
+    setActiveTab("custom");
+    toast.success(`Template "${template.title}" applied successfully!`);
   };
 
   // Handle form submission
@@ -167,7 +209,8 @@ const BookDetailsForm = () => {
         category: bookCategory,
         credits: validCredits,
         needsGeneratedTitle: !title,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        template: selectedTemplate ? selectedTemplate.id : null
       };
       
       // For now, we'll just store it in localStorage as a demo
@@ -193,171 +236,280 @@ const BookDetailsForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-4">
-        <div>
-          <div className="flex justify-between items-end mb-1">
-            <Label htmlFor="title">Book Title (Optional)</Label>
-            <Button 
-              type="button" 
-              variant="outline" 
-              size="sm"
-              onClick={handleGenerateTitle}
-              disabled={isGeneratingTitle || !description || !bookType || !bookCategory}
-              className="text-xs"
-            >
-              {isGeneratingTitle ? (
-                <>
-                  <div className="h-3 w-3 border-t-2 border-current rounded-full animate-spin mr-1"></div>
-                  Generating...
-                </>
-              ) : (
-                <>Generate Title</>
-              )}
-            </Button>
-          </div>
-          <Input
-            id="title"
-            placeholder="Leave blank for AI to generate"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <p className="text-sm text-slate-500 mt-1">
-            You can generate a title based on your description, or let AI create one when you submit
-          </p>
-        </div>
-        
-        <div>
-          <Label htmlFor="description" className="text-book-darkText font-medium">
-            Book Description <span className="text-red-500">*</span>
-          </Label>
-          <Textarea
-            id="description"
-            placeholder="Describe your book idea in detail. The more specific, the better the result!"
-            className="h-32"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required
-          />
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="bookType" className="text-book-darkText font-medium">
-              Book Type <span className="text-red-500">*</span>
-            </Label>
-            <Select 
-              value={bookType} 
-              onValueChange={(value) => {
-                setBookType(value);
-                setBookCategory('');
-              }}
-              required
-            >
-              <SelectTrigger id="bookType">
-                <SelectValue placeholder="Select book type" />
-              </SelectTrigger>
-              <SelectContent>
-                {BOOK_TYPES.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {type}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="bookCategory" className="text-book-darkText font-medium">
-              Book Category <span className="text-red-500">*</span>
-            </Label>
-            <Select 
-              value={bookCategory} 
-              onValueChange={setBookCategory}
-              disabled={!bookType}
-              required
-            >
-              <SelectTrigger id="bookCategory">
-                <SelectValue placeholder={bookType ? "Select category" : "Select book type first"} />
-              </SelectTrigger>
-              <SelectContent>
-                {getCategories().map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <Label className="text-book-darkText font-medium">Credits</Label>
-            <Button 
-              type="button" 
-              variant="outline" 
-              size="sm"
-              onClick={handleAddCredit}
-            >
-              <Plus size={16} className="mr-1" />
-              Add Credit
-            </Button>
-          </div>
-          
-          <div className="space-y-3">
-            {credits.map((credit, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <Input
-                  placeholder="Role (e.g., Author, Illustrator)"
-                  value={credit.role}
-                  onChange={(e) => handleUpdateCredit(index, 'role', e.target.value)}
-                  className="flex-1"
-                />
-                <Input
-                  placeholder="Name"
-                  value={credit.name}
-                  onChange={(e) => handleUpdateCredit(index, 'name', e.target.value)}
-                  className="flex-1"
-                />
-                {credits.length > 1 && (
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => handleRemoveCredit(index)}
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <Trash2 size={18} />
-                  </Button>
-                )}
-              </div>
-            ))}
-          </div>
-          <p className="text-sm text-slate-500 mt-2">
-            Add credits for anyone who contributed to your book
-          </p>
-        </div>
-      </div>
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <TabsList className="grid grid-cols-2 mb-6">
+        <TabsTrigger value="custom" className="flex items-center gap-2">
+          <Sparkles size={16} />
+          <span>Custom Book</span>
+        </TabsTrigger>
+        <TabsTrigger value="template" className="flex items-center gap-2">
+          <LayoutTemplate size={16} />
+          <span>Start from Template</span>
+        </TabsTrigger>
+      </TabsList>
       
-      <Button 
-        type="submit" 
-        className="w-full py-6 bg-book-purple hover:bg-book-purple/90"
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? (
-          <div className="flex items-center gap-2">
-            <div className="h-5 w-5 border-t-2 border-white rounded-full animate-spin"></div>
-            <span>Creating Book Plan...</span>
+      <TabsContent value="template" className="space-y-6">
+        <div className="mb-4">
+          <Label htmlFor="templateBookType" className="text-book-darkText font-medium mb-2 block">
+            Select Book Type
+          </Label>
+          <Select 
+            value={bookType} 
+            onValueChange={(value) => {
+              setBookType(value);
+              setBookCategory('');
+              setSelectedTemplate(null);
+            }}
+          >
+            <SelectTrigger id="templateBookType">
+              <SelectValue placeholder="Select book type to see templates" />
+            </SelectTrigger>
+            <SelectContent>
+              {BOOK_TYPES.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {type}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {bookType && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {availableTemplates.length > 0 ? (
+              availableTemplates.map((template) => (
+                <Card key={template.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader>
+                    <CardTitle>{template.title}</CardTitle>
+                    <CardDescription>{template.type} - {template.category}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-slate-600 mb-2">{template.description}</p>
+                    <div className="text-xs text-slate-500">
+                      <span className="font-medium">Structure:</span> {template.structure.length} chapters
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button 
+                      onClick={() => handleSelectTemplate(template)} 
+                      variant="secondary" 
+                      className="w-full"
+                    >
+                      Use This Template
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))
+            ) : (
+              <div className="col-span-2 text-center py-8 bg-slate-50 rounded-md">
+                <p className="text-slate-500">No templates available for this book type yet.</p>
+              </div>
+            )}
           </div>
-        ) : (
-          <>
-            <BookOpen className="mr-2" />
-            Create Book Plan
-          </>
         )}
-      </Button>
-    </form>
+        
+        {!bookType && (
+          <div className="text-center py-12 bg-slate-50 rounded-md">
+            <LayoutTemplate size={48} className="mx-auto mb-4 text-slate-400" />
+            <h3 className="text-lg font-medium text-slate-700 mb-2">Select a Book Type</h3>
+            <p className="text-slate-500 max-w-md mx-auto">
+              Choose a book type from the dropdown above to see available templates for your project.
+            </p>
+          </div>
+        )}
+      </TabsContent>
+
+      <TabsContent value="custom">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between items-end mb-1">
+                <Label htmlFor="title">Book Title (Optional)</Label>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleGenerateTitle}
+                  disabled={isGeneratingTitle || !description || !bookType || !bookCategory}
+                  className="text-xs"
+                >
+                  {isGeneratingTitle ? (
+                    <>
+                      <div className="h-3 w-3 border-t-2 border-current rounded-full animate-spin mr-1"></div>
+                      Generating...
+                    </>
+                  ) : (
+                    <>Generate Title</>
+                  )}
+                </Button>
+              </div>
+              <Input
+                id="title"
+                placeholder="Leave blank for AI to generate"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+              <p className="text-sm text-slate-500 mt-1">
+                You can generate a title based on your description, or let AI create one when you submit
+              </p>
+            </div>
+            
+            <div>
+              <Label htmlFor="description" className="text-book-darkText font-medium">
+                Book Description <span className="text-red-500">*</span>
+              </Label>
+              <Textarea
+                id="description"
+                placeholder="Describe your book idea in detail. The more specific, the better the result!"
+                className="h-32"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="bookType" className="text-book-darkText font-medium">
+                  Book Type <span className="text-red-500">*</span>
+                </Label>
+                <Select 
+                  value={bookType} 
+                  onValueChange={(value) => {
+                    setBookType(value);
+                    setBookCategory('');
+                  }}
+                  required
+                >
+                  <SelectTrigger id="bookType">
+                    <SelectValue placeholder="Select book type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {BOOK_TYPES.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="bookCategory" className="text-book-darkText font-medium">
+                  Book Category <span className="text-red-500">*</span>
+                </Label>
+                <Select 
+                  value={bookCategory} 
+                  onValueChange={setBookCategory}
+                  disabled={!bookType}
+                  required
+                >
+                  <SelectTrigger id="bookCategory">
+                    <SelectValue placeholder={bookType ? "Select category" : "Select book type first"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getCategories().map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-book-darkText font-medium">Credits</Label>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleAddCredit}
+                >
+                  <Plus size={16} className="mr-1" />
+                  Add Credit
+                </Button>
+              </div>
+              
+              <div className="space-y-3">
+                {credits.map((credit, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <Input
+                      placeholder="Role (e.g., Author, Illustrator)"
+                      value={credit.role}
+                      onChange={(e) => handleUpdateCredit(index, 'role', e.target.value)}
+                      className="flex-1"
+                    />
+                    <Input
+                      placeholder="Name"
+                      value={credit.name}
+                      onChange={(e) => handleUpdateCredit(index, 'name', e.target.value)}
+                      className="flex-1"
+                    />
+                    {credits.length > 1 && (
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => handleRemoveCredit(index)}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 size={18} />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-slate-500 mt-2">
+                Add credits for anyone who contributed to your book
+              </p>
+            </div>
+          </div>
+          
+          {selectedTemplate && (
+            <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center">
+                  <LayoutTemplate size={16} className="text-blue-500 mt-1 mr-2" />
+                  <div>
+                    <h4 className="text-sm font-medium text-blue-800">Using Template: {selectedTemplate.title}</h4>
+                    <p className="text-xs text-blue-600">Your book will be pre-structured based on this template</p>
+                  </div>
+                </div>
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setSelectedTemplate(null)}
+                  className="text-blue-500 hover:text-blue-700 hover:bg-blue-100 text-xs"
+                >
+                  Remove Template
+                </Button>
+              </div>
+            </div>
+          )}
+          
+          <Button 
+            type="submit" 
+            className="w-full py-6 bg-book-purple hover:bg-book-purple/90"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <div className="flex items-center gap-2">
+                <div className="h-5 w-5 border-t-2 border-white rounded-full animate-spin"></div>
+                <span>Creating Book Plan...</span>
+              </div>
+            ) : (
+              <>
+                <BookOpen className="mr-2" />
+                Create Book Plan
+              </>
+            )}
+          </Button>
+        </form>
+      </TabsContent>
+    </Tabs>
   );
 };
 

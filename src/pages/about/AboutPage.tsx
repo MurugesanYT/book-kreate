@@ -110,9 +110,13 @@ const AboutPage = () => {
             <div className="flex justify-center">
               <div className="bg-book-lightGray p-6 rounded-lg max-w-md">
                 <img 
-                  src="https://i.ibb.co/TDdX5dz/founder-image.jpg" 
+                  src="https://i.ibb.co/Y4w9Gwv/3d820bd3-58a4-4c1c-b447-b11043015ef8.png" 
                   alt="M.Kabilan - Founder & CEO" 
                   className="w-full h-64 object-cover rounded-md mb-4"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "https://i.ibb.co/TDdX5dz/founder-image.jpg"; // Fallback image
+                  }}
                 />
                 <h3 className="text-xl font-semibold text-book-darkText">M.Kabilan</h3>
                 <p className="text-book-purple mb-2">Founder & CEO</p>

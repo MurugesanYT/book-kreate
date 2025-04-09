@@ -2,6 +2,7 @@
 import { toast } from "sonner";
 import { generateWithGemini } from "./geminiService";
 import { BookData, BookItemType } from "./types";
+import { allBookTemplates } from "../bookTemplates";
 
 // Function to generate book content based on type
 export const generateBookContent = async (
@@ -12,13 +13,32 @@ export const generateBookContent = async (
 ): Promise<string> => {
   let prompt = "";
   
+  // Check if a template is being used
+  const templateId = book.template as string | undefined;
+  const template = templateId ? allBookTemplates.find(t => t.id === templateId) : undefined;
+  
   if (itemType === 'cover') {
-    prompt = `Create a cover page for a ${book.type} book titled "${book.title}" in the ${book.category} category. This book is about: ${book.description}. Format the response using markdown with a prominent title and any subtitle or author information you can infer. Only include the formatted cover page content, no additional instructions or explanations.`;
+    prompt = `Create a cover page for a ${book.type} book titled "${book.title}" in the ${book.category} category. This book is about: ${book.description}.`;
+    
+    if (template?.coverSuggestion) {
+      prompt += ` Consider the following design concept: ${template.coverSuggestion}.`;
+    }
+    
+    prompt += ` Format the response using markdown with a prominent title and any subtitle or author information you can infer. Only include the formatted cover page content, no additional instructions or explanations.`;
   } else if (itemType === 'chapter') {
     prompt = `Write a detailed chapter titled "${itemTitle}" for a ${book.type} book titled "${book.title}" in the ${book.category} category. 
     ${itemDescription ? `This chapter covers: ${itemDescription}.` : ''} 
-    The book overall is about: ${book.description}. 
-    Make it engaging, appropriate for the ${book.type} genre, and at least 500 words in length. Format the response using markdown with proper headings, paragraphs, and any dialogue formatting if needed. Only include the actual chapter content, no additional instructions or explanations.`;
+    The book overall is about: ${book.description}.`;
+    
+    // If using a template, find the matching chapter structure and add it to the prompt
+    if (template) {
+      const chapterStructureItem = template.structure.find(item => item.title === itemTitle);
+      if (chapterStructureItem) {
+        prompt += ` According to the book structure, this chapter should focus on: ${chapterStructureItem.description}.`;
+      }
+    }
+    
+    prompt += ` Make it engaging, appropriate for the ${book.type} genre, and at least 500 words in length. Format the response using markdown with proper headings, paragraphs, and any dialogue formatting if needed. Only include the actual chapter content, no additional instructions or explanations.`;
   } else if (itemType === 'credits') {
     // Create a credits list prompt including the book's contributors
     const creditsList = book.credits && book.credits.length > 0

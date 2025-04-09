@@ -1,263 +1,164 @@
-
-import React, { useState } from 'react';
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
-import { Mail, MessageSquare, Phone, MapPin, Clock } from 'lucide-react';
-import { toast } from "sonner";
+import React from 'react';
+import { Link } from 'react-router-dom';
 import LandingHeader from '@/components/LandingHeader';
 import LandingFooter from '@/components/LandingFooter';
-
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
-  email: z.string().email({
-    message: "Please enter a valid email address.",
-  }),
-  subject: z.string().min(5, {
-    message: "Subject must be at least 5 characters.",
-  }),
-  category: z.string({
-    required_error: "Please select a category.",
-  }),
-  message: z.string().min(10, {
-    message: "Message must be at least 10 characters.",
-  }),
-});
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { 
+  Mail, PhoneCall, MessageSquare, Send, 
+  Facebook as FacebookIcon, Twitter as XIcon, Instagram as InstagramIcon, Github as GithubIcon
+} from 'lucide-react';
 
 const ContactPage = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      subject: "",
-      category: "",
-      message: "",
-    },
-  });
-
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      console.log(values);
-      toast.success("Message sent successfully! We'll get back to you soon.");
-      form.reset();
-      setIsSubmitting(false);
-    }, 1500);
-  }
-
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="min-h-screen flex flex-col">
       <LandingHeader />
       
-      <main className="flex-grow container mx-auto px-4 py-12">
-        <div className="max-w-5xl mx-auto">
-          <h1 className="text-4xl font-bold text-center mb-4">Contact Us</h1>
-          <p className="text-lg text-center text-muted-foreground mb-12">
-            Have questions or feedback? We're here to help!
-          </p>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Contact Form */}
-            <div className="md:col-span-2">
-              <Card>
-                <CardContent className="pt-6">
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Your name" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email</FormLabel>
-                              <FormControl>
-                                <Input placeholder="your.email@example.com" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="subject"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Subject</FormLabel>
-                              <FormControl>
-                                <Input placeholder="What's this about?" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={form.control}
-                          name="category"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Category</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select a category" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="general">General Inquiry</SelectItem>
-                                  <SelectItem value="support">Technical Support</SelectItem>
-                                  <SelectItem value="billing">Billing Question</SelectItem>
-                                  <SelectItem value="feedback">Feedback/Suggestion</SelectItem>
-                                  <SelectItem value="partnership">Partnership Opportunity</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      
-                      <FormField
-                        control={form.control}
-                        name="message"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Message</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Please provide details about your inquiry..." 
-                                className="min-h-[150px]" 
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
+      <main className="flex-grow">
+        {/* Hero Section */}
+        <section className="bg-gradient-to-r from-book-purple/10 to-book-orange/10 py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-book-darkText mb-6">
+              Contact Us
+            </h1>
+            <p className="text-xl text-slate-600 max-w-3xl mx-auto mb-8">
+              We're here to help! Reach out to us with any questions, feedback, or inquiries.
+            </p>
+          </div>
+        </section>
+        
+        {/* Contact Form */}
+        <section className="py-16 bg-white">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="md:grid md:grid-cols-2 md:gap-8">
+              <div>
+                <h2 className="text-2xl font-bold text-book-darkText mb-4">Send us a Message</h2>
+                <form className="space-y-4">
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-slate-700">Name</label>
+                    <div className="mt-1">
+                      <Input
+                        type="text"
+                        id="name"
+                        placeholder="Your Name"
+                        className="shadow-sm focus:ring-book-purple focus:border-book-purple block w-full sm:text-sm border-slate-300 rounded-md"
                       />
-                      
-                      <Button type="submit" className="w-full" disabled={isSubmitting}>
-                        {isSubmitting ? "Sending..." : "Send Message"}
-                      </Button>
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
-            </div>
-            
-            {/* Contact Information */}
-            <div>
-              <Card>
-                <CardContent className="pt-6">
-                  <h3 className="text-xl font-semibold mb-4">Contact Information</h3>
-                  
-                  <div className="space-y-4">
-                    <div className="flex items-start">
-                      <Mail className="h-5 w-5 text-primary mt-0.5 mr-3" />
-                      <div>
-                        <p className="font-medium">Email Us</p>
-                        <a href="mailto:kabilanmurugesan2004@gmail.com" className="text-sm text-muted-foreground hover:text-primary">
-                          kabilanmurugesan2004@gmail.com
-                        </a>
-                      </div>
                     </div>
-                    
-                    <div className="flex items-start">
-                      <Phone className="h-5 w-5 text-primary mt-0.5 mr-3" />
-                      <div>
-                        <p className="font-medium">Call Us</p>
-                        <p className="text-sm text-muted-foreground">
-                          Contact via email for phone details
-                        </p>
-                      </div>
+                  </div>
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-slate-700">Email</label>
+                    <div className="mt-1">
+                      <Input
+                        type="email"
+                        id="email"
+                        placeholder="Your Email"
+                        className="shadow-sm focus:ring-book-purple focus:border-book-purple block w-full sm:text-sm border-slate-300 rounded-md"
+                      />
                     </div>
-                    
-                    <div className="flex items-start">
-                      <MapPin className="h-5 w-5 text-primary mt-0.5 mr-3" />
-                      <div>
-                        <p className="font-medium">Our Office</p>
-                        <p className="text-sm text-muted-foreground">
-                          Currently operating remotely
-                        </p>
-                      </div>
+                  </div>
+                  <div>
+                    <label htmlFor="subject" className="block text-sm font-medium text-slate-700">Subject</label>
+                    <div className="mt-1">
+                      <Input
+                        type="text"
+                        id="subject"
+                        placeholder="Subject"
+                        className="shadow-sm focus:ring-book-purple focus:border-book-purple block w-full sm:text-sm border-slate-300 rounded-md"
+                      />
                     </div>
-                    
-                    <div className="flex items-start">
-                      <Clock className="h-5 w-5 text-primary mt-0.5 mr-3" />
-                      <div>
-                        <p className="font-medium">Business Hours</p>
-                        <p className="text-sm text-muted-foreground">
-                          Monday - Friday: 9am - 6pm IST<br />
-                          Saturday - Sunday: By appointment
-                        </p>
-                      </div>
+                  </div>
+                  <div>
+                    <label htmlFor="message" className="block text-sm font-medium text-slate-700">Message</label>
+                    <div className="mt-1">
+                      <Textarea
+                        id="message"
+                        rows={4}
+                        placeholder="Your Message"
+                        className="shadow-sm focus:ring-book-purple focus:border-book-purple block w-full sm:text-sm border-slate-300 rounded-md"
+                      />
+                    </div>
+                  </div>
+                  <Button type="submit" className="bg-book-purple hover:bg-book-purple/90 text-white">
+                    <Send size={16} className="mr-2" />
+                    Send Message
+                  </Button>
+                </form>
+              </div>
+              
+              <div className="mt-12 md:mt-0">
+                <h2 className="text-2xl font-bold text-book-darkText mb-4">Contact Information</h2>
+                <p className="text-slate-600 mb-6">
+                  Feel free to reach out to us through the contact form or using the information below.
+                </p>
+                
+                <div className="space-y-4">
+                  <div className="flex items-start">
+                    <Mail size={20} className="text-book-orange mr-4" />
+                    <div>
+                      <h3 className="text-lg font-medium text-book-darkText">Email</h3>
+                      <p className="text-slate-600">kabilanmurugesan2004@gmail.com</p>
                     </div>
                   </div>
                   
-                  <div className="mt-6 pt-6 border-t">
-                    <h4 className="font-medium mb-2">Connect With Us</h4>
-                    <div className="flex space-x-4">
-                      <a href="https://www.facebook.com/profile.php?id=61574131919351" className="text-muted-foreground hover:text-primary">
-                        <Facebook className="h-5 w-5" />
-                      </a>
-                      <a href="https://x.com/_fan_boi_lm10_" className="text-muted-foreground hover:text-primary">
-                        <X className="h-5 w-5" />
-                      </a>
-                      <a href="https://www.instagram.com/_fan_boi_lm10_" className="text-muted-foreground hover:text-primary">
-                        <Instagram className="h-5 w-5" />
-                      </a>
-                      <a href="https://www.github.com/MurugesanYT" className="text-muted-foreground hover:text-primary">
-                        <Github className="h-5 w-5" />
-                      </a>
+                  <div className="flex items-start">
+                    <PhoneCall size={20} className="text-book-orange mr-4" />
+                    <div>
+                      <h3 className="text-lg font-medium text-book-darkText">Phone</h3>
+                      <p className="text-slate-600">Currently not available</p>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                  
+                  <div className="flex items-start">
+                    <MessageSquare size={20} className="text-book-orange mr-4" />
+                    <div>
+                      <h3 className="text-lg font-medium text-book-darkText">Social Media</h3>
+                      <div className="flex space-x-4 mt-2">
+                        <Link to="https://www.facebook.com/profile.php?id=61574131919351" className="text-slate-400 hover:text-book-purple transition-colors" aria-label="Facebook">
+                          <FacebookIcon size={20} />
+                        </Link>
+                        <Link to="https://x.com/_fan_boi_lm10_" className="text-slate-400 hover:text-book-purple transition-colors" aria-label="X">
+                          <XIcon size={20} />
+                        </Link>
+                        <Link to="https://www.instagram.com/@_fan_boi_lm10_" className="text-slate-400 hover:text-book-purple transition-colors" aria-label="Instagram">
+                          <InstagramIcon size={20} />
+                        </Link>
+                        <Link to="https://www.github.com/MurugesanYT" className="text-slate-400 hover:text-book-purple transition-colors" aria-label="Github">
+                          <GithubIcon size={20} />
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
+        
+        {/* Call to Action */}
+        <section className="py-16 bg-gradient-to-r from-book-purple to-book-orange text-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl font-bold mb-6">Ready to Start Your Book Journey?</h2>
+            <p className="text-xl max-w-3xl mx-auto mb-8 text-white/90">
+              Join thousands of authors who have already discovered the power of AI-assisted book creation.
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Button 
+                asChild
+                className="bg-white text-book-purple hover:bg-white/90 px-8 py-6 text-lg"
+              >
+                <Link to="/auth">Get Started</Link>
+              </Button>
+              <Button 
+                asChild
+                variant="outline" 
+                className="bg-transparent border-white text-white hover:bg-white/10 px-8 py-6 text-lg"
+              >
+                <Link to="/features">Learn More</Link>
+              </Button>
+            </div>
+          </div>
+        </section>
       </main>
       
       <LandingFooter />

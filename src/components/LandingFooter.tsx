@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, X, Instagram, Github, Mail, MapPin } from 'lucide-react';
+import { Facebook, Twitter as X, Instagram, Github, Mail, MapPin } from 'lucide-react';
 
 const LandingFooter = () => {
   return (

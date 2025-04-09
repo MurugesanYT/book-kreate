@@ -17,6 +17,7 @@ export interface BookData {
   credits: Credit[];
   needsGeneratedTitle?: boolean;
   timestamp: string;
+  template?: string | null;
 }
 
 export interface ChapterItem {
