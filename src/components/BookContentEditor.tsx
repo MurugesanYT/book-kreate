@@ -7,13 +7,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
-import { Download, Save, Settings, PenTool, Image, LayoutTemplate } from 'lucide-react';
+import { Download, Save, Settings, PenTool, Image, LayoutTemplate, Sparkles } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PDFExportOptions } from '@/lib/api/types';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Chapter {
   title: string;
@@ -50,10 +51,18 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
     coverPage: true,
     colorScheme: 'elegant',
     pageSize: 'a4',
-    orientation: 'portrait'
+    orientation: 'portrait',
+    decorativeElements: true,
+    chapterDividers: true,
+    dropCaps: false,
+    textAlignment: 'justified',
+    lineSpacing: 'normal',
+    pageMargins: 'normal',
+    paperTextureEffect: false
   });
   const [isExporting, setIsExporting] = useState(false);
   const [formattingTab, setFormattingTab] = useState<string>('content');
+  const [previewTheme, setPreviewTheme] = useState<string>(pdfOptions.colorScheme);
 
   React.useEffect(() => {
     setEditedBook(book);
@@ -95,21 +104,243 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
     toast.success('Book content saved successfully');
   };
 
-  // Color schemes for PDF export
+  // Enhanced color schemes for PDF export
   const colorSchemes = {
-    default: { bg: '#ffffff', text: '#000000', heading: '#000000', accent: '#4a90e2' },
-    elegant: { bg: '#f9f9f9', text: '#333333', heading: '#222222', accent: '#8e44ad' },
-    modern: { bg: '#ffffff', text: '#2c3e50', heading: '#16a085', accent: '#3498db' },
-    classic: { bg: '#fff8e1', text: '#3e2723', heading: '#5d4037', accent: '#795548' },
-    vibrant: { bg: '#ffffff', text: '#333333', heading: '#e74c3c', accent: '#f39c12' }
+    default: { bg: '#ffffff', text: '#000000', heading: '#000000', accent: '#4a90e2', borderColor: '#dddddd' },
+    elegant: { bg: '#f9f9f9', text: '#333333', heading: '#222222', accent: '#8e44ad', borderColor: '#d4c5e5' },
+    modern: { bg: '#ffffff', text: '#2c3e50', heading: '#16a085', accent: '#3498db', borderColor: '#b3e5fc' },
+    classic: { bg: '#fff8e1', text: '#3e2723', heading: '#5d4037', accent: '#795548', borderColor: '#d7ccc8' },
+    vibrant: { bg: '#ffffff', text: '#333333', heading: '#e74c3c', accent: '#f39c12', borderColor: '#fbd7b5' },
+    minimalist: { bg: '#fcfcfc', text: '#202020', heading: '#404040', accent: '#808080', borderColor: '#e0e0e0' },
+    artistic: { bg: '#fffaf0', text: '#2d3436', heading: '#6c5ce7', accent: '#fd79a8', borderColor: '#ffeaa7' },
+    scholarly: { bg: '#f5f5f5', text: '#333333', heading: '#1e3a8a', accent: '#6b7280', borderColor: '#cbd5e1' },
+    romantic: { bg: '#fff0f3', text: '#4a281f', heading: '#c71f37', accent: '#ff758f', borderColor: '#ffd8e2' },
+    fantasy: { bg: '#f0f8ff', text: '#333652', heading: '#2a6b96', accent: '#c06c84', borderColor: '#d8e2dc' }
   };
 
   // Font families for PDF export
   const fontFamilies = [
     { value: 'helvetica', label: 'Helvetica (Sans-serif)' },
     { value: 'times', label: 'Times (Serif)' },
-    { value: 'courier', label: 'Courier (Monospace)' }
+    { value: 'courier', label: 'Courier (Monospace)' },
+    { value: 'georgia', label: 'Georgia (Elegant Serif)' }
   ];
+
+  // Decorative elements for different themes
+  const getDecorations = (theme: string, doc: jsPDF, pageWidth: number, pageHeight: number, margin: number) => {
+    const colorScheme = colorSchemes[theme as keyof typeof colorSchemes] || colorSchemes.default;
+    
+    switch(theme) {
+      case 'elegant':
+        // Elegant corners with flourishes
+        doc.setDrawColor(colorScheme.accent);
+        doc.setLineWidth(0.5);
+        
+        // Top left corner flourish
+        doc.line(margin, margin + 5, margin + 5, margin);
+        doc.line(margin, margin + 15, margin + 15, margin);
+        
+        // Top right corner flourish
+        doc.line(pageWidth - margin, margin + 5, pageWidth - margin - 5, margin);
+        doc.line(pageWidth - margin, margin + 15, pageWidth - margin - 15, margin);
+        
+        // Bottom left corner flourish
+        doc.line(margin, pageHeight - margin - 5, margin + 5, pageHeight - margin);
+        doc.line(margin, pageHeight - margin - 15, margin + 15, pageHeight - margin);
+        
+        // Bottom right corner flourish
+        doc.line(pageWidth - margin, pageHeight - margin - 5, pageWidth - margin - 5, pageHeight - margin);
+        doc.line(pageWidth - margin, pageHeight - margin - 15, pageWidth - margin - 15, pageHeight - margin);
+        break;
+        
+      case 'artistic':
+        // Watercolor-like border
+        doc.setDrawColor(colorScheme.accent);
+        doc.setFillColor(colorScheme.borderColor);
+        doc.setLineWidth(0.3);
+        
+        // Random "splotches" around the corners
+        for (let i = 0; i < 8; i++) {
+          const x = i < 4 ? margin + (i * 2) : pageWidth - margin - ((i - 4) * 2);
+          const y = i < 2 || (i > 3 && i < 6) ? margin + 5 : pageHeight - margin - 5;
+          const size = 2 + Math.random() * 4;
+          doc.circle(x, y, size, 'FD');
+        }
+        break;
+        
+      case 'fantasy':
+        // Mystical borders
+        doc.setDrawColor(colorScheme.accent);
+        doc.setLineWidth(0.5);
+        
+        // Wavy top and bottom borders
+        for (let x = margin; x < pageWidth - margin; x += 10) {
+          const yOffset = Math.sin((x - margin) / 20) * 3;
+          doc.line(x, margin + yOffset, x + 5, margin + yOffset);
+          doc.line(x, pageHeight - margin + yOffset, x + 5, pageHeight - margin + yOffset);
+        }
+        break;
+        
+      case 'scholarly':
+        // Clean border with academic flair
+        doc.setDrawColor(colorScheme.heading);
+        doc.setLineWidth(0.7);
+        doc.rect(margin, margin, pageWidth - (margin * 2), pageHeight - (margin * 2), 'S');
+        
+        // Small decorative elements at corners
+        const cornerSize = 10;
+        doc.setFillColor(colorScheme.accent);
+        doc.rect(margin, margin, cornerSize, cornerSize, 'F');
+        doc.rect(pageWidth - margin - cornerSize, margin, cornerSize, cornerSize, 'F');
+        doc.rect(margin, pageHeight - margin - cornerSize, cornerSize, cornerSize, 'F');
+        doc.rect(pageWidth - margin - cornerSize, pageHeight - margin - cornerSize, cornerSize, cornerSize, 'F');
+        break;
+        
+      case 'romantic':
+        // Soft flowing design
+        doc.setDrawColor(colorScheme.accent);
+        doc.setLineWidth(0.4);
+        
+        // Heart-like curves in corners
+        const curveSize = 15;
+        
+        // Top left
+        doc.lines([[curveSize, 0], [0, -curveSize]], margin + curveSize, margin + curveSize, [0.5, 0.5]);
+        
+        // Top right
+        doc.lines([[0, -curveSize], [-curveSize, 0]], pageWidth - margin - curveSize, margin + curveSize, [0.5, 0.5]);
+        
+        // Bottom left
+        doc.lines([[0, curveSize], [curveSize, 0]], margin + curveSize, pageHeight - margin - curveSize, [0.5, 0.5]);
+        
+        // Bottom right
+        doc.lines([[-curveSize, 0], [0, curveSize]], pageWidth - margin - curveSize, pageHeight - margin - curveSize, [0.5, 0.5]);
+        break;
+        
+      default:
+        // Simple border
+        if (pdfOptions.decorativeElements) {
+          doc.setDrawColor(colorScheme.accent);
+          doc.setLineWidth(0.5);
+          doc.rect(margin, margin, pageWidth - (margin * 2), pageHeight - (margin * 2), 'S');
+        }
+    }
+  };
+
+  // Apply paper texture effect
+  const applyPaperTexture = (doc: jsPDF, pageWidth: number, pageHeight: number, colorScheme: any) => {
+    if (!pdfOptions.paperTextureEffect) return;
+    
+    // Set a very light color for texture
+    doc.setFillColor(colorScheme.text);
+    doc.setGlobalAlpha(0.01);
+    
+    // Create a subtle noise pattern
+    const dotSpacing = 2;
+    for (let x = 0; x < pageWidth; x += dotSpacing) {
+      for (let y = 0; y < pageHeight; y += dotSpacing) {
+        if (Math.random() > 0.85) {
+          const size = 0.1 + Math.random() * 0.2;
+          doc.circle(x, y, size, 'F');
+        }
+      }
+    }
+    
+    doc.setGlobalAlpha(1);
+  };
+
+  // Create chapter dividers
+  const createChapterDivider = (doc: jsPDF, pageWidth: number, colorScheme: any) => {
+    if (!pdfOptions.chapterDividers) return;
+    
+    doc.setDrawColor(colorScheme.accent);
+    doc.setLineWidth(0.5);
+    
+    const margin = pdfOptions.includeMargins ? 20 : 10;
+    const contentWidth = pageWidth - (margin * 2);
+    
+    // Draw decorative divider based on theme
+    switch(pdfOptions.colorScheme) {
+      case 'elegant':
+        // Elegant flowing divider
+        const centerX = pageWidth / 2;
+        doc.line(centerX - contentWidth/4, 25, centerX + contentWidth/4, 25);
+        doc.circle(centerX, 25, 2, 'F');
+        doc.circle(centerX - contentWidth/4, 25, 1, 'F');
+        doc.circle(centerX + contentWidth/4, 25, 1, 'F');
+        break;
+        
+      case 'fantasy':
+        // Fantasy-style divider with runes
+        const divPoints = 7;
+        const divWidth = contentWidth * 0.7;
+        const startX = (pageWidth - divWidth) / 2;
+        
+        doc.line(startX, 25, startX + divWidth, 25);
+        
+        for (let i = 0; i < divPoints; i++) {
+          const x = startX + (divWidth * i / (divPoints - 1));
+          if (i % 2 === 0) {
+            doc.circle(x, 25, 1.5, 'F');
+          } else {
+            doc.rect(x - 1, 23, 2, 4, 'F');
+          }
+        }
+        break;
+        
+      case 'artistic':
+        // Artistic brush-like divider
+        doc.setLineWidth(1);
+        doc.setLineCap('round');
+        doc.setLineJoin('round');
+        
+        const segments = 12;
+        const segLength = contentWidth * 0.8 / segments;
+        const startXArt = (pageWidth - contentWidth * 0.8) / 2;
+        
+        for (let i = 0; i < segments; i++) {
+          const x1 = startXArt + i * segLength;
+          const x2 = x1 + segLength;
+          const y1 = 25 + (Math.random() - 0.5) * 2;
+          const y2 = 25 + (Math.random() - 0.5) * 2;
+          doc.line(x1, y1, x2, y2);
+        }
+        break;
+        
+      default:
+        // Standard divider
+        doc.line(margin, 25, pageWidth - margin, 25);
+    }
+  };
+  
+  // Apply drop caps effect to the first letter of a paragraph
+  const applyDropCaps = (doc: jsPDF, text: string, x: number, y: number, colorScheme: any) => {
+    if (!pdfOptions.dropCaps || !text || text.length === 0) return 0;
+    
+    const firstChar = text.charAt(0);
+    const restOfText = text.substring(1);
+    
+    // Draw the drop cap
+    doc.setFont(pdfOptions.fontFamily, 'bold');
+    doc.setFontSize(pdfOptions.fontSize * 3);
+    doc.setTextColor(colorScheme.heading);
+    doc.text(firstChar, x, y);
+    
+    // Calculate the width of the drop cap
+    const dropCapWidth = doc.getTextWidth(firstChar) + 2;
+    
+    // Reset font for the rest of the text
+    doc.setFont(pdfOptions.fontFamily, 'normal');
+    doc.setFontSize(pdfOptions.fontSize);
+    doc.setTextColor(colorScheme.text);
+    
+    // Return the rest of the text and the x-offset
+    return { 
+      restOfText, 
+      dropCapWidth,
+      lineHeight: pdfOptions.fontSize * 3 * 0.25  // Approximate line height
+    };
+  };
 
   const exportToPdf = () => {
     try {
@@ -126,7 +357,20 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
       
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
-      const margin = pdfOptions.includeMargins ? 20 : 10;
+      
+      // Adjust margins based on settings
+      let margin;
+      switch(pdfOptions.pageMargins) {
+        case 'wide': margin = 25; break;
+        case 'narrow': margin = 15; break;
+        default: margin = 20; // normal
+      }
+      
+      // Adjust if margins setting is off
+      if (!pdfOptions.includeMargins) {
+        margin = 10;
+      }
+      
       const contentWidth = pageWidth - (margin * 2);
       
       // Set font family
@@ -136,42 +380,103 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
       // Base font size
       const baseFontSize = pdfOptions.fontSize || 12;
       
-      // First page - Title Page
+      // Set line height based on spacing settings
+      let lineHeight;
+      switch(pdfOptions.lineSpacing) {
+        case 'compact': lineHeight = 1.2; break;
+        case 'relaxed': lineHeight = 1.8; break;
+        default: lineHeight = 1.5; // normal
+      }
+      
+      // First page - Title Page with enhanced styling
       doc.setFillColor(colorScheme.bg);
       doc.rect(0, 0, pageWidth, pageHeight, 'F');
       
-      // Add decorative elements
-      doc.setDrawColor(colorScheme.accent);
-      doc.setLineWidth(1);
-      doc.line(margin, 40, pageWidth - margin, 40);
-      doc.line(margin, pageHeight - 40, pageWidth - margin, pageHeight - 40);
+      // Apply paper texture if enabled
+      applyPaperTexture(doc, pageWidth, pageHeight, colorScheme);
       
-      // Title
+      // Add decorative elements based on theme
+      if (pdfOptions.decorativeElements) {
+        getDecorations(pdfOptions.colorScheme, doc, pageWidth, pageHeight, margin);
+      }
+      
+      // Title styling based on theme
       doc.setTextColor(colorScheme.heading);
       doc.setFontSize(baseFontSize * 3);
       doc.setFont(fontFamily, 'bold');
+      
+      // Add decorative accent lines
+      doc.setDrawColor(colorScheme.accent);
+      doc.setLineWidth(1);
+      if (pdfOptions.colorScheme === 'elegant' || pdfOptions.colorScheme === 'artistic') {
+        // Curved decorative lines
+        doc.line(margin, 60, pageWidth / 2 - 20, 55);
+        doc.line(pageWidth / 2 + 20, 55, pageWidth - margin, 60);
+        doc.line(margin, pageHeight - 60, pageWidth / 2 - 20, pageHeight - 55);
+        doc.line(pageWidth / 2 + 20, pageHeight - 55, pageWidth - margin, pageHeight - 60);
+      } else {
+        // Straight lines
+        doc.line(margin, 50, pageWidth - margin, 50);
+        doc.line(margin, pageHeight - 50, pageWidth - margin, pageHeight - 50);
+      }
+      
+      // Title text with drop shadow effect for certain themes
+      if (pdfOptions.colorScheme === 'vibrant' || pdfOptions.colorScheme === 'fantasy') {
+        doc.setTextColor('#00000022');
+        doc.text(editedBook.title || 'Untitled Book', pageWidth / 2 + 1, 82, { align: 'center' });
+        doc.setTextColor(colorScheme.heading);
+      }
+      
       doc.text(editedBook.title || 'Untitled Book', pageWidth / 2, 80, { align: 'center' });
       
-      // Genre
-      doc.setTextColor(colorScheme.text);
+      // Genre with special styling
+      doc.setTextColor(colorScheme.accent);
       doc.setFontSize(baseFontSize * 1.5);
       doc.setFont(fontFamily, 'italic');
-      doc.text(editedBook.genre || 'No Genre', pageWidth / 2, 100, { align: 'center' });
       
-      // Description
+      if (pdfOptions.colorScheme === 'modern' || pdfOptions.colorScheme === 'minimalist') {
+        // Boxed genre for modern/minimalist themes
+        const genreText = editedBook.genre || 'No Genre';
+        const genreWidth = doc.getTextWidth(genreText) + 10;
+        doc.roundedRect(pageWidth / 2 - genreWidth / 2, 95, genreWidth, 12, 2, 2, 'F');
+        doc.setTextColor('#ffffff');
+        doc.text(genreText, pageWidth / 2, 103, { align: 'center' });
+      } else {
+        doc.text(editedBook.genre || 'No Genre', pageWidth / 2, 100, { align: 'center' });
+      }
+      
+      // Description with enhanced formatting
       if (editedBook.description) {
         doc.setFontSize(baseFontSize);
         doc.setFont(fontFamily, 'normal');
+        doc.setTextColor(colorScheme.text);
+        
+        // Apply text alignment
         const descLines = doc.splitTextToSize(editedBook.description, contentWidth);
-        doc.text(descLines, pageWidth / 2, 130, { align: 'center' });
+        const textAlign = pdfOptions.textAlignment as any;
+        doc.text(descLines, pdfOptions.textAlignment === 'center' ? pageWidth / 2 : margin, 130, { 
+          align: textAlign === 'justified' ? 'justify' : textAlign
+        });
       }
       
-      // Cover page
+      // Cover page with enhanced styling
       if (pdfOptions.coverPage && editedBook.coverPage) {
         doc.addPage();
         
+        // Background
+        doc.setFillColor(colorScheme.bg);
+        doc.rect(0, 0, pageWidth, pageHeight, 'F');
+        
+        // Apply paper texture
+        applyPaperTexture(doc, pageWidth, pageHeight, colorScheme);
+        
+        // Add decorative elements
+        if (pdfOptions.decorativeElements) {
+          getDecorations(pdfOptions.colorScheme, doc, pageWidth, pageHeight, margin);
+        }
+        
         if (pdfOptions.headerFooter) {
-          // Header
+          // Header with styling
           doc.setFont(fontFamily, 'italic');
           doc.setFontSize(baseFontSize * 0.8);
           doc.setTextColor(colorScheme.accent);
@@ -181,19 +486,29 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
           doc.text('Cover Page', pageWidth - margin, pageHeight - 10, { align: 'right' });
         }
         
+        // Cover title with decorative element
         doc.setFont(fontFamily, 'bold');
-        doc.setFontSize(baseFontSize * 1.5);
+        doc.setFontSize(baseFontSize * 1.8);
         doc.setTextColor(colorScheme.heading);
+        
+        createChapterDivider(doc, pageWidth, colorScheme);
         doc.text("Cover Page", pageWidth / 2, 30, { align: 'center' });
         
+        // Cover content with enhanced formatting
         doc.setFont(fontFamily, 'normal');
         doc.setFontSize(baseFontSize);
         doc.setTextColor(colorScheme.text);
+        
         const coverLines = doc.splitTextToSize(editedBook.coverPage, contentWidth);
-        doc.text(coverLines, margin, 50);
+        
+        // Apply text alignment
+        const textAlign = pdfOptions.textAlignment as any;
+        doc.text(coverLines, pdfOptions.textAlignment === 'center' ? pageWidth / 2 : margin, 50, { 
+          align: textAlign === 'justified' ? 'justify' : textAlign 
+        });
       }
       
-      // Chapters
+      // Chapters with enhanced styling
       if (editedBook.chapters && editedBook.chapters.length > 0) {
         editedBook.chapters.forEach((chapter, index) => {
           doc.addPage();
@@ -202,30 +517,56 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
           doc.setFillColor(colorScheme.bg);
           doc.rect(0, 0, pageWidth, pageHeight, 'F');
           
+          // Apply paper texture
+          applyPaperTexture(doc, pageWidth, pageHeight, colorScheme);
+          
+          // Add decorative page elements
+          if (pdfOptions.decorativeElements) {
+            getDecorations(pdfOptions.colorScheme, doc, pageWidth, pageHeight, margin);
+          }
+          
           if (pdfOptions.headerFooter) {
-            // Header
+            // Header with enhanced styling
             doc.setFont(fontFamily, 'italic');
             doc.setFontSize(baseFontSize * 0.8);
             doc.setTextColor(colorScheme.accent);
-            doc.text(editedBook.title, margin, 10);
             
-            // Footer with page number
+            if (pdfOptions.colorScheme === 'elegant' || pdfOptions.colorScheme === 'scholarly') {
+              // Centered header for elegant themes
+              doc.text(editedBook.title, pageWidth / 2, 10, { align: 'center' });
+            } else {
+              doc.text(editedBook.title, margin, 10);
+            }
+            
+            // Footer with page number and styling
             if (pdfOptions.showPageNumbers) {
-              doc.text(`Page ${index + 3}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
+              const pageText = `Page ${index + 3}`;
+              
+              if (pdfOptions.colorScheme === 'classic' || pdfOptions.colorScheme === 'scholarly') {
+                // Centered page numbers
+                doc.text(pageText, pageWidth / 2, pageHeight - 10, { align: 'center' });
+              } else {
+                doc.text(pageText, pageWidth - margin, pageHeight - 10, { align: 'right' });
+              }
             }
           }
           
-          // Chapter title with decorative element
-          doc.setDrawColor(colorScheme.accent);
-          doc.setLineWidth(0.5);
-          doc.line(margin, 25, pageWidth - margin, 25);
+          // Chapter title with decorative divider
+          createChapterDivider(doc, pageWidth, colorScheme);
           
           doc.setFont(fontFamily, 'bold');
           doc.setFontSize(baseFontSize * 1.8);
           doc.setTextColor(colorScheme.heading);
-          doc.text(`Chapter ${index + 1}: ${chapter.title}`, margin, 22);
           
-          // Chapter content
+          if (pdfOptions.colorScheme === 'modern' || pdfOptions.colorScheme === 'vibrant') {
+            // Left-aligned chapter titles for modern themes
+            doc.text(`Chapter ${index + 1}: ${chapter.title}`, margin, 22);
+          } else {
+            // Centered chapter titles for other themes
+            doc.text(`Chapter ${index + 1}: ${chapter.title}`, pageWidth / 2, 22, { align: 'center' });
+          }
+          
+          // Chapter content with enhanced formatting
           if (chapter.content) {
             doc.setFont(fontFamily, 'normal');
             doc.setFontSize(baseFontSize);
@@ -234,8 +575,40 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
             // Process markdown-like content
             const paragraphs = chapter.content.split('\n\n');
             let yPosition = 40;
+            let isFirstParagraph = true;
             
             paragraphs.forEach(paragraph => {
+              // Check if we need a new page
+              if (yPosition + 30 > pageHeight - margin) {
+                doc.addPage();
+                
+                // Background & paper texture
+                doc.setFillColor(colorScheme.bg);
+                doc.rect(0, 0, pageWidth, pageHeight, 'F');
+                applyPaperTexture(doc, pageWidth, pageHeight, colorScheme);
+                
+                // Add decorative page elements
+                if (pdfOptions.decorativeElements) {
+                  getDecorations(pdfOptions.colorScheme, doc, pageWidth, pageHeight, margin);
+                }
+                
+                if (pdfOptions.headerFooter) {
+                  // Header
+                  doc.setFont(fontFamily, 'italic');
+                  doc.setFontSize(baseFontSize * 0.8);
+                  doc.setTextColor(colorScheme.accent);
+                  doc.text(editedBook.title, margin, 10);
+                  
+                  // Footer with page number
+                  if (pdfOptions.showPageNumbers) {
+                    doc.text(`Page ${index + 3}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
+                  }
+                }
+                
+                yPosition = margin + 10;
+                isFirstParagraph = false;
+              }
+              
               // Check if it's a heading (starts with #)
               if (paragraph.startsWith('# ')) {
                 doc.setFont(fontFamily, 'bold');
@@ -244,8 +617,15 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
                 const headingText = paragraph.substring(2);
                 const headingLines = doc.splitTextToSize(headingText, contentWidth);
                 
-                doc.text(headingLines, margin, yPosition);
+                // Apply text alignment
+                if (pdfOptions.textAlignment === 'center') {
+                  doc.text(headingLines, pageWidth / 2, yPosition, { align: 'center' });
+                } else {
+                  doc.text(headingLines, margin, yPosition);
+                }
+                
                 yPosition += 10 * (headingLines.length);
+                isFirstParagraph = false;
               } 
               else if (paragraph.startsWith('## ')) {
                 doc.setFont(fontFamily, 'bold');
@@ -254,89 +634,200 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
                 const headingText = paragraph.substring(3);
                 const headingLines = doc.splitTextToSize(headingText, contentWidth);
                 
-                doc.text(headingLines, margin, yPosition);
+                // Apply text alignment
+                if (pdfOptions.textAlignment === 'center') {
+                  doc.text(headingLines, pageWidth / 2, yPosition, { align: 'center' });
+                } else {
+                  doc.text(headingLines, margin, yPosition);
+                }
+                
                 yPosition += 8 * (headingLines.length);
+                isFirstParagraph = false;
               }
               else if (paragraph.startsWith('> ')) {
-                // Quote
+                // Quote with enhanced styling
                 doc.setFont(fontFamily, 'italic');
                 doc.setFontSize(baseFontSize);
-                doc.setTextColor(colorScheme.accent);
                 
                 const quoteText = paragraph.substring(2);
                 const quoteLines = doc.splitTextToSize(quoteText, contentWidth - 20);
                 
-                // Draw quote box
+                // Draw quote box based on theme
                 doc.setDrawColor(colorScheme.accent);
                 doc.setFillColor(colorScheme.bg);
-                doc.roundedRect(margin + 5, yPosition - 5, contentWidth - 10, 10 * quoteLines.length, 2, 2, 'FD');
                 
-                doc.text(quoteLines, margin + 10, yPosition);
+                if (pdfOptions.colorScheme === 'elegant' || pdfOptions.colorScheme === 'artistic') {
+                  // Rounded quote box with gradient-like effect
+                  doc.setFillColor(colorScheme.bg);
+                  doc.roundedRect(margin + 5, yPosition - 5, contentWidth - 10, 10 * quoteLines.length + 10, 3, 3, 'F');
+                  
+                  // Left border accent
+                  doc.setFillColor(colorScheme.accent);
+                  doc.rect(margin + 5, yPosition - 5, 2, 10 * quoteLines.length + 10, 'F');
+                  
+                  doc.setTextColor(colorScheme.accent);
+                } else if (pdfOptions.colorScheme === 'fantasy' || pdfOptions.colorScheme === 'vibrant') {
+                  // Fantasy-style quote box
+                  doc.setFillColor(`${colorScheme.accent}15`); // Very light accent color
+                  doc.roundedRect(margin + 5, yPosition - 5, contentWidth - 10, 10 * quoteLines.length + 10, 3, 3, 'F');
+                  
+                  // Decorative corners
+                  doc.setDrawColor(colorScheme.accent);
+                  doc.setLineWidth(0.5);
+                  
+                  const boxWidth = contentWidth - 10;
+                  const boxHeight = 10 * quoteLines.length + 10;
+                  const cornerSize = 5;
+                  
+                  // Top left
+                  doc.line(margin + 5, yPosition - 5 + cornerSize, margin + 5, yPosition - 5);
+                  doc.line(margin + 5, yPosition - 5, margin + 5 + cornerSize, yPosition - 5);
+                  
+                  // Top right
+                  doc.line(margin + 5 + boxWidth - cornerSize, yPosition - 5, margin + 5 + boxWidth, yPosition - 5);
+                  doc.line(margin + 5 + boxWidth, yPosition - 5, margin + 5 + boxWidth, yPosition - 5 + cornerSize);
+                  
+                  // Bottom left
+                  doc.line(margin + 5, yPosition - 5 + boxHeight - cornerSize, margin + 5, yPosition - 5 + boxHeight);
+                  doc.line(margin + 5, yPosition - 5 + boxHeight, margin + 5 + cornerSize, yPosition - 5 + boxHeight);
+                  
+                  // Bottom right
+                  doc.line(margin + 5 + boxWidth - cornerSize, yPosition - 5 + boxHeight, margin + 5 + boxWidth, yPosition - 5 + boxHeight);
+                  doc.line(margin + 5 + boxWidth, yPosition - 5 + boxHeight, margin + 5 + boxWidth, yPosition - 5 + boxHeight - cornerSize);
+                  
+                  doc.setTextColor(colorScheme.heading);
+                } else {
+                  // Standard quote box
+                  doc.roundedRect(margin + 5, yPosition - 5, contentWidth - 10, 10 * quoteLines.length + 10, 2, 2, 'FD');
+                  doc.setTextColor(colorScheme.text);
+                }
+                
+                // Apply text alignment for quotes
+                if (pdfOptions.textAlignment === 'center') {
+                  doc.text(quoteLines, pageWidth / 2, yPosition + 5, { align: 'center' });
+                } else {
+                  doc.text(quoteLines, margin + 15, yPosition + 5);
+                }
+                
                 yPosition += 10 * (quoteLines.length + 1);
+                isFirstParagraph = false;
               }
               else {
-                // Regular paragraph
+                // Regular paragraph with enhanced formatting
                 doc.setFont(fontFamily, 'normal');
                 doc.setFontSize(baseFontSize);
                 doc.setTextColor(colorScheme.text);
                 
-                const contentLines = doc.splitTextToSize(paragraph, contentWidth);
+                // Apply drop caps to the first paragraph if enabled
+                let xOffset = 0;
+                let processedText = paragraph;
                 
-                // Check if we need a new page
-                if (yPosition + (contentLines.length * 7) > pageHeight - margin) {
-                  doc.addPage();
-                  yPosition = margin;
+                if (isFirstParagraph && pdfOptions.dropCaps && paragraph.length > 0) {
+                  const dropCapsResult = applyDropCaps(doc, paragraph, margin, yPosition, colorScheme);
+                  processedText = dropCapsResult.restOfText;
+                  xOffset = dropCapsResult.dropCapWidth;
                   
-                  // Background
-                  doc.setFillColor(colorScheme.bg);
-                  doc.rect(0, 0, pageWidth, pageHeight, 'F');
+                  // If there's a drop cap, we need to handle the first few lines differently
+                  const firstLineText = processedText.substring(0, 50); // Approximate chars in first line
+                  const contentLines = doc.splitTextToSize(firstLineText, contentWidth - xOffset);
                   
-                  if (pdfOptions.headerFooter) {
-                    // Header
-                    doc.setFont(fontFamily, 'italic');
-                    doc.setFontSize(baseFontSize * 0.8);
-                    doc.setTextColor(colorScheme.accent);
-                    doc.text(editedBook.title, margin, 10);
-                    
-                    // Footer with page number
-                    if (pdfOptions.showPageNumbers) {
-                      doc.text(`Page ${index + 3}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
-                    }
+                  // Apply text alignment for the first line
+                  if (pdfOptions.textAlignment === 'center') {
+                    doc.text(contentLines, pageWidth / 2, yPosition, { align: 'center' });
+                  } else if (pdfOptions.textAlignment === 'justified') {
+                    doc.text(contentLines, margin + xOffset, yPosition, { align: 'justify', maxWidth: contentWidth - xOffset });
+                  } else {
+                    doc.text(contentLines, margin + xOffset, yPosition);
                   }
+                  
+                  // Calculate the number of lines we just added
+                  const linesAdded = contentLines.length;
+                  yPosition += linesAdded * (baseFontSize * 0.5);
+                  
+                  // Now handle the rest of the paragraph normally
+                  processedText = processedText.substring(firstLineText.length);
+                } 
+                
+                // Process the rest of the paragraph
+                const contentLines = doc.splitTextToSize(processedText, contentWidth);
+                
+                // Apply line spacing
+                const lineHeightMultiplier = lineHeight;
+                
+                // Apply text alignment for the rest of the paragraph
+                if (pdfOptions.textAlignment === 'center') {
+                  doc.text(contentLines, pageWidth / 2, yPosition, { align: 'center' });
+                } else if (pdfOptions.textAlignment === 'justified') {
+                  doc.text(contentLines, margin, yPosition, { align: 'justify', maxWidth: contentWidth });
+                } else {
+                  doc.text(contentLines, margin, yPosition);
                 }
                 
-                doc.text(contentLines, margin, yPosition);
-                yPosition += 7 * contentLines.length + 3;
+                // Calculate the final position based on content and line spacing
+                yPosition += lineHeightMultiplier * (7 * contentLines.length);
+                
+                // Add extra spacing after paragraphs for readability
+                yPosition += 3;
+                isFirstParagraph = false;
               }
             });
           }
         });
       }
       
-      // Credits page
+      // Credits page with enhanced styling
       if (editedBook.creditsPage) {
         doc.addPage();
         
-        // Background
+        // Background and texture
         doc.setFillColor(colorScheme.bg);
         doc.rect(0, 0, pageWidth, pageHeight, 'F');
+        applyPaperTexture(doc, pageWidth, pageHeight, colorScheme);
         
-        // Decorative elements
+        // Add decorative elements
+        if (pdfOptions.decorativeElements) {
+          getDecorations(pdfOptions.colorScheme, doc, pageWidth, pageHeight, margin);
+        }
+        
+        // Decorative accents for credits page
         doc.setDrawColor(colorScheme.accent);
         doc.setLineWidth(1);
-        doc.line(margin, 40, pageWidth - margin, 40);
-        doc.line(margin, pageHeight - 40, pageWidth - margin, pageHeight - 40);
         
+        if (pdfOptions.colorScheme === 'elegant' || pdfOptions.colorScheme === 'artistic') {
+          // Curved decorative elements
+          const centerX = pageWidth / 2;
+          doc.line(centerX - 30, 40, centerX + 30, 40);
+          doc.circle(centerX, 40, 3, 'F');
+          
+          doc.line(centerX - 30, pageHeight - 40, centerX + 30, pageHeight - 40);
+          doc.circle(centerX, pageHeight - 40, 3, 'F');
+        } else {
+          // Straight decorative lines
+          doc.line(margin, 40, pageWidth - margin, 40);
+          doc.line(margin, pageHeight - 40, pageWidth - margin, pageHeight - 40);
+        }
+        
+        // Credits title with styling based on theme
         doc.setFont(fontFamily, 'bold');
         doc.setFontSize(baseFontSize * 1.8);
         doc.setTextColor(colorScheme.heading);
         doc.text("Credits", pageWidth / 2, 30, { align: 'center' });
         
+        // Credits content with enhanced formatting
         doc.setFont(fontFamily, 'normal');
         doc.setFontSize(baseFontSize);
         doc.setTextColor(colorScheme.text);
+        
         const creditsLines = doc.splitTextToSize(editedBook.creditsPage, contentWidth);
-        doc.text(creditsLines, margin, 60);
+        
+        // Apply text alignment for credits
+        if (pdfOptions.textAlignment === 'center') {
+          doc.text(creditsLines, pageWidth / 2, 60, { align: 'center' });
+        } else if (pdfOptions.textAlignment === 'justified') {
+          doc.text(creditsLines, margin, 60, { align: 'justify', maxWidth: contentWidth });
+        } else {
+          doc.text(creditsLines, margin, 60);
+        }
       }
       
       // Set document properties
@@ -502,66 +993,162 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
             <TabsContent value="export" className="pt-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">PDF Export Settings <Settings size={18} /></CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    PDF Export Settings 
+                    <Settings size={18} />
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label className="font-medium mb-2 block">PDF Quality</Label>
-                        <select 
-                          className="w-full px-3 py-2 border rounded-md"
-                          value={exportQuality}
-                          onChange={(e) => setExportQuality(e.target.value as 'standard' | 'high')}
+                        <Label className="font-medium mb-2 block">Theme</Label>
+                        <Select 
+                          value={pdfOptions.colorScheme}
+                          onValueChange={(value) => {
+                            setPdfOptions({...pdfOptions, colorScheme: value as any});
+                            setPreviewTheme(value);
+                          }}
                         >
-                          <option value="standard">Standard</option>
-                          <option value="high">High Quality</option>
-                        </select>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select theme" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.keys(colorSchemes).map((scheme) => (
+                              <SelectItem key={scheme} value={scheme}>
+                                <span className="capitalize">{scheme}</span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <Label className="font-medium mb-2 block">Font Family</Label>
+                        <Select 
+                          value={pdfOptions.fontFamily}
+                          onValueChange={(value) => setPdfOptions({...pdfOptions, fontFamily: value})}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select font" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {fontFamilies.map((font) => (
+                              <SelectItem key={font.value} value={font.value}>
+                                {font.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       
                       <div>
                         <Label className="font-medium mb-2 block">Page Size</Label>
-                        <select 
-                          className="w-full px-3 py-2 border rounded-md"
+                        <Select 
                           value={pdfOptions.pageSize}
-                          onChange={(e) => setPdfOptions({...pdfOptions, pageSize: e.target.value as 'a4' | 'letter' | 'legal'})}
+                          onValueChange={(value) => setPdfOptions({...pdfOptions, pageSize: value as any})}
                         >
-                          <option value="a4">A4</option>
-                          <option value="letter">Letter</option>
-                          <option value="legal">Legal</option>
-                        </select>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select page size" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="a4">A4</SelectItem>
+                            <SelectItem value="letter">Letter</SelectItem>
+                            <SelectItem value="legal">Legal</SelectItem>
+                            <SelectItem value="a5">A5 (Smaller)</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       
                       <div>
                         <Label className="font-medium mb-2 block">Orientation</Label>
-                        <select 
-                          className="w-full px-3 py-2 border rounded-md"
+                        <Select 
                           value={pdfOptions.orientation}
-                          onChange={(e) => setPdfOptions({...pdfOptions, orientation: e.target.value as 'portrait' | 'landscape'})}
+                          onValueChange={(value) => setPdfOptions({...pdfOptions, orientation: value as any})}
                         >
-                          <option value="portrait">Portrait</option>
-                          <option value="landscape">Landscape</option>
-                        </select>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select orientation" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="portrait">Portrait</SelectItem>
+                            <SelectItem value="landscape">Landscape</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       
                       <div>
                         <Label className="font-medium mb-2 block">Font Size</Label>
-                        <select 
-                          className="w-full px-3 py-2 border rounded-md"
-                          value={pdfOptions.fontSize}
-                          onChange={(e) => setPdfOptions({...pdfOptions, fontSize: Number(e.target.value)})}
+                        <Select 
+                          value={String(pdfOptions.fontSize)}
+                          onValueChange={(value) => setPdfOptions({...pdfOptions, fontSize: Number(value)})}
                         >
-                          <option value="10">Small (10pt)</option>
-                          <option value="12">Medium (12pt)</option>
-                          <option value="14">Large (14pt)</option>
-                          <option value="16">Extra Large (16pt)</option>
-                        </select>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select font size" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="10">Small (10pt)</SelectItem>
+                            <SelectItem value="12">Medium (12pt)</SelectItem>
+                            <SelectItem value="14">Large (14pt)</SelectItem>
+                            <SelectItem value="16">Extra Large (16pt)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <Label className="font-medium mb-2 block">Text Alignment</Label>
+                        <Select 
+                          value={pdfOptions.textAlignment}
+                          onValueChange={(value) => setPdfOptions({...pdfOptions, textAlignment: value as any})}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select text alignment" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="left">Left</SelectItem>
+                            <SelectItem value="justified">Justified</SelectItem>
+                            <SelectItem value="center">Center</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <Label className="font-medium mb-2 block">Line Spacing</Label>
+                        <Select 
+                          value={pdfOptions.lineSpacing}
+                          onValueChange={(value) => setPdfOptions({...pdfOptions, lineSpacing: value as any})}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select line spacing" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="compact">Compact</SelectItem>
+                            <SelectItem value="normal">Normal</SelectItem>
+                            <SelectItem value="relaxed">Relaxed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
+                        <Label className="font-medium mb-2 block">Page Margins</Label>
+                        <Select 
+                          value={pdfOptions.pageMargins}
+                          onValueChange={(value) => setPdfOptions({...pdfOptions, pageMargins: value as any})}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select margins" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="narrow">Narrow</SelectItem>
+                            <SelectItem value="normal">Normal</SelectItem>
+                            <SelectItem value="wide">Wide</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                     
-                    <Separator />
+                    <Separator className="my-4" />
                     
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="flex items-center space-x-2">
                         <Checkbox 
                           id="page-numbers" 
@@ -613,6 +1200,68 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
                           Include cover page
                         </Label>
                       </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="decorative-elements" 
+                          checked={pdfOptions.decorativeElements}
+                          onCheckedChange={(checked) => 
+                            setPdfOptions({...pdfOptions, decorativeElements: !!checked})
+                          }
+                        />
+                        <Label htmlFor="decorative-elements" className="font-medium cursor-pointer">
+                          Add decorative elements
+                        </Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="chapter-dividers" 
+                          checked={pdfOptions.chapterDividers}
+                          onCheckedChange={(checked) => 
+                            setPdfOptions({...pdfOptions, chapterDividers: !!checked})
+                          }
+                        />
+                        <Label htmlFor="chapter-dividers" className="font-medium cursor-pointer">
+                          Add chapter dividers
+                        </Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="drop-caps" 
+                          checked={pdfOptions.dropCaps}
+                          onCheckedChange={(checked) => 
+                            setPdfOptions({...pdfOptions, dropCaps: !!checked})
+                          }
+                        />
+                        <Label htmlFor="drop-caps" className="font-medium cursor-pointer">
+                          Add drop caps to paragraphs
+                        </Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="paper-texture" 
+                          checked={pdfOptions.paperTextureEffect}
+                          onCheckedChange={(checked) => 
+                            setPdfOptions({...pdfOptions, paperTextureEffect: !!checked})
+                          }
+                        />
+                        <Label htmlFor="paper-texture" className="font-medium cursor-pointer">
+                          Apply paper texture effect
+                        </Label>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-md">
+                      <h3 className="text-sm font-semibold flex items-center gap-1 text-blue-700 mb-2">
+                        <Sparkles size={16} />
+                        Theme Preview Hint
+                      </h3>
+                      <p className="text-sm text-blue-600">
+                        Switch to the Preview tab to see how your chosen formatting and theme will look before exporting to PDF.
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -622,13 +1271,42 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
         </TabsContent>
         
         <TabsContent value="preview" className="space-y-4">
-          <Card className="p-6">
-            <div className="text-center mb-10">
-              <h1 className="text-3xl font-bold mb-2">{editedBook.title}</h1>
-              <p className="text-lg italic">{editedBook.genre}</p>
+          <Card className={`p-6 ${previewTheme === 'artistic' ? 'bg-amber-50' : 
+                                 previewTheme === 'fantasy' ? 'bg-blue-50' : 
+                                 previewTheme === 'romantic' ? 'bg-pink-50' : 
+                                 previewTheme === 'scholarly' ? 'bg-slate-50' : 
+                                 previewTheme === 'elegant' ? 'bg-purple-50' : ''}`}>
+            <div className={`text-center mb-10 ${
+              previewTheme === 'modern' ? 'font-sans' : 
+              previewTheme === 'classic' ? 'font-serif' : 
+              previewTheme === 'elegant' ? 'font-serif' : 
+              'font-sans'
+            }`}>
+              <h1 className={`text-3xl font-bold mb-2 ${
+                previewTheme === 'vibrant' ? 'text-red-600' :
+                previewTheme === 'elegant' ? 'text-purple-800' :
+                previewTheme === 'modern' ? 'text-teal-600' :
+                previewTheme === 'fantasy' ? 'text-blue-700' :
+                ''
+              }`}>{editedBook.title}</h1>
+              
+              <p className={`text-lg italic ${
+                previewTheme === 'vibrant' ? 'text-amber-600' :
+                previewTheme === 'elegant' ? 'text-purple-600' :
+                previewTheme === 'modern' ? 'text-teal-500' :
+                previewTheme === 'fantasy' ? 'text-blue-500' :
+                ''
+              }`}>{editedBook.genre}</p>
+              
               <p className="mt-4 text-slate-600">{editedBook.description}</p>
+              
               {editedBook.coverPage && (
-                <div className="mt-8">
+                <div className={`mt-8 ${
+                  previewTheme === 'artistic' ? 'p-6 bg-white rounded-lg shadow-md' :
+                  previewTheme === 'scholarly' ? 'p-6 border-l-4 border-blue-700' : 
+                  previewTheme === 'fantasy' ? 'p-6 bg-white border border-blue-200 rounded-lg' :
+                  ''
+                }`}>
                   <ReactMarkdown>{editedBook.coverPage}</ReactMarkdown>
                 </div>
               )}
@@ -636,14 +1314,38 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
             
             {editedBook.chapters.map((chapter, index) => (
               <div key={index} className="mb-10">
-                <h2 className="text-2xl font-semibold mb-4">Chapter {index + 1}: {chapter.title}</h2>
-                <ReactMarkdown>{chapter.content}</ReactMarkdown>
+                <h2 className={`text-2xl font-semibold mb-4 ${
+                  previewTheme === 'vibrant' ? 'text-red-600 border-b border-red-200 pb-2' :
+                  previewTheme === 'elegant' ? 'text-purple-800 font-serif' :
+                  previewTheme === 'modern' ? 'text-teal-600 border-b border-teal-200 pb-2' :
+                  previewTheme === 'fantasy' ? 'text-blue-700' :
+                  previewTheme === 'romantic' ? 'text-pink-700' :
+                  ''
+                }`}>Chapter {index + 1}: {chapter.title}</h2>
+                
+                <div className={
+                  pdfOptions.textAlignment === 'justified' ? 'text-justify' : 
+                  pdfOptions.textAlignment === 'center' ? 'text-center' : 
+                  'text-left'
+                }>
+                  <ReactMarkdown>{chapter.content}</ReactMarkdown>
+                </div>
               </div>
             ))}
             
             {editedBook.creditsPage && (
-              <div className="mt-10 pt-10 border-t">
-                <h2 className="text-2xl font-semibold mb-4 text-center">Credits</h2>
+              <div className={`mt-10 pt-10 border-t ${
+                previewTheme === 'scholarly' ? 'border-slate-300' :
+                previewTheme === 'elegant' ? 'border-purple-200' :
+                previewTheme === 'vibrant' ? 'border-amber-200' :
+                'border-slate-200'
+              }`}>
+                <h2 className={`text-2xl font-semibold mb-4 text-center ${
+                  previewTheme === 'vibrant' ? 'text-red-600' :
+                  previewTheme === 'elegant' ? 'text-purple-800' :
+                  previewTheme === 'modern' ? 'text-teal-600' :
+                  ''
+                }`}>Credits</h2>
                 <ReactMarkdown>{editedBook.creditsPage}</ReactMarkdown>
               </div>
             )}
@@ -657,7 +1359,7 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
                 </div>
                 <div>
                   <h3 className="font-medium">Ready to Export Your Book</h3>
-                  <p className="text-sm text-slate-600">Your book will be exported with the current settings</p>
+                  <p className="text-sm text-slate-600">Your book will be exported with the selected theme and formatting options</p>
                 </div>
               </div>
             </CardContent>

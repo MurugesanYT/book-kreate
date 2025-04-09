@@ -45,7 +45,14 @@ export interface PDFExportOptions {
   fontSize: number;
   headerFooter: boolean;
   coverPage: boolean;
-  colorScheme: 'default' | 'elegant' | 'modern' | 'classic' | 'vibrant';
-  pageSize: 'a4' | 'letter' | 'legal';
+  colorScheme: 'default' | 'elegant' | 'modern' | 'classic' | 'vibrant' | 'minimalist' | 'artistic' | 'scholarly' | 'romantic' | 'fantasy';
+  pageSize: 'a4' | 'letter' | 'legal' | 'a5';
   orientation: 'portrait' | 'landscape';
+  decorativeElements: boolean;
+  chapterDividers: boolean;
+  dropCaps: boolean;
+  textAlignment: 'left' | 'justified' | 'center';
+  lineSpacing: 'normal' | 'relaxed' | 'compact';
+  pageMargins: 'normal' | 'wide' | 'narrow';
+  paperTextureEffect: boolean;
 }
