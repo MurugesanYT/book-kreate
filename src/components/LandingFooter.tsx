@@ -24,7 +24,7 @@ const LandingFooter = () => {
               <a href="https://x.com/_fan_boi_lm10_" className="text-slate-400 hover:text-white transition-colors" aria-label="X" target="_blank" rel="noopener noreferrer">
                 <X size={20} />
               </a>
-              <a href="https://www.instagram.com/@_fan_boi_lm10_" className="text-slate-400 hover:text-white transition-colors" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
+              <a href="https://www.instagram.com/_fan_boi_lm10_" className="text-slate-400 hover:text-white transition-colors" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
                 <Instagram size={20} />
               </a>
               <a href="https://www.github.com/MurugesanYT" className="text-slate-400 hover:text-white transition-colors" aria-label="Github" target="_blank" rel="noopener noreferrer">
@@ -58,7 +58,7 @@ const LandingFooter = () => {
             <ul className="space-y-4">
               <li className="flex items-start">
                 <Mail size={18} className="text-book-orange mt-1 mr-2" />
-                <span className="text-slate-400">youvegottabefreakingkiddingme@gmail.com</span>
+                <span className="text-slate-400">kabilanmurugesan2004@gmail.com</span>
               </li>
               <li className="flex items-start">
                 <MapPin size={18} className="text-book-orange mt-1 mr-2" />

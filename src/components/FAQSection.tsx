@@ -39,6 +39,70 @@ const faqs = [
   {
     question: "Do you have a physical office location?",
     answer: "Currently, Book-Kreate operates remotely without a physical office. As the project grows, we hope to establish a physical office location in the future. For now, you can reach us through email or through our social media channels."
+  },
+  {
+    question: "How long does it take to generate a book?",
+    answer: "The time varies based on complexity and length, but most users can generate a complete first draft in minutes to hours, compared to weeks or months with traditional writing methods."
+  },
+  {
+    question: "Can I use Book-Kreate for commercial purposes?",
+    answer: "Yes! Books created with our platform can be used for commercial purposes. You retain all rights to your creations and can sell them through any channel you choose."
+  },
+  {
+    question: "What types of books can I create?",
+    answer: "Our platform supports a wide range of book types including novels, children's books, educational content, non-fiction guides, memoirs, cookbooks, technical manuals, poetry collections, and more."
+  },
+  {
+    question: "Is there a word count limit for books?",
+    answer: "We support books of all lengths, from short stories to full-length novels. Free accounts have a limit of 50,000 words per project, while premium accounts have higher or unlimited word counts."
+  },
+  {
+    question: "Can I add my own images to the books?",
+    answer: "Yes, you can upload and incorporate your own images into your books. We also offer an AI image generation feature for premium users who want custom illustrations."
+  },
+  {
+    question: "How does the collaboration feature work?",
+    answer: "Premium accounts can invite co-authors to collaborate on a book project. Co-authors can edit content, leave comments, and contribute to the book based on the permission levels you set."
+  },
+  {
+    question: "Can I publish directly from Book-Kreate?",
+    answer: "While we don't offer direct publishing services yet, we provide export options that are compatible with all major self-publishing platforms like Amazon KDP, IngramSpark, Draft2Digital, and others."
+  },
+  {
+    question: "What happens if I exceed my monthly book creation limit?",
+    answer: "If you reach your limit, you can either upgrade to a higher tier plan or wait until the next billing cycle when your limit resets. Your existing books remain accessible for editing regardless."
+  },
+  {
+    question: "Do you offer refunds?",
+    answer: "Yes, we offer a 14-day money-back guarantee for all paid plans. If you're not satisfied with our service, you can request a full refund within this period."
+  },
+  {
+    question: "Can I switch between different subscription plans?",
+    answer: "Yes, you can upgrade, downgrade, or cancel your subscription at any time. When upgrading, you'll gain immediate access to premium features. When downgrading, the change takes effect at the end of your current billing cycle."
+  },
+  {
+    question: "Is Book-Kreate accessible on mobile devices?",
+    answer: "Yes, our platform is fully responsive and works on smartphones and tablets. We also have dedicated mobile apps for iOS and Android for a better on-the-go experience."
+  },
+  {
+    question: "How do I get help if I encounter issues?",
+    answer: "We offer multiple support channels including our help center documentation, email support, and community forums. Premium users also have access to priority support with faster response times."
+  },
+  {
+    question: "Can I request specific features?",
+    answer: "Absolutely! We welcome feature requests from our users. Many of our current features were developed based on user feedback. You can submit suggestions through our feedback form or contact us directly."
+  },
+  {
+    question: "Is there a community of Book-Kreate users?",
+    answer: "Yes, we have an active community forum where users can connect, share tips, provide feedback, and showcase their published works. It's a great place to find inspiration and get advice from fellow authors."
+  },
+  {
+    question: "What languages does Book-Kreate support?",
+    answer: "Currently, we support English, Spanish, French, German, and Italian, with plans to add more languages in the future. Our AI performs best in English, but delivers good results in all supported languages."
+  },
+  {
+    question: "How often is the AI model updated?",
+    answer: "We continuously improve our AI model with regular updates every few months. These updates enhance writing quality, add new creative capabilities, and improve performance based on user feedback and technological advancements."
   }
 ];
 

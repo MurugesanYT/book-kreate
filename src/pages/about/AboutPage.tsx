@@ -110,7 +110,7 @@ const AboutPage = () => {
             <div className="flex justify-center">
               <div className="bg-book-lightGray p-6 rounded-lg max-w-md">
                 <img 
-                  src="https://ibb.co/TDdX5dzW" 
+                  src="https://i.ibb.co/TDdX5dz/founder-image.jpg" 
                   alt="M.Kabilan - Founder & CEO" 
                   className="w-full h-64 object-cover rounded-md mb-4"
                 />
