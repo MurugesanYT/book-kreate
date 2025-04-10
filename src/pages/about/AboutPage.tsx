@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import LandingHeader from '@/components/LandingHeader';
@@ -43,13 +44,9 @@ const AboutPage = () => {
                 <div className="absolute -inset-4 bg-gradient-to-r from-book-purple/20 to-book-orange/20 rounded-lg transform rotate-3"></div>
                 <div className="absolute -inset-4 bg-gradient-to-l from-book-purple/20 to-book-orange/20 rounded-lg transform -rotate-3"></div>
                 <img 
-                  src="https://i.ibb.co/2Y3Mshg/3d820bd3-58a4-4c1c-b447-b11043015ef8.png" 
+                  src="https://images.unsplash.com/photo-1531988042231-d39a9cc12a9a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" 
                   alt="Library with books" 
                   className="relative rounded-lg shadow-xl w-full h-auto"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = "https://images.unsplash.com/photo-1531988042231-d39a9cc12a9a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80"; // Fallback image
-                  }}
                 />
               </div>
             </div>
@@ -113,13 +110,9 @@ const AboutPage = () => {
             <div className="flex justify-center">
               <div className="bg-book-lightGray p-6 rounded-lg max-w-md">
                 <img 
-                  src="https://i.ibb.co/TDdX5dz/founder-image.jpg" 
+                  src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=687&q=80" 
                   alt="M.Kabilan - Founder & CEO" 
                   className="w-full h-64 object-cover rounded-md mb-4"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = "https://i.ibb.co/TDdX5dz/founder-image.jpg"; // Fallback image
-                  }}
                 />
                 <h3 className="text-xl font-semibold text-book-darkText">M.Kabilan</h3>
                 <p className="text-book-purple mb-2">Founder & CEO</p>

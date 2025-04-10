@@ -1,4 +1,3 @@
-
 import { jsPDF } from "jspdf";
 import { BookData, PDFExportOptions } from "../api/types";
 import { generateBookBeautification, BeautificationResult } from "./beautificationService";

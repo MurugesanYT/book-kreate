@@ -1,4 +1,3 @@
-
 // Common types used across API services
 
 export type BookItemType = 'cover' | 'chapter' | 'credits';
@@ -38,7 +37,7 @@ export interface PlanItem {
 }
 
 // Export Formats
-export type ExportFormat = 'pdf' | 'epub' | 'mobi' | 'docx' | 'txt' | 'html' | 'markdown' | 'rtf' | 'azw3' | 'fb2' | 'cbz' | 'audio';
+export type ExportFormat = 'pdf' | 'epub' | 'mobi' | 'docx' | 'txt' | 'html' | 'markdown' | 'rtf' | 'azw3' | 'fb2' | 'cbz' | 'audio' | 'latex' | 'odt' | 'pages' | 'xml' | 'json';
 
 // PDF Export types
 export interface PDFExportOptions {
@@ -141,7 +140,7 @@ export interface MarkdownExportOptions {
   includeTableOfContents?: boolean;
 }
 
-// New export options for additional formats
+// RTF Export options
 export interface RTFExportOptions {
   includeTableOfContents: boolean;
   includeHeaderFooter: boolean;
@@ -157,6 +156,7 @@ export interface RTFExportOptions {
   specialCharacters: boolean;
 }
 
+// AZW3 Export options
 export interface AZW3ExportOptions {
   includeTableOfContents: boolean;
   coverImage: boolean;
@@ -177,6 +177,7 @@ export interface AZW3ExportOptions {
   pageNumbering: boolean;
 }
 
+// FB2 Export options
 export interface FB2ExportOptions {
   includeTableOfContents: boolean;
   coverImage: boolean;
@@ -192,6 +193,7 @@ export interface FB2ExportOptions {
   xhtmlSupport: boolean;
 }
 
+// CBZ Export options
 export interface CBZExportOptions {
   coverImage: boolean;
   imageQuality: 'low' | 'medium' | 'high';
@@ -206,6 +208,7 @@ export interface CBZExportOptions {
   compressionLevel: 'low' | 'medium' | 'high';
 }
 
+// Audio Export options
 export interface AudioExportOptions {
   voiceType: 'male' | 'female' | 'neutral';
   audioQuality: 'standard' | 'high';
@@ -223,4 +226,92 @@ export interface BeautificationOptions {
   theme: 'auto' | 'custom';
   enhancedGeneration: boolean;
   customSettings?: Record<string, any>;
+}
+
+// LaTeX Export options
+export interface LaTeXExportOptions {
+  documentClass: 'book' | 'article' | 'report' | 'memoir';
+  fontSize: '10pt' | '11pt' | '12pt';
+  paperSize: 'a4paper' | 'letterpaper' | 'a5paper';
+  twoSided: boolean;
+  includeTableOfContents: boolean;
+  includeIndex: boolean;
+  includeBibliography: boolean;
+  template: 'basic' | 'academic' | 'thesis' | 'novel' | 'technical';
+  customPreamble?: string;
+  mathSupport: boolean;
+  chapterStyle: 'default' | 'elegant' | 'artistic';
+  bibliographyStyle?: 'plain' | 'abbrv' | 'alpha' | 'apalike';
+  fontPackage: 'default' | 'times' | 'palatino' | 'bookman' | 'charter';
+}
+
+// ODT (OpenDocument Text) Export options
+export interface ODTExportOptions {
+  includeTableOfContents: boolean;
+  includeCoverPage: boolean;
+  pageStyle: 'standard' | 'professional' | 'creative';
+  fontFamily: string;
+  fontSize: number;
+  lineSpacing: number;
+  margins: 'normal' | 'narrow' | 'wide';
+  headerFooter: boolean;
+  metadata: {
+    author: string;
+    subject?: string;
+    keywords?: string[];
+  };
+  styles: {
+    headings: 'default' | 'numbered' | 'decorated';
+    paragraphs: 'default' | 'indented' | 'spaced';
+  };
+  includeImages: boolean;
+  compatibility: 'libreoffice' | 'msoffice' | 'standard';
+}
+
+// Pages (Apple) Export options
+export interface PagesExportOptions {
+  template: 'blank' | 'book' | 'essay' | 'report' | 'novel';
+  fontFamily: string;
+  fontSize: number;
+  pageSize: 'a4' | 'us-letter';
+  orientation: 'portrait' | 'landscape';
+  includeTableOfContents: boolean;
+  headerFooter: boolean;
+  columnLayout: 'single' | 'double' | 'triple';
+  lineSpacing: number;
+  includePageNumbers: boolean;
+  includeImages: boolean;
+  coverPage: boolean;
+  appleCompatibilityLevel: 'latest' | 'high-sierra' | 'catalina';
+}
+
+// XML Export options
+export interface XMLExportOptions {
+  documentType: 'book' | 'article' | 'manuscript';
+  schema: 'docbook' | 'tei' | 'custom';
+  version: '5.0' | '4.5';
+  includeMetadata: boolean;
+  prettyPrint: boolean;
+  encoding: 'utf-8' | 'iso-8859-1';
+  dtdLocation?: string;
+  validateOnExport: boolean;
+  includeChapters: boolean;
+  includeSections: boolean;
+  stylesheet?: string;
+  outputFormat: 'xml' | 'html' | 'xhtml';
+}
+
+// JSON Export options
+export interface JSONExportOptions {
+  structure: 'flat' | 'nested' | 'hierarchical';
+  includeMetadata: boolean;
+  includeContent: boolean;
+  includeFormatting: boolean;
+  prettyPrint: boolean;
+  indentation: number;
+  splitByChapter: boolean;
+  includeImages: boolean;
+  imageHandling: 'base64' | 'urls' | 'none';
+  schema: 'standard' | 'custom';
+  includeStatistics: boolean;
 }
