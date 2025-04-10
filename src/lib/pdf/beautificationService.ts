@@ -114,15 +114,16 @@ ${contentSample}
 """
 
 DESIGN MISSION:
-You are a world-class book designer tasked with creating a distinctive, memorable, and cohesive visual identity for this book that will wow readers and showcase the content in its best light. Your design should:
+You are a world-class book designer with decades of experience in creating stunning, award-winning book layouts. Your design should:
 
-1. Perfectly capture the mood, tone, and essence of the content - if it's a thriller, create tension; if romance, evoke emotion; if technical, ensure clarity
-2. Feel professionally crafted and worthy of a bestseller
-3. Prioritize exceptional readability while adding sophisticated visual appeal
-4. Include subtle but distinctive design elements that complement the content's themes
-5. Feel timeless yet contemporary, avoiding trendy design that will quickly look dated
+1. Have its own unique visual identity that perfectly matches the book's genre and content
+2. Use typography that enhances readability while adding distinctive character
+3. Incorporate subtle decorative elements that feel organic to the content
+4. Create a cohesive visual system from cover to credits page
+5. Utilize a sophisticated color palette with precise emotional resonance
+6. Balance white space and content in a way that feels intentional and elegant
 
-Be extraordinarily specific and detailed with your recommendations. For example, instead of "use decorative dividers," specify "employ elegant botanical line drawings of cypress trees in a rich sepia tone that echoes the Mediterranean setting of the narrative."
+Your beautification should feel like it was hand-crafted specifically for this book by a design professional who spent weeks perfecting every detail.
 
 Based on your expert analysis, provide exceptionally detailed beautification recommendations in the following JSON format:
 {
@@ -144,7 +145,9 @@ Based on your expert analysis, provide exceptionally detailed beautification rec
   }
 }
 
-Your recommendations should reflect a deep understanding of the book's category (${book.category}) and demonstrate professional book design expertise. Provide only the JSON response without additional text.
+Your recommendations should have an unmistakable professional quality that would impress both publishers and readers. Focus on creating a unique visual identity that feels tailored specifically to this book.
+
+Provide only the JSON response without additional text.
 `;
 };
 
@@ -233,60 +236,72 @@ const getCategoryColorScheme = (category: string, preferredScheme: string): stri
   // If user selected a specific scheme other than default or custom, prioritize it
   if (preferredScheme !== 'default' && preferredScheme !== 'custom') {
     const schemes: Record<string, string> = {
-      elegant: "#2D3748,#F7FAFC,#805AD5",
-      modern: "#1A202C,#FFFFFF,#3182CE",
-      classic: "#333333,#F8F5E9,#8B4513",
-      vibrant: "#2D3748,#FFFFFF,#E53E3E",
-      minimalist: "#1A202C,#F7FAFC,#718096",
-      artistic: "#44337A,#FFF5F7,#B83280",
-      scholarly: "#1A365D,#EDF2F7,#2C5282",
-      romantic: "#702459,#FFF5F7,#B83280",
-      fantasy: "#44337A,#FEFCBF,#6B46C1"
+      elegant: "#2D3748,#F7FAFC,#805AD5", // Dark slate, light background, purple accent
+      modern: "#1A202C,#FFFFFF,#3182CE", // Near black, white, blue accent
+      classic: "#333333,#F8F5E9,#8B4513", // Dark gray, cream, sienna
+      vibrant: "#2D3748,#FFFFFF,#E53E3E", // Dark slate, white, red
+      minimalist: "#1A202C,#F7FAFC,#718096", // Near black, light background, slate
+      artistic: "#44337A,#FFF5F7,#B83280", // Deep purple, light pink, magenta
+      scholarly: "#1A365D,#EDF2F7,#2C5282", // Navy, light blue/gray, blue
+      romantic: "#702459,#FFF5F7,#B83280", // Burgundy, light pink, pink
+      fantasy: "#44337A,#FEFCBF,#6B46C1" // Deep purple, light yellow, bright purple
     };
     
     return schemes[preferredScheme] || "#333333,#F8F8F8,#E0E0E0";
   }
   
-  // Category-specific color schemes
+  // Category-specific color schemes - enhanced with more sophisticated palettes
   const categorySchemes: Record<string, string> = {
-    fiction: "#333333,#F8F8F8,#6B46C1", // Purple accent for fiction
-    "non-fiction": "#2D3748,#F7FAFC,#3182CE", // Blue accent for non-fiction
-    technical: "#1A202C,#FFFFFF,#38B2AC", // Teal accent for technical
-    children: "#2D3748,#FFFAF0,#F6AD55", // Orange accent for children's books
-    poetry: "#553C9A,#FAF5FF,#805AD5", // Lavender for poetry
-    romance: "#702459,#FFF5F7,#D53F8C", // Pink for romance
-    mystery: "#1A365D,#EDF2F7,#2B6CB0", // Dark blue for mystery
-    "sci-fi": "#1A202C,#F0FFF4,#38A169", // Green for sci-fi
-    fantasy: "#44337A,#FFFBEB,#D69E2E", // Gold accent for fantasy
-    horror: "#1A202C,#F7FAFC,#E53E3E", // Red accent for horror
-    thriller: "#2A4365,#F7FAFC,#DD6B20", // Orange accent for thriller
-    historical: "#5F370E,#FFFAF0,#B7791F", // Brown accent for historical
-    biography: "#2D3748,#F7FAFC,#4299E1", // Blue accent for biography
-    academic: "#1A365D,#EDF2F7,#2C5282", // Navy blue for academic
+    fiction: "#2C3E50,#F5F7FA,#9B59B6", // Midnight blue, off-white, amethyst
+    "non-fiction": "#34495E,#FFFFFF,#3498DB", // Darker blue, white, lighter blue
+    technical: "#1A202C,#F8FAFC,#00BFA5", // Dark gray, off-white, teal
+    children: "#4A6572,#FFF9C4,#FF9800", // Slate blue, light yellow, orange
+    poetry: "#5E3C58,#F9F5F9,#8E44AD", // Plum, off-white, purple
+    romance: "#7D314C,#FFF0F3,#E84393", // Burgundy, light pink, bright pink
+    mystery: "#263238,#ECEFF1,#607D8B", // Dark blue-gray, light gray, blue-gray
+    "sci-fi": "#0B3954,#E9F5F9,#00BCD4", // Dark blue, light blue, cyan
+    fantasy: "#493657,#FFF8E1,#FFB900", // Dark purple, cream, gold
+    horror: "#1C1C1C,#F5F5F5,#B71C1C", // Nearly black, off-white, dark red
+    thriller: "#252627,#F8F9FA,#FF5252", // Almost black, off-white, bright red
+    historical: "#3E2723,#F5F5DC,#A1887F", // Dark brown, beige, light brown
+    biography: "#2D4B73,#F8F9FA,#2E86DE", // Navy, off-white, bright blue
+    academic: "#002147,#F5F5F5,#3F72AF", // Oxford blue, off-white, royal blue
+    adventure: "#155263,#F8F9F9,#FF9A3C", // Teal, off-white, orange
+    comedy: "#6C4A4A,#FFFFF0,#E7B10A", // Brown, ivory, mustard
+    drama: "#2C3639,#F5F2E7,#A27B5C", // Dark gray, light beige, copper
+    "self-help": "#282F44,#FFFFFF,#4D9DE0", // Dark navy, white, sky blue
+    travel: "#2C3333,#E7F6F2,#2E8B57", // Dark gray, mint, sea green
+    cooking: "#3A4750,#FFFBF5,#D4634B", // Dark slate, cream, terracotta
   };
   
   return categorySchemes[category.toLowerCase()] || "#333333,#F8F8F8,#E0E0E0";
 };
 
 /**
- * Get font recommendations based on book category
+ * Get font recommendations based on book category - enhanced with more sophisticated pairings
  */
 const getCategoryFontRecommendation = (category: string): string => {
   const categoryFonts: Record<string, string> = {
-    fiction: "Crimson Text, Georgia, serif",
-    "non-fiction": "Source Sans Pro, Helvetica, sans-serif",
-    technical: "IBM Plex Sans, Arial, sans-serif",
-    children: "Comic Sans MS, Verdana, sans-serif",
-    poetry: "Baskerville, Garamond, serif",
-    romance: "Libre Baskerville, Georgia, serif",
-    mystery: "Lora, Times New Roman, serif",
-    "sci-fi": "Space Mono, Courier New, monospace",
-    fantasy: "Cinzel, Georgia, serif",
-    horror: "Playfair Display, Times New Roman, serif",
-    thriller: "Roboto Slab, Georgia, serif",
-    historical: "Libre Caslon Text, Georgia, serif",
-    biography: "Merriweather, Georgia, serif",
-    academic: "Roboto, Arial, sans-serif",
+    fiction: "Merriweather, Georgia, serif", // Elegant serif
+    "non-fiction": "Nunito, Helvetica, sans-serif", // Clean sans-serif
+    technical: "Roboto Mono, Courier, monospace", // Monospaced for code
+    children: "Quicksand, Arial, sans-serif", // Friendly rounded sans
+    poetry: "Cormorant Garamond, Baskerville, serif", // Delicate serif
+    romance: "Playfair Display, Georgia, serif", // Romantic serif
+    mystery: "Crimson Pro, Times New Roman, serif", // Classic serif
+    "sci-fi": "Titillium Web, Arial, sans-serif", // Modern, clean sans
+    fantasy: "Spectral, Georgia, serif", // Magical serif
+    horror: "Libre Baskerville, Georgia, serif", // Spooky serif
+    thriller: "Source Sans Pro, Helvetica, sans-serif", // Efficient sans
+    historical: "EB Garamond, Palatino, serif", // Historical serif
+    biography: "Lora, Georgia, serif", // Readable serif
+    academic: "PT Serif, Times New Roman, serif", // Scholarly serif
+    adventure: "Montserrat, Arial, sans-serif", // Bold sans
+    comedy: "Comfortaa, Verdana, sans-serif", // Playful rounded
+    drama: "Bitter, Georgia, serif", // Dramatic serif
+    "self-help": "Open Sans, Arial, sans-serif", // Approachable sans
+    travel: "Work Sans, Helvetica, sans-serif", // Modern sans
+    cooking: "Cardo, Palatino, serif", // Elegant cooking serif
   };
   
   return categoryFonts[category.toLowerCase()] || "Georgia, serif";
@@ -298,8 +313,8 @@ const getCategoryFontRecommendation = (category: string): string => {
 const getDefaultDecorativeElements = (category: string): BeautificationResult['decorativeElements'] => {
   const elements: Record<string, BeautificationResult['decorativeElements']> = {
     fiction: {
-      headerStyle: "Book title in small caps with an elegant thin underline in accent color",
-      footerStyle: "Page number centered within a delicate ornamental frame with small flourishes on either side",
+      headerStyle: "Title in small caps with a thin gradient underline that fades from primary to accent color",
+      footerStyle: "Page number enclosed in a subtle ornamental frame with thin flourish lines extending horizontally",
       chapterDividers: [
         "A graceful swirl pattern that begins thin on the left, thickens in the middle, and tapers to the right",
         "Three small diamond shapes arranged horizontally with thin connecting lines between them",
@@ -333,201 +348,97 @@ const getDefaultDecorativeElements = (category: string): BeautificationResult['d
       backgroundTexture: "Crisp white with an extremely subtle grid pattern that aids eye tracking"
     },
     
-    technical: {
-      headerStyle: "Monospaced chapter name with a technical icon relevant to the subject matter",
-      footerStyle: "Page number with section reference in a clean information hierarchy",
-      chapterDividers: [
-        "A pattern inspired by code syntax with brackets, dots and slashes",
-        "A clean horizontal line with chapter number in a circular node",
-        "A minimal pattern suggesting binary or hexadecimal sequences",
-        "A schematic-inspired divider with connected nodes"
-      ],
-      dropCapStyle: "A monospaced initial letter in a light rectangular background with rounded corners",
-      pageDecorations: [
-        "Code snippet styling with syntax highlighting for code blocks",
-        "Margin indicators for notes, warnings, and tips",
-        "Small diagrams that complement the technical content"
-      ],
-      backgroundTexture: "Subtle graph paper or blueprint texture in very light blue"
-    },
-    
-    children: {
-      headerStyle: "Playful rounded font with small themed illustration relevant to the chapter",
-      footerStyle: "Page number inside a fun shape like a star, cloud, or animal footprint",
-      chapterDividers: [
-        "A row of small playful icons like stars, hearts, or animals relevant to the story",
-        "A colorful wavy line with gradient colors from the book's palette",
-        "Character illustration or silhouette from the story",
-        "Playful dashed line with small themed symbols at intervals"
-      ],
-      dropCapStyle: "A colorful bubble letter with playful 3D effect or character interaction",
-      pageDecorations: [
-        "Colorful illustrated borders on chapter opening pages",
-        "Small spot illustrations in margins that relate to nearby text",
-        "Character expressions or reactions in margins at emotional moments",
-        "Playful corner elements that create a framing effect"
-      ],
-      backgroundTexture: "Very subtle polka dots, stars, or themed pattern that relates to the story"
-    },
-    
     poetry: {
-      headerStyle: "Elegant italic title with delicate flourishes",
-      footerStyle: "Simple centered page number with small calligraphic ornament",
+      headerStyle: "Elegant italic title with delicate calligraphic flourishes",
+      footerStyle: "Simple centered page number with small botanical ornament",
       chapterDividers: [
         "A single elegant curved line with small flourish at one end",
         "A small symbolic representation related to the poem's theme",
         "A delicate nature-inspired divider like a vine or branch",
         "A minimalist symbol that captures the emotional essence of the collection"
       ],
-      dropCapStyle: "A flowing calligraphic initial letter with artistic flourishes",
+      dropCapStyle: "A flowing calligraphic initial letter with artistic flourishes in a complementary color",
       pageDecorations: [
         "Subtle botanical or nature illustrations in margins",
         "Delicate line work framing special poems",
-        "Gentle watercolor-style washes in very light tints",
-        "Small symbolic elements that echo the poem's imagery"
+        "Gentle watercolor-style washes in very light tints for poem backgrounds"
       ],
-      backgroundTexture: "Textured paper or parchment effect with subtle warmth"
+      backgroundTexture: "Textured paper effect with subtle warmth that creates a handcrafted feel"
     },
     
-    romance: {
-      headerStyle: "Elegant script font with subtle heart or floral motif",
-      footerStyle: "Page number within a delicate ornamental frame",
+    fantasy: {
+      headerStyle: "Title in an elegant serif with small mystical symbol as chapter indicator",
+      footerStyle: "Page number inside a subtle circular rune or magical emblem",
       chapterDividers: [
-        "Intertwined floral pattern with subtle color gradient",
-        "Delicate heart-inspired design that's sophisticated rather than cliché",
-        "Flowing ribbon or scroll design in accent color",
-        "Ornamental swirl that suggests connection and emotion"
+        "A symmetrical pattern featuring stylized vines or branches with small star accents",
+        "An intricate line of mythical symbols that forms a continuous pattern",
+        "A gradient fade with subtle magical sparkle effect at center",
+        "A decorative border inspired by ancient manuscripts with mystical runes"
       ],
-      dropCapStyle: "Flowing script initial letter with decorative flourishes in a warm color",
+      dropCapStyle: "An ornate initial letter with illuminated manuscript styling and gold-like accent colors",
       pageDecorations: [
-        "Subtle corner embellishments on chapter opening pages",
-        "Delicate floral or nature motifs in margins",
-        "Small symbolic elements at emotional high points",
-        "Light watercolor-style washes behind chapter titles"
+        "Corner elements resembling mythical creatures or symbols",
+        "Subtle magical motifs that appear at chapter beginnings",
+        "Border elements that suggest a magical realm or ancient text"
       ],
-      backgroundTexture: "Very subtle texture suggesting fine linen or handmade paper"
+      backgroundTexture: "Very subtle parchment or aged paper texture with barely perceptible magical symbols"
     },
     
     mystery: {
-      headerStyle: "Sharp serif font with a small magnifying glass or key icon",
-      footerStyle: "Page number with small mysterious symbol or footprint",
+      headerStyle: "Title in a classic serif with a thin shadow effect and small magnifying glass icon",
+      footerStyle: "Page number partially obscured by subtle fog or shadow effect",
       chapterDividers: [
-        "Faded or broken line suggesting something hidden or incomplete",
-        "Pattern of small clue-related symbols (keys, locks, footprints)",
-        "Ink splatter or fingerprint-inspired design in very light opacity",
-        "Morse code or cryptic symbol pattern that relates to the story"
+        "A series of fading dots that suggest a trail of clues",
+        "A broken line pattern that creates a sense of discontinuity",
+        "A thin line with small question mark or key symbol at the end",
+        "A pattern that resembles partial fingerprints or cryptic symbols"
       ],
-      dropCapStyle: "Initial letter with subtle shadow and mysterious symbol integrated",
+      dropCapStyle: "A serif initial letter with a subtle shadow that creates depth and mystery",
       pageDecorations: [
-        "Subtle watermark-like symbols in page corners",
-        "Faded typewriter font for chapter numbers",
-        "Light texture suggesting old paper or documents",
-        "Small mysterious symbols in margins at key plot points"
+        "Subtle corner elements that resemble fragments of a map or clue",
+        "Small investigative symbols (magnifying glass, footprints) as section breaks",
+        "Faded text effects that suggest hidden messages between chapters"
       ],
-      backgroundTexture: "Very subtle aged paper texture or light fog effect"
+      backgroundTexture: "Very subtle paper texture with occasional faint fingerprint or ink blot effects"
+    },
+    
+    romance: {
+      headerStyle: "Title in an elegant script with subtle heart or floral motif accent",
+      footerStyle: "Page number within a delicate ornamental frame with curved edges",
+      chapterDividers: [
+        "Intertwined floral pattern with subtle color gradient effects",
+        "Delicate heart-inspired design with flowing lines extending outward",
+        "A pattern of small roses or flower petals arranged in a graceful curve",
+        "Flowing script-like lines that suggest handwritten love letters"
+      ],
+      dropCapStyle: "A flowing script initial letter with small heart or floral embellishments",
+      pageDecorations: [
+        "Delicate corner flourishes with subtle floral or heart motifs",
+        "Small romantic symbols at the end of significant passages",
+        "Subtle rose or floral border elements that frame emotional scenes"
+      ],
+      backgroundTexture: "Very subtle textured paper with occasionally visible pressed flower effect"
     }
   };
   
-  // Return category-specific elements or fiction defaults
+  // For categories we don't have specific elements for, use fiction as default
   return elements[category.toLowerCase()] || elements.fiction;
 };
 
 /**
- * Get enhanced default beautification settings based on book category
+ * Create enhanced default beautification settings if AI generation fails
  */
-const getEnhancedDefaultBeautification = (
-  category: string,
-  colorScheme: string = 'default'
-): BeautificationResult => {
-  // Get category-specific color scheme
-  const colors = getCategoryColorScheme(category, colorScheme);
-  
-  // Get category-specific font recommendation
-  const fontRecommendation = getCategoryFontRecommendation(category);
-  
-  // Get category-specific decorative elements
-  const decorativeElements = getDefaultDecorativeElements(category);
-  
-  // Map category to appropriate default styles
-  const categoryDefaults: Record<string, Partial<BeautificationResult>> = {
-    fiction: {
-      layoutRecommendation: {
-        margins: "1 inch (2.54 cm) on all sides",
-        lineSpacing: "1.5",
-        pageBreakStrategy: "Start new chapters on odd-numbered pages",
-      },
-    },
-    
-    "non-fiction": {
-      layoutRecommendation: {
-        margins: "1.25 inches (3.2 cm) on left and right, 1 inch (2.54 cm) on top and bottom",
-        lineSpacing: "1.15",
-        pageBreakStrategy: "Include section breaks with visual indicator",
-      },
-    },
-    
-    technical: {
-      layoutRecommendation: {
-        margins: "1 inch (2.54 cm) on all sides",
-        lineSpacing: "1.2",
-        pageBreakStrategy: "Keep code blocks intact, avoid breaking in middle",
-      },
-    },
-    
-    children: {
-      layoutRecommendation: {
-        margins: "0.75 inches (1.9 cm) on all sides",
-        lineSpacing: "1.8",
-        pageBreakStrategy: "Keep illustrations with relevant text",
-      },
-    },
-    
-    poetry: {
-      layoutRecommendation: {
-        margins: "1.5 inches (3.8 cm) on left and right, 1 inch (2.54 cm) on top and bottom",
-        lineSpacing: "1.5",
-        pageBreakStrategy: "Try to keep poems on single pages where possible",
-      },
-    },
-  };
-  
-  // Use category defaults or fiction defaults if category not found
-  const categoryDefault = categoryDefaults[category.toLowerCase()] || categoryDefaults.fiction;
-  
-  // Enhanced CSS styles based on category
-  const cssStyles = `
-    body { 
-      font-family: ${fontRecommendation}; 
-      line-height: ${categoryDefault.layoutRecommendation?.lineSpacing || "1.5"}; 
-    }
-    h1, h2, h3 { 
-      color: ${colors.split(',')[0]}; 
-      margin-bottom: 1.5rem; 
-    }
-    .chapter { 
-      page-break-before: always; 
-      margin-top: 3rem; 
-    }
-    .drop-cap:first-letter { 
-      float: left; 
-      font-size: 3.5em; 
-      line-height: 0.8; 
-      margin-right: 0.2em; 
-      color: ${colors.split(',')[2]}; 
-    }
-  `;
-  
-  // Return comprehensive beautification settings
+const getEnhancedDefaultBeautification = (category: string, colorScheme: string): BeautificationResult => {
   return {
-    cssStyles,
-    fontRecommendation,
-    colorScheme: colors,
-    decorativeElements,
-    layoutRecommendation: categoryDefault.layoutRecommendation || {
-      margins: "1 inch (2.54 cm) on all sides",
-      lineSpacing: "1.5",
-      pageBreakStrategy: "Start new chapters on new pages",
-    },
+    cssStyles: ".book-container { font-family: Georgia, serif; line-height: 1.6; color: #333; }",
+    fontRecommendation: getCategoryFontRecommendation(category),
+    colorScheme: getCategoryColorScheme(category, colorScheme),
+    decorativeElements: getDefaultDecorativeElements(category),
+    layoutRecommendation: {
+      margins: category.toLowerCase() === 'poetry' ? "1.5 inch (3.81 cm) side margins for emphasis" : "1 inch (2.54 cm) margins on all sides",
+      lineSpacing: category.toLowerCase() === 'academic' ? "1.8 for improved readability of complex content" : "1.5 for balanced readability and aesthetics",
+      pageBreakStrategy: "Start new chapters on right-facing pages with decorative elements"
+    }
   };
 };
 

@@ -78,6 +78,17 @@ export interface EPUBExportOptions {
     lineHeight: string;
     textAlign: 'left' | 'justified' | 'center';
   };
+  enhancedNavigation?: boolean;
+  embedFonts?: boolean;
+  generateCSS?: boolean;
+  chapterPageBreaks?: boolean;
+  customStyling?: boolean;
+  interactiveElements?: boolean;
+  accessibility?: {
+    aria: boolean;
+    imageAlt: boolean;
+    semanticMarkup: boolean;
+  };
 }
 
 // DOCX Export options
@@ -92,6 +103,42 @@ export interface DOCXExportOptions {
   pageSize: 'a4' | 'letter' | 'legal';
   margins: 'normal' | 'narrow' | 'moderate' | 'wide';
   orientation: 'portrait' | 'landscape';
+  trackChanges?: boolean;
+  documentProtection?: boolean;
+  watermark?: string;
+  styleSet?: 'modern' | 'classic' | 'elegant' | 'minimal';
+  highlightedSections?: boolean;
+  autoHyphenation?: boolean;
+  footnotesEndnotes?: boolean;
+}
+
+// Additional export options
+export interface HTMLExportOptions {
+  responsive: boolean;
+  includeCSS: boolean;
+  darkModeSupport?: boolean;
+  htmlVersion?: 'html5' | 'xhtml';
+  includeFonts?: boolean;
+  interactiveElements?: boolean;
+  printOptimized?: boolean;
+}
+
+export interface TXTExportOptions {
+  encoding: 'utf8' | 'ascii';
+  lineBreaks: 'lf' | 'crlf';
+  includeMetadata?: boolean;
+  preserveFormatting?: boolean;
+  wrapWidth?: number;
+}
+
+export interface MarkdownExportOptions {
+  format: 'standard' | 'github' | 'commonmark';
+  includeMetadata: boolean;
+  tableSupport?: boolean;
+  frontMatter?: boolean;
+  codeHighlighting?: boolean;
+  footnotes?: boolean;
+  includeTableOfContents?: boolean;
 }
 
 // PDF Beautification types
