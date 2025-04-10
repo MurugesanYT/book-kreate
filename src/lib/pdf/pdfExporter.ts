@@ -1,3 +1,4 @@
+
 import { jsPDF } from "jspdf";
 import { BookData, PDFExportOptions } from "../api/types";
 import { generateBookBeautification, BeautificationResult } from "./beautificationService";
@@ -35,8 +36,8 @@ export const exportBookToPDF = async (
   book: BookData,
   chapters: { title: string; content: string }[],
   options: PDFExportOptions = getDefaultExportOptions(),
-  coverPage?: string,
-  creditsPage?: string
+  coverPage: string = "",
+  creditsPage: string = ""
 ): Promise<string> => {
   try {
     console.log("Starting PDF export with options:", options);
