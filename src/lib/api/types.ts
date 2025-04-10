@@ -56,3 +56,10 @@ export interface PDFExportOptions {
   pageMargins: 'normal' | 'wide' | 'narrow';
   paperTextureEffect: boolean;
 }
+
+// PDF Beautification types
+export interface BeautificationOptions {
+  useAI: boolean;
+  theme: 'auto' | 'custom';
+  customSettings?: Record<string, any>;
+}
