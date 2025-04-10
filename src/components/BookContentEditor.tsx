@@ -672,4 +672,129 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
                   doc.line(margin + 5, yPosition - 5 + boxHeight - cornerSize, margin + 5, yPosition - 5 + boxHeight);
                   doc.line(margin + 5, yPosition - 5 + boxHeight, margin + 5 + cornerSize, yPosition - 5 + boxHeight);
                   
-                  doc.line(margin + 5 + boxWidth - cornerSize, yPosition - 5 + boxHeight, margin + 5 + box
+                  doc.line(margin + 5 + boxWidth - cornerSize, yPosition - 5 + boxHeight, margin + 5 + boxWidth, yPosition - 5 + boxHeight);
+                  doc.line(margin + 5 + boxWidth, yPosition - 5 + boxHeight, margin + 5 + boxWidth, yPosition - 5 + boxHeight - cornerSize);
+                } else {
+                  doc.setFillColor(`${colorScheme.bg}e6`);
+                  doc.roundedRect(margin + 5, yPosition - 5, contentWidth - 10, 10 * quoteLines.length + 10, 2, 2, 'F');
+                  doc.setDrawColor(colorScheme.accent);
+                  doc.roundedRect(margin + 5, yPosition - 5, contentWidth - 10, 10 * quoteLines.length + 10, 2, 2, 'S');
+                }
+                
+                doc.text(quoteLines, margin + 15, yPosition);
+                yPosition += 10 * quoteLines.length + 5;
+              }
+              else {
+                // Regular paragraph
+                if (isFirstParagraph && pdfOptions.dropCaps) {
+                  const dropCapsResult = applyDropCaps(doc, paragraph, margin, yPosition, colorScheme);
+                  
+                  if (dropCapsResult) {
+                    const { restOfText, dropCapWidth, lineHeight } = dropCapsResult;
+                    const wrappedText = doc.splitTextToSize(restOfText, contentWidth - dropCapWidth);
+                    
+                    // First 3 lines are next to the drop cap
+                    for (let i = 0; i < Math.min(3, wrappedText.length); i++) {
+                      doc.text(wrappedText[i], margin + dropCapWidth, yPosition + (i * lineHeight));
+                    }
+                    
+                    // The rest are full width
+                    if (wrappedText.length > 3) {
+                      for (let i = 3; i < wrappedText.length; i++) {
+                        doc.text(wrappedText[i], margin, yPosition + (i * lineHeight));
+                      }
+                    }
+                    
+                    yPosition += lineHeight * Math.max(wrappedText.length, 3) + 10;
+                  } else {
+                    const wrappedText = doc.splitTextToSize(paragraph, contentWidth);
+                    
+                    if (pdfOptions.textAlignment === 'center') {
+                      doc.text(wrappedText, pageWidth / 2, yPosition, { align: 'center' });
+                    } else {
+                      doc.text(wrappedText, margin, yPosition);
+                    }
+                    
+                    yPosition += 6 * wrappedText.length;
+                  }
+                } else {
+                  const wrappedText = doc.splitTextToSize(paragraph, contentWidth);
+                  
+                  if (pdfOptions.textAlignment === 'center') {
+                    doc.text(wrappedText, pageWidth / 2, yPosition, { align: 'center' });
+                  } else {
+                    doc.text(wrappedText, margin, yPosition);
+                  }
+                  
+                  yPosition += 6 * wrappedText.length;
+                }
+                
+                isFirstParagraph = false;
+              }
+              
+              yPosition += 6; // Extra spacing between paragraphs
+            });
+          }
+        });
+      }
+      
+      if (editedBook.creditsPage) {
+        doc.addPage();
+        
+        doc.setFillColor(colorScheme.bg);
+        doc.rect(0, 0, pageWidth, pageHeight, 'F');
+        
+        applyPaperTexture(doc, pageWidth, pageHeight, colorScheme);
+        
+        if (pdfOptions.decorativeElements) {
+          getDecorations(pdfOptions.colorScheme, doc, pageWidth, pageHeight, margin);
+        }
+        
+        if (pdfOptions.headerFooter) {
+          doc.setFont(fontFamily, 'italic');
+          doc.setFontSize(baseFontSize * 0.8);
+          doc.setTextColor(colorScheme.accent);
+          doc.text(editedBook.title, margin, 10);
+          
+          doc.text('Credits', pageWidth - margin, pageHeight - 10, { align: 'right' });
+        }
+        
+        doc.setFont(fontFamily, 'bold');
+        doc.setFontSize(baseFontSize * 1.8);
+        doc.setTextColor(colorScheme.heading);
+        doc.text("Credits", pageWidth / 2, 30, { align: 'center' });
+        
+        doc.setFont(fontFamily, 'normal');
+        doc.setFontSize(baseFontSize);
+        doc.setTextColor(colorScheme.text);
+        
+        const creditsLines = doc.splitTextToSize(editedBook.creditsPage, contentWidth);
+        const textAlign = pdfOptions.textAlignment as any;
+        doc.text(creditsLines, pdfOptions.textAlignment === 'center' ? pageWidth / 2 : margin, 50, { 
+          align: textAlign === 'justified' ? 'justify' : textAlign 
+        });
+      }
+      
+      // Simulate PDF creation delay
+      setTimeout(() => {
+        setIsExporting(false);
+        toast.success('PDF export completed successfully!');
+        
+        // Save the PDF
+        doc.save(`${editedBook.title || 'untitled-book'}.pdf`);
+      }, 1000);
+    } catch (error) {
+      console.error('PDF export error:', error);
+      setIsExporting(false);
+      toast.error('Failed to export PDF. Please try again.');
+    }
+  };
+
+  return (
+    <div>
+      {/* Component rendering code */}
+    </div>
+  );
+};
+
+export default BookContentEditor;
