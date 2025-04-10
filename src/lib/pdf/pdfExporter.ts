@@ -1,4 +1,3 @@
-
 import { jsPDF } from "jspdf";
 import { BookData, PDFExportOptions } from "../api/types";
 import { generateBookBeautification, BeautificationResult } from "./beautificationService";
@@ -35,9 +34,9 @@ const COLOR_SCHEMES = {
 export const exportBookToPDF = async (
   book: BookData,
   chapters: { title: string; content: string }[],
+  options: PDFExportOptions = getDefaultExportOptions(),
   coverPage?: string,
-  creditsPage?: string,
-  options: PDFExportOptions = getDefaultExportOptions()
+  creditsPage?: string
 ): Promise<string> => {
   try {
     console.log("Starting PDF export with options:", options);
@@ -116,15 +115,18 @@ const configureDocument = (
   
   // Add page numbers if enabled
   if (options.showPageNumbers) {
-    doc.setFooter((pageNumber, pageCount) => {
+    // jsPDF doesn't have setFooter method - use regular page events instead
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
       doc.setFontSize(FONT_SIZES.footer);
       doc.text(
-        `${pageNumber} / ${pageCount}`,
+        `${i} / ${pageCount}`,
         doc.internal.pageSize.width / 2,
         doc.internal.pageSize.height - 10,
         { align: 'center' }
       );
-    });
+    }
   }
 };
 

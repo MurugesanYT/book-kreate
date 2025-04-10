@@ -1,4 +1,3 @@
-
 import { generateWithGemini } from '@/lib/api/geminiService';
 import { PDFExportOptions, BookData } from '@/lib/api/types';
 import { toast } from 'sonner';
@@ -45,7 +44,7 @@ export const generateBookBeautification = async (
     // Generate beautification recommendations with Gemini
     console.log("Sending beautification prompt to Gemini...");
     // Use a larger token limit to get more detailed responses
-    const geminiResponse = await generateWithGemini(prompt, 4096);
+    const geminiResponse = await generateWithGemini(prompt, 8192);
     
     // Parse the structured response from Gemini
     const parsedResponse = parseGeminiResponse(geminiResponse);
@@ -70,7 +69,7 @@ export const generateBookBeautification = async (
 const extractContentSample = (content: string): string => {
   // Get multiple samples from different parts of the book for better analysis
   const totalLength = content.length;
-  const sampleSize = 800; // Increased sample size for better context
+  const sampleSize = 1200; // Increased sample size for better context
   
   if (totalLength <= sampleSize * 3) {
     return content; // Return whole content if it's small enough
@@ -90,7 +89,7 @@ const extractContentSample = (content: string): string => {
  */
 const createEnhancedBeautificationPrompt = (book: BookData, contentSample: string, options: PDFExportOptions): string => {
   return `
-I need exceptional PDF beautification recommendations for a book with the following details:
+I need stunning, professional-grade PDF beautification recommendations for a book with the following details:
 
 BOOK METADATA:
 - Title: "${book.title}"
@@ -115,36 +114,37 @@ ${contentSample}
 """
 
 DESIGN MISSION:
-Create a visually stunning, professional design that feels custom-made for this specific book. The design should:
-1. Reflect the mood, tone, and essence of the book content
-2. Feel cohesive and thoughtfully crafted
-3. Enhance readability while adding visual appeal
-4. Include subtle but memorable visual elements that complement the content
-5. Feel appropriate for the book's genre and target audience
+You are a world-class book designer tasked with creating a distinctive, memorable, and cohesive visual identity for this book that will wow readers and showcase the content in its best light. Your design should:
 
-Be creative and specific with your recommendations. For example, instead of just "Simple centered asterisk", describe "An elegant floral asterisk motif in a deep burgundy shade that echoes the book's romantic themes."
+1. Perfectly capture the mood, tone, and essence of the content - if it's a thriller, create tension; if romance, evoke emotion; if technical, ensure clarity
+2. Feel professionally crafted and worthy of a bestseller
+3. Prioritize exceptional readability while adding sophisticated visual appeal
+4. Include subtle but distinctive design elements that complement the content's themes
+5. Feel timeless yet contemporary, avoiding trendy design that will quickly look dated
 
-Based on this information, provide exceptionally detailed beautification recommendations in the following JSON format:
+Be extraordinarily specific and detailed with your recommendations. For example, instead of "use decorative dividers," specify "employ elegant botanical line drawings of cypress trees in a rich sepia tone that echoes the Mediterranean setting of the narrative."
+
+Based on your expert analysis, provide exceptionally detailed beautification recommendations in the following JSON format:
 {
   "cssStyles": "Detailed CSS styles that would work well for this content",
-  "fontRecommendation": "Specific font family or combinations that perfectly complement the content's tone and style",
-  "colorScheme": "Sophisticated color palette recommendation with precise hex codes for primary, secondary, accent colors",
+  "fontRecommendation": "A perfect font pairing recommendation (header/body) with fallbacks",
+  "colorScheme": "A sophisticated color palette with precise hex codes for primary text, background, and accent colors",
   "decorativeElements": {
-    "headerStyle": "Detailed description of header style with specific design elements",
-    "footerStyle": "Detailed description of footer style with specific design elements", 
-    "chapterDividers": ["Array of 3-4 unique and specific divider styles that match the book's theme"],
-    "dropCapStyle": "Detailed description of drop cap style with specific styling suggestions",
-    "pageDecorations": ["Array of 3-4 subtle decoration elements with specific placement and styling"],
-    "backgroundTexture": "Description of subtle background texture or pattern if appropriate"
+    "headerStyle": "Detailed description of a distinctive header design with specific elements",
+    "footerStyle": "Detailed description of a complementary footer design", 
+    "chapterDividers": ["Array of 3-4 unique and visually cohesive divider styles that match the book's aesthetic"],
+    "dropCapStyle": "Detailed description of a drop cap style with specific styling that enhances the opening of chapters",
+    "pageDecorations": ["Array of 2-3 subtle but distinctive decoration elements with specific placement and styling"],
+    "backgroundTexture": "Description of a subtle background texture or pattern if appropriate to the content"
   },
   "layoutRecommendation": {
-    "margins": "Precise margin recommendations in inches/cm",
-    "lineSpacing": "Exact line spacing recommendation with rationale",
-    "pageBreakStrategy": "Thoughtful strategy for page breaks and content flow"
+    "margins": "Precise margin recommendations based on design principles",
+    "lineSpacing": "Exact line spacing recommendation with rationale for readability",
+    "pageBreakStrategy": "Thoughtful strategy for page breaks that enhances reading experience"
   }
 }
 
-The recommendations should perfectly match the book's category (${book.category}) and reflect the unique style and tone of the content. Provide only the JSON response without additional text.
+Your recommendations should reflect a deep understanding of the book's category (${book.category}) and demonstrate professional book design expertise. Provide only the JSON response without additional text.
 `;
 };
 
@@ -298,84 +298,133 @@ const getCategoryFontRecommendation = (category: string): string => {
 const getDefaultDecorativeElements = (category: string): BeautificationResult['decorativeElements'] => {
   const elements: Record<string, BeautificationResult['decorativeElements']> = {
     fiction: {
-      headerStyle: "Book title in small caps with a thin underline",
-      footerStyle: "Page number centered with small decorative flourishes on either side",
+      headerStyle: "Book title in small caps with an elegant thin underline in accent color",
+      footerStyle: "Page number centered within a delicate ornamental frame with small flourishes on either side",
       chapterDividers: [
-        "An elegant swirl pattern in light gray",
-        "Three small diamond shapes arranged horizontally",
-        "A thin gradient line that fades at both ends"
+        "A graceful swirl pattern that begins thin on the left, thickens in the middle, and tapers to the right",
+        "Three small diamond shapes arranged horizontally with thin connecting lines between them",
+        "A gradient line that transitions from primary to accent color and fades at both ends",
+        "A small ornamental motif inspired by classical literature with subtle floral elements"
       ],
-      dropCapStyle: "Large serif initial letter spanning 3 lines with subtle shadow",
+      dropCapStyle: "A large serif initial letter spanning 3 lines with a subtle shadow and thin decorative border",
       pageDecorations: [
-        "Subtle corner flourishes on first page of each chapter",
-        "Small ornamental symbol at end of chapters"
+        "Subtle corner flourishes that appear on the first page of each chapter",
+        "Small decorative symbols that relate to the book's themes at the end of chapters",
+        "Delicate rule lines above header and below footer"
       ],
-      backgroundTexture: "Very subtle paper texture"
+      backgroundTexture: "Very subtle antique parchment texture that adds warmth without reducing readability"
     },
     
     "non-fiction": {
-      headerStyle: "Section name and chapter number in sans-serif font",
-      footerStyle: "Page number with book title in small text",
+      headerStyle: "Clean sans-serif section name and chapter number with a thin horizontal accent line",
+      footerStyle: "Page number with book title in small caps, separated by a minimal dot symbol",
       chapterDividers: [
-        "Clean horizontal line with small square at center",
-        "Gradient bar from primary to accent color",
-        "Minimal triple-dot divider in accent color"
+        "A precise horizontal line with a small square at center in the accent color",
+        "A sleek gradient bar that transitions smoothly from primary to accent color",
+        "A minimal triple-dot divider aligned centrally with even spacing",
+        "A geometric pattern of interconnected shapes that suggests organization and structure"
       ],
-      dropCapStyle: "Clean sans-serif initial letter spanning 2 lines with accent color",
+      dropCapStyle: "A modern sans-serif initial letter in accent color with increased weight",
       pageDecorations: [
-        "Subtle section icons in page margins",
-        "Small key points highlighted in margin notes"
+        "Subtle margin indicators for key sections",
+        "Small geometric shapes as bullet points",
+        "Clean margin space for reader notes"
       ],
-      backgroundTexture: "Clean white with subtle grid pattern"
+      backgroundTexture: "Crisp white with an extremely subtle grid pattern that aids eye tracking"
     },
     
     technical: {
-      headerStyle: "Chapter name with small technical icon",
-      footerStyle: "Page number with section reference",
+      headerStyle: "Monospaced chapter name with a technical icon relevant to the subject matter",
+      footerStyle: "Page number with section reference in a clean information hierarchy",
       chapterDividers: [
-        "Code-inspired pattern with brackets and dots",
-        "Clean horizontal line with section number",
-        "Binary or hex pattern in light gray"
+        "A pattern inspired by code syntax with brackets, dots and slashes",
+        "A clean horizontal line with chapter number in a circular node",
+        "A minimal pattern suggesting binary or hexadecimal sequences",
+        "A schematic-inspired divider with connected nodes"
       ],
-      dropCapStyle: "Monospace initial letter in a light box background",
+      dropCapStyle: "A monospaced initial letter in a light rectangular background with rounded corners",
       pageDecorations: [
-        "Code snippet styling for code blocks",
-        "Technical diagrams with consistent styling"
+        "Code snippet styling with syntax highlighting for code blocks",
+        "Margin indicators for notes, warnings, and tips",
+        "Small diagrams that complement the technical content"
       ],
-      backgroundTexture: "Graph paper or blueprint subtle texture"
+      backgroundTexture: "Subtle graph paper or blueprint texture in very light blue"
     },
     
     children: {
-      headerStyle: "Playful rounded font with small illustration",
-      footerStyle: "Page number inside a fun shape (star, cloud, etc.)",
+      headerStyle: "Playful rounded font with small themed illustration relevant to the chapter",
+      footerStyle: "Page number inside a fun shape like a star, cloud, or animal footprint",
       chapterDividers: [
-        "Row of small playful icons (stars, hearts, animals)",
-        "Wavy colorful line",
-        "Character illustration relevant to chapter"
+        "A row of small playful icons like stars, hearts, or animals relevant to the story",
+        "A colorful wavy line with gradient colors from the book's palette",
+        "Character illustration or silhouette from the story",
+        "Playful dashed line with small themed symbols at intervals"
       ],
-      dropCapStyle: "Colorful bubble letter with playful design",
+      dropCapStyle: "A colorful bubble letter with playful 3D effect or character interaction",
       pageDecorations: [
-        "Colorful illustrated borders on chapter pages",
-        "Small spot illustrations in margins",
-        "Character reactions or emotions in margins"
+        "Colorful illustrated borders on chapter opening pages",
+        "Small spot illustrations in margins that relate to nearby text",
+        "Character expressions or reactions in margins at emotional moments",
+        "Playful corner elements that create a framing effect"
       ],
-      backgroundTexture: "Very subtle polka dots or playful pattern"
+      backgroundTexture: "Very subtle polka dots, stars, or themed pattern that relates to the story"
     },
     
     poetry: {
-      headerStyle: "Minimalist italic title",
-      footerStyle: "Simple centered page number with small flourish",
+      headerStyle: "Elegant italic title with delicate flourishes",
+      footerStyle: "Simple centered page number with small calligraphic ornament",
       chapterDividers: [
-        "Single elegant line with small flourish",
-        "Small symbolic representation of poem theme",
-        "Delicate floral or nature-inspired divider"
+        "A single elegant curved line with small flourish at one end",
+        "A small symbolic representation related to the poem's theme",
+        "A delicate nature-inspired divider like a vine or branch",
+        "A minimalist symbol that captures the emotional essence of the collection"
       ],
-      dropCapStyle: "Elegant calligraphic initial letter",
+      dropCapStyle: "A flowing calligraphic initial letter with artistic flourishes",
       pageDecorations: [
-        "Subtle botanical illustrations in margins",
-        "Delicate line work framing special poems"
+        "Subtle botanical or nature illustrations in margins",
+        "Delicate line work framing special poems",
+        "Gentle watercolor-style washes in very light tints",
+        "Small symbolic elements that echo the poem's imagery"
       ],
-      backgroundTexture: "Textured paper or parchment effect"
+      backgroundTexture: "Textured paper or parchment effect with subtle warmth"
+    },
+    
+    romance: {
+      headerStyle: "Elegant script font with subtle heart or floral motif",
+      footerStyle: "Page number within a delicate ornamental frame",
+      chapterDividers: [
+        "Intertwined floral pattern with subtle color gradient",
+        "Delicate heart-inspired design that's sophisticated rather than cliché",
+        "Flowing ribbon or scroll design in accent color",
+        "Ornamental swirl that suggests connection and emotion"
+      ],
+      dropCapStyle: "Flowing script initial letter with decorative flourishes in a warm color",
+      pageDecorations: [
+        "Subtle corner embellishments on chapter opening pages",
+        "Delicate floral or nature motifs in margins",
+        "Small symbolic elements at emotional high points",
+        "Light watercolor-style washes behind chapter titles"
+      ],
+      backgroundTexture: "Very subtle texture suggesting fine linen or handmade paper"
+    },
+    
+    mystery: {
+      headerStyle: "Sharp serif font with a small magnifying glass or key icon",
+      footerStyle: "Page number with small mysterious symbol or footprint",
+      chapterDividers: [
+        "Faded or broken line suggesting something hidden or incomplete",
+        "Pattern of small clue-related symbols (keys, locks, footprints)",
+        "Ink splatter or fingerprint-inspired design in very light opacity",
+        "Morse code or cryptic symbol pattern that relates to the story"
+      ],
+      dropCapStyle: "Initial letter with subtle shadow and mysterious symbol integrated",
+      pageDecorations: [
+        "Subtle watermark-like symbols in page corners",
+        "Faded typewriter font for chapter numbers",
+        "Light texture suggesting old paper or documents",
+        "Small mysterious symbols in margins at key plot points"
+      ],
+      backgroundTexture: "Very subtle aged paper texture or light fog effect"
     }
   };
   

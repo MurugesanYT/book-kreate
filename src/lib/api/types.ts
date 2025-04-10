@@ -37,6 +37,9 @@ export interface PlanItem {
   content?: string;
 }
 
+// Export Formats
+export type ExportFormat = 'pdf' | 'epub' | 'mobi' | 'docx' | 'txt' | 'html' | 'markdown';
+
 // PDF Export types
 export interface PDFExportOptions {
   showPageNumbers: boolean;
@@ -56,6 +59,39 @@ export interface PDFExportOptions {
   pageMargins: 'normal' | 'wide' | 'narrow';
   paperTextureEffect: boolean;
   customTheme?: string;
+}
+
+// EPUB Export options
+export interface EPUBExportOptions {
+  includeTableOfContents: boolean;
+  coverImage: boolean;
+  metadata: {
+    author: string;
+    publisher?: string;
+    language: string;
+    rights?: string;
+    identifier?: string;
+  };
+  styling: {
+    fontFamily: string;
+    fontSize: string;
+    lineHeight: string;
+    textAlign: 'left' | 'justified' | 'center';
+  };
+}
+
+// DOCX Export options
+export interface DOCXExportOptions {
+  includeTableOfContents: boolean;
+  includeHeaderFooter: boolean;
+  styling: {
+    fontFamily: string;
+    fontSize: number;
+    lineSpacing: number;
+  };
+  pageSize: 'a4' | 'letter' | 'legal';
+  margins: 'normal' | 'narrow' | 'moderate' | 'wide';
+  orientation: 'portrait' | 'landscape';
 }
 
 // PDF Beautification types
