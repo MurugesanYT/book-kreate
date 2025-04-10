@@ -791,8 +791,451 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
   };
 
   return (
-    <div>
-      {/* Component rendering code */}
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Book Content Editor</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="edit" value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="mb-4 grid grid-cols-3">
+              <TabsTrigger value="edit">
+                <PenTool size={16} className="mr-2" /> Edit
+              </TabsTrigger>
+              <TabsTrigger value="format">
+                <LayoutTemplate size={16} className="mr-2" /> Format
+              </TabsTrigger>
+              <TabsTrigger value="preview">
+                <BookOpen size={16} className="mr-2" /> Preview
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="edit" className="space-y-6">
+              {editedBook.coverPage && (
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold">Cover Page</h3>
+                  <Textarea 
+                    value={editedBook.coverPage}
+                    onChange={(e) => handleCoverChange(e.target.value)}
+                    className="min-h-[200px] font-mono text-sm"
+                  />
+                </div>
+              )}
+              
+              {editedBook.chapters && editedBook.chapters.map((chapter, index) => (
+                <div key={index} className="space-y-2">
+                  <h3 className="text-lg font-semibold">Chapter {index + 1}: {chapter.title}</h3>
+                  <Textarea 
+                    value={chapter.content}
+                    onChange={(e) => handleContentChange(index, e.target.value)}
+                    className="min-h-[200px] font-mono text-sm"
+                  />
+                </div>
+              ))}
+              
+              {editedBook.creditsPage && (
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold">Credits</h3>
+                  <Textarea 
+                    value={editedBook.creditsPage}
+                    onChange={(e) => handleCreditsChange(e.target.value)}
+                    className="min-h-[200px] font-mono text-sm"
+                  />
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="format" className="space-y-6">
+              <Tabs defaultValue="content" value={formattingTab} onValueChange={setFormattingTab}>
+                <TabsList className="mb-4">
+                  <TabsTrigger value="content">Content</TabsTrigger>
+                  <TabsTrigger value="appearance">Appearance</TabsTrigger>
+                  <TabsTrigger value="export">Export Options</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="content" className="space-y-4">
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Book Style</h3>
+                      <Select 
+                        value={editedBook.fontFamily || 'helvetica'} 
+                        onValueChange={(value) => handleStyleChange('fontFamily', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select font family" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {fontFamilies.map((font) => (
+                            <SelectItem key={font.value} value={font.value}>
+                              {font.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Color Theme</h3>
+                      <Select 
+                        value={editedBook.colorScheme || 'elegant'} 
+                        onValueChange={(value) => handleStyleChange('colorScheme', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select color scheme" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="default">Default</SelectItem>
+                          <SelectItem value="elegant">Elegant</SelectItem>
+                          <SelectItem value="modern">Modern</SelectItem>
+                          <SelectItem value="classic">Classic</SelectItem>
+                          <SelectItem value="vibrant">Vibrant</SelectItem>
+                          <SelectItem value="minimalist">Minimalist</SelectItem>
+                          <SelectItem value="artistic">Artistic</SelectItem>
+                          <SelectItem value="scholarly">Scholarly</SelectItem>
+                          <SelectItem value="romantic">Romantic</SelectItem>
+                          <SelectItem value="fantasy">Fantasy</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="appearance" className="space-y-4">
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Page Settings</h3>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <Label htmlFor="pageSize">Page Size</Label>
+                          <Select 
+                            value={pdfOptions.pageSize} 
+                            onValueChange={(value) => setPdfOptions({...pdfOptions, pageSize: value})}
+                          >
+                            <SelectTrigger id="pageSize">
+                              <SelectValue placeholder="Select page size" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="a4">A4</SelectItem>
+                              <SelectItem value="letter">Letter</SelectItem>
+                              <SelectItem value="legal">Legal</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="orientation">Orientation</Label>
+                          <Select 
+                            value={pdfOptions.orientation} 
+                            onValueChange={(value: 'portrait' | 'landscape') => setPdfOptions({...pdfOptions, orientation: value})}
+                          >
+                            <SelectTrigger id="orientation">
+                              <SelectValue placeholder="Select orientation" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="portrait">Portrait</SelectItem>
+                              <SelectItem value="landscape">Landscape</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="pageMargins">Margins</Label>
+                          <Select 
+                            value={pdfOptions.pageMargins} 
+                            onValueChange={(value) => setPdfOptions({...pdfOptions, pageMargins: value})}
+                          >
+                            <SelectTrigger id="pageMargins">
+                              <SelectValue placeholder="Select margin size" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="narrow">Narrow</SelectItem>
+                              <SelectItem value="normal">Normal</SelectItem>
+                              <SelectItem value="wide">Wide</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="lineSpacing">Line Spacing</Label>
+                          <Select 
+                            value={pdfOptions.lineSpacing} 
+                            onValueChange={(value) => setPdfOptions({...pdfOptions, lineSpacing: value})}
+                          >
+                            <SelectTrigger id="lineSpacing">
+                              <SelectValue placeholder="Select line spacing" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="compact">Compact</SelectItem>
+                              <SelectItem value="normal">Normal</SelectItem>
+                              <SelectItem value="relaxed">Relaxed</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Text Settings</h3>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <Label htmlFor="fontSize">Font Size</Label>
+                          <Select 
+                            value={pdfOptions.fontSize.toString()} 
+                            onValueChange={(value) => setPdfOptions({...pdfOptions, fontSize: parseInt(value)})}
+                          >
+                            <SelectTrigger id="fontSize">
+                              <SelectValue placeholder="Select font size" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="10">10</SelectItem>
+                              <SelectItem value="11">11</SelectItem>
+                              <SelectItem value="12">12</SelectItem>
+                              <SelectItem value="14">14</SelectItem>
+                              <SelectItem value="16">16</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="textAlignment">Text Alignment</Label>
+                          <Select 
+                            value={pdfOptions.textAlignment} 
+                            onValueChange={(value) => setPdfOptions({...pdfOptions, textAlignment: value})}
+                          >
+                            <SelectTrigger id="textAlignment">
+                              <SelectValue placeholder="Select text alignment" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="left">Left</SelectItem>
+                              <SelectItem value="center">Center</SelectItem>
+                              <SelectItem value="right">Right</SelectItem>
+                              <SelectItem value="justified">Justified</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="dropCaps" 
+                            checked={pdfOptions.dropCaps}
+                            onCheckedChange={(checked) => setPdfOptions({...pdfOptions, dropCaps: checked as boolean})}
+                          />
+                          <label
+                            htmlFor="dropCaps"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            Enable drop caps for paragraphs
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Layout Elements</h3>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="showPageNumbers" 
+                            checked={pdfOptions.showPageNumbers}
+                            onCheckedChange={(checked) => setPdfOptions({...pdfOptions, showPageNumbers: checked as boolean})}
+                          />
+                          <label
+                            htmlFor="showPageNumbers"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            Show page numbers
+                          </label>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="headerFooter" 
+                            checked={pdfOptions.headerFooter}
+                            onCheckedChange={(checked) => setPdfOptions({...pdfOptions, headerFooter: checked as boolean})}
+                          />
+                          <label
+                            htmlFor="headerFooter"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            Include headers and footers
+                          </label>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="chapterDividers" 
+                            checked={pdfOptions.chapterDividers}
+                            onCheckedChange={(checked) => setPdfOptions({...pdfOptions, chapterDividers: checked as boolean})}
+                          />
+                          <label
+                            htmlFor="chapterDividers"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            Add chapter dividers
+                          </label>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="decorativeElements" 
+                            checked={pdfOptions.decorativeElements}
+                            onCheckedChange={(checked) => setPdfOptions({...pdfOptions, decorativeElements: checked as boolean})}
+                          />
+                          <label
+                            htmlFor="decorativeElements"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            Include decorative elements
+                          </label>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="paperTextureEffect" 
+                            checked={pdfOptions.paperTextureEffect}
+                            onCheckedChange={(checked) => setPdfOptions({...pdfOptions, paperTextureEffect: checked as boolean})}
+                          />
+                          <label
+                            htmlFor="paperTextureEffect"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            Add subtle paper texture effect
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="export" className="space-y-4">
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Export Format</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                        {exportFormats.map((format) => (
+                          <div 
+                            key={format.value}
+                            className={`border rounded-md p-2 cursor-pointer hover:bg-slate-50 transition-colors ${selectedFormat === format.value ? 'border-book-purple bg-book-purple/5' : 'border-slate-200'}`}
+                            onClick={() => setSelectedFormat(format.value as ExportFormat)}
+                          >
+                            <div className="flex items-center">
+                              <div className="w-8 h-8 flex items-center justify-center text-book-purple">
+                                {format.icon}
+                              </div>
+                              <div className="ml-2 text-sm">{format.label}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Quality Settings</h3>
+                      <RadioGroup 
+                        defaultValue={exportQuality} 
+                        value={exportQuality}
+                        onValueChange={(value) => setExportQuality(value as 'standard' | 'high')}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="standard" id="standard" />
+                          <Label htmlFor="standard">Standard quality (smaller file size)</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="high" id="high" />
+                          <Label htmlFor="high">High quality (larger file size)</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </TabsContent>
+            
+            <TabsContent value="preview" className="space-y-6">
+              <div className="bg-white p-4 border rounded-lg shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">Preview</h3>
+                  <Select 
+                    value={previewTheme} 
+                    onValueChange={setPreviewTheme}
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Select theme" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="default">Default</SelectItem>
+                      <SelectItem value="elegant">Elegant</SelectItem>
+                      <SelectItem value="modern">Modern</SelectItem>
+                      <SelectItem value="classic">Classic</SelectItem>
+                      <SelectItem value="vibrant">Vibrant</SelectItem>
+                      <SelectItem value="minimalist">Minimalist</SelectItem>
+                      <SelectItem value="artistic">Artistic</SelectItem>
+                      <SelectItem value="scholarly">Scholarly</SelectItem>
+                      <SelectItem value="romantic">Romantic</SelectItem>
+                      <SelectItem value="fantasy">Fantasy</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div 
+                  className="prose max-w-none"
+                  style={{
+                    fontFamily: editedBook.fontFamily || 'helvetica',
+                    padding: '1rem',
+                    backgroundColor: colorSchemes[previewTheme as keyof typeof colorSchemes]?.bg || '#ffffff',
+                    color: colorSchemes[previewTheme as keyof typeof colorSchemes]?.text || '#000000'
+                  }}
+                >
+                  {editedBook.coverPage && (
+                    <div className="mb-6 pb-6 border-b">
+                      <h2 style={{ color: colorSchemes[previewTheme as keyof typeof colorSchemes]?.heading || '#000000' }}>Cover Page</h2>
+                      <ReactMarkdown>{editedBook.coverPage}</ReactMarkdown>
+                    </div>
+                  )}
+                  
+                  {editedBook.chapters && editedBook.chapters.map((chapter, index) => (
+                    <div key={index} className="mb-6 pb-6 border-b">
+                      <h2 style={{ color: colorSchemes[previewTheme as keyof typeof colorSchemes]?.heading || '#000000' }}>
+                        Chapter {index + 1}: {chapter.title}
+                      </h2>
+                      <ReactMarkdown>{chapter.content}</ReactMarkdown>
+                    </div>
+                  ))}
+                  
+                  {editedBook.creditsPage && (
+                    <div className="mb-6">
+                      <h2 style={{ color: colorSchemes[previewTheme as keyof typeof colorSchemes]?.heading || '#000000' }}>Credits</h2>
+                      <ReactMarkdown>{editedBook.creditsPage}</ReactMarkdown>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button variant="outline" onClick={handleSave}>
+            <Save size={16} className="mr-2" />
+            Save Changes
+          </Button>
+          
+          <Button 
+            onClick={handleExport}
+            disabled={isExporting}
+            className="bg-book-purple hover:bg-book-purple/90"
+          >
+            <Download size={16} className="mr-2" />
+            {isExporting ? 'Exporting...' : `Export as ${selectedFormat.toUpperCase()}`}
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 };
