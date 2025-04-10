@@ -38,7 +38,7 @@ export interface PlanItem {
 }
 
 // Export Formats
-export type ExportFormat = 'pdf' | 'epub' | 'mobi' | 'docx' | 'txt' | 'html' | 'markdown';
+export type ExportFormat = 'pdf' | 'epub' | 'mobi' | 'docx' | 'txt' | 'html' | 'markdown' | 'rtf' | 'azw3' | 'fb2' | 'cbz' | 'audio';
 
 // PDF Export types
 export interface PDFExportOptions {
@@ -139,6 +139,82 @@ export interface MarkdownExportOptions {
   codeHighlighting?: boolean;
   footnotes?: boolean;
   includeTableOfContents?: boolean;
+}
+
+// New export options for additional formats
+export interface RTFExportOptions {
+  includeTableOfContents: boolean;
+  includeHeaderFooter: boolean;
+  styling: {
+    fontFamily: string;
+    fontSize: number;
+    lineSpacing: number;
+  };
+  pageSize: 'a4' | 'letter' | 'legal';
+  margins: 'normal' | 'narrow' | 'moderate' | 'wide';
+  embedImages: boolean;
+  colorSupport: 'full' | 'limited' | 'none';
+  specialCharacters: boolean;
+}
+
+export interface AZW3ExportOptions {
+  includeTableOfContents: boolean;
+  coverImage: boolean;
+  metadata: {
+    author: string;
+    publisher?: string;
+    language: string;
+    rights?: string;
+    identifier?: string;
+  };
+  formatting: {
+    fontFamily: string;
+    fontSize: string;
+    lineHeight: string;
+  };
+  enhancedTypesetting: boolean;
+  kindlePreviewer: boolean;
+  pageNumbering: boolean;
+}
+
+export interface FB2ExportOptions {
+  includeTableOfContents: boolean;
+  coverImage: boolean;
+  metadata: {
+    author: string;
+    publisher?: string;
+    language: string;
+    genre?: string;
+    year?: string;
+  };
+  includeAnnotation: boolean;
+  includeSections: boolean;
+  xhtmlSupport: boolean;
+}
+
+export interface CBZExportOptions {
+  coverImage: boolean;
+  imageQuality: 'low' | 'medium' | 'high';
+  pageSize: 'standard' | 'wide' | 'tall';
+  pageNumbering: boolean;
+  metadata: {
+    title: string;
+    author: string;
+    publisher?: string;
+    year?: string;
+  };
+  compressionLevel: 'low' | 'medium' | 'high';
+}
+
+export interface AudioExportOptions {
+  voiceType: 'male' | 'female' | 'neutral';
+  audioQuality: 'standard' | 'high';
+  fileFormat: 'mp3' | 'wav' | 'ogg' | 'flac';
+  sampleRate: '44.1kHz' | '48kHz' | '96kHz';
+  includeChapterMarkers: boolean;
+  normalizeAudio: boolean;
+  speedControl: boolean;
+  bitRate: '128kbps' | '192kbps' | '256kbps' | '320kbps';
 }
 
 // PDF Beautification types

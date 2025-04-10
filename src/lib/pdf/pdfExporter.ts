@@ -65,7 +65,7 @@ export const exportBookToPDF = async (
     configureDocument(doc, options, beautification);
     
     // Generate the PDF content
-    addCoverPage(doc, book, options, coverPage, beautification);
+    addCoverPage(doc, book, options, beautification, coverPage);
     addTableOfContents(doc, chapters, options, beautification);
     addChapters(doc, chapters, options, beautification);
     if (creditsPage) {
@@ -137,9 +137,9 @@ const configureDocument = (
 const addCoverPage = (
   doc: jsPDF, 
   book: BookData, 
-  options: PDFExportOptions = getDefaultExportOptions(),
-  coverContent?: string,
-  beautification?: BeautificationResult
+  options: PDFExportOptions,
+  beautification: BeautificationResult,
+  coverContent?: string
 ) => {
   if (!options.coverPage) {
     return;

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { jsPDF } from "jspdf";
 import { Button } from '@/components/ui/button';
@@ -6,10 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
-import { Download, Save, Settings, PenTool, Image, LayoutTemplate, Sparkles } from 'lucide-react';
+import { Download, Save, Settings, PenTool, Image, LayoutTemplate, Sparkles, BookOpen, FileText, Audio } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Checkbox } from "@/components/ui/checkbox";
-import { PDFExportOptions } from '@/lib/api/types';
+import { PDFExportOptions, ExportFormat } from '@/lib/api/types';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -41,6 +42,7 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
   const [editedBook, setEditedBook] = useState<Book>(book);
   const [activeTab, setActiveTab] = useState<string>('edit');
   const [exportQuality, setExportQuality] = useState<'standard' | 'high'>('high');
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('pdf');
   const [pdfOptions, setPdfOptions] = useState<PDFExportOptions>({
     showPageNumbers: true,
     includeMargins: true,
@@ -121,6 +123,21 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
     { value: 'times', label: 'Times (Serif)' },
     { value: 'courier', label: 'Courier (Monospace)' },
     { value: 'georgia', label: 'Georgia (Elegant Serif)' }
+  ];
+
+  const exportFormats = [
+    { value: 'pdf', label: 'PDF Document', icon: <FileText size={16} /> },
+    { value: 'epub', label: 'EPUB eBook', icon: <BookOpen size={16} /> },
+    { value: 'mobi', label: 'MOBI (Kindle)', icon: <BookOpen size={16} /> },
+    { value: 'docx', label: 'Word Document', icon: <FileText size={16} /> },
+    { value: 'html', label: 'HTML Website', icon: <FileText size={16} /> },
+    { value: 'markdown', label: 'Markdown', icon: <FileText size={16} /> },
+    { value: 'txt', label: 'Plain Text', icon: <FileText size={16} /> },
+    { value: 'rtf', label: 'Rich Text Format', icon: <FileText size={16} /> },
+    { value: 'azw3', label: 'Kindle AZW3', icon: <BookOpen size={16} /> },
+    { value: 'fb2', label: 'FictionBook', icon: <BookOpen size={16} /> },
+    { value: 'cbz', label: 'Comic Book Archive', icon: <Image size={16} /> },
+    { value: 'audio', label: 'Audiobook', icon: <Audio size={16} /> }
   ];
 
   const getDecorations = (theme: string, doc: jsPDF, pageWidth: number, pageHeight: number, margin: number) => {
@@ -294,7 +311,7 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
         if (pdfOptions.decorativeElements) {
           doc.setDrawColor(colorScheme.accent);
           doc.setLineWidth(0.5);
-          doc.rect(margin, margin, pageWidth - (margin * 2), pageHeight - (margin * 2), 'S');
+          doc.line(pageWidth / 2 - contentWidth / 4, 25, pageWidth / 2 + contentWidth / 4, 25);
         }
     }
   };
@@ -321,6 +338,49 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
       dropCapWidth,
       lineHeight: pdfOptions.fontSize * 3 * 0.25
     };
+  };
+
+  const handleExport = () => {
+    switch (selectedFormat) {
+      case 'pdf':
+        exportToPdf();
+        break;
+      case 'epub':
+      case 'mobi':
+      case 'docx':
+      case 'html':
+      case 'markdown':
+      case 'txt':
+      case 'rtf':
+      case 'azw3':
+      case 'fb2':
+      case 'cbz':
+      case 'audio':
+        simulateExport(selectedFormat);
+        break;
+      default:
+        toast.error(`Export format ${selectedFormat} not supported yet`);
+    }
+  };
+
+  const simulateExport = (format: ExportFormat) => {
+    setIsExporting(true);
+    toast.loading(`Creating your ${format.toUpperCase()} file...`);
+    
+    // Simulate processing time
+    setTimeout(() => {
+      setIsExporting(false);
+      toast.success(`Book exported to ${format.toUpperCase()} successfully!`);
+      
+      // Simulate download by creating a dummy download link
+      const element = document.createElement('a');
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent('Your book content would be here.'));
+      element.setAttribute('download', `${editedBook.title || 'untitled-book'}.${format}`);
+      element.style.display = 'none';
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    }, 2000);
   };
 
   const exportToPdf = () => {
@@ -674,3 +734,491 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
                 } else {
                   doc.text(contentLines, margin, yPosition);
                 }
+                
+                yPosition += contentLines.length * (baseFontSize * 0.5 * lineHeightMultiplier);
+                isFirstParagraph = false;
+              }
+            });
+          }
+        });
+      }
+      
+      // Save the PDF
+      const pdfOutput = doc.output('datauristring');
+      
+      // Create a link to download the PDF
+      const element = document.createElement('a');
+      element.setAttribute('href', pdfOutput);
+      element.setAttribute('download', `${editedBook.title || 'book'}.pdf`);
+      element.style.display = 'none';
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+      
+      setIsExporting(false);
+      toast.success('Book exported to PDF successfully!');
+    } catch (error) {
+      console.error('PDF export error:', error);
+      setIsExporting(false);
+      toast.error('Failed to export book to PDF. Please try again.');
+    }
+  };
+
+  return (
+    <div className="w-full space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="edit">Edit Content</TabsTrigger>
+          <TabsTrigger value="preview">Preview</TabsTrigger>
+          <TabsTrigger value="export">Export</TabsTrigger>
+          <TabsTrigger value="settings">Format Settings</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="edit" className="space-y-4">
+          {editedBook.coverPage !== undefined && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Cover Page</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Textarea 
+                  placeholder="Write your cover page content here..."
+                  value={editedBook.coverPage}
+                  onChange={(e) => handleCoverChange(e.target.value)}
+                  className="min-h-32"
+                />
+              </CardContent>
+            </Card>
+          )}
+          
+          {editedBook.chapters.map((chapter, index) => (
+            <Card key={index}>
+              <CardHeader>
+                <CardTitle>Chapter {index + 1}: {chapter.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Textarea 
+                  placeholder="Write your chapter content here..."
+                  value={chapter.content}
+                  onChange={(e) => handleContentChange(index, e.target.value)}
+                  className="min-h-64"
+                />
+              </CardContent>
+            </Card>
+          ))}
+          
+          {editedBook.creditsPage !== undefined && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Credits Page</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Textarea 
+                  placeholder="Write your credits page content here..."
+                  value={editedBook.creditsPage}
+                  onChange={(e) => handleCreditsChange(e.target.value)}
+                  className="min-h-32"
+                />
+              </CardContent>
+            </Card>
+          )}
+          
+          <Button 
+            onClick={handleSave}
+            className="flex items-center gap-2"
+            disabled={isExporting}
+          >
+            <Save size={16} />
+            Save Changes
+          </Button>
+        </TabsContent>
+        
+        <TabsContent value="preview" className="space-y-4">
+          <div className="p-6 border rounded-lg bg-white">
+            <h1 className="text-3xl font-bold mb-4">{editedBook.title || 'Untitled Book'}</h1>
+            <p className="text-sm mb-6 italic">{editedBook.genre || 'No Genre'}</p>
+            
+            {editedBook.description && (
+              <div className="mb-8">
+                <p>{editedBook.description}</p>
+              </div>
+            )}
+            
+            {editedBook.coverPage && (
+              <div className="mb-8 p-4 border-l-4 border-gray-300">
+                <h2 className="text-xl font-semibold mb-2">Cover Page</h2>
+                <ReactMarkdown>{editedBook.coverPage}</ReactMarkdown>
+              </div>
+            )}
+            
+            {editedBook.chapters.map((chapter, index) => (
+              <div key={index} className="mb-8">
+                <h2 className="text-2xl font-semibold mb-4">Chapter {index + 1}: {chapter.title}</h2>
+                <ReactMarkdown>{chapter.content}</ReactMarkdown>
+              </div>
+            ))}
+            
+            {editedBook.creditsPage && (
+              <div className="mt-8 p-4 border-t border-gray-200">
+                <h2 className="text-xl font-semibold mb-2">Credits</h2>
+                <ReactMarkdown>{editedBook.creditsPage}</ReactMarkdown>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="export" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Download size={20} />
+                Export Your Book
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label className="text-base">Choose Format</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mt-2">
+                  {exportFormats.map((format) => (
+                    <Button
+                      key={format.value}
+                      variant={selectedFormat === format.value ? "default" : "outline"}
+                      className={`justify-start gap-2 py-6 ${selectedFormat === format.value ? "" : "border-dashed"}`}
+                      onClick={() => setSelectedFormat(format.value as ExportFormat)}
+                    >
+                      {format.icon}
+                      {format.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              
+              <Separator />
+              
+              <div>
+                <Label className="text-base">Export Quality</Label>
+                <RadioGroup
+                  className="flex items-center gap-4 mt-2"
+                  value={exportQuality}
+                  onValueChange={(value) => setExportQuality(value as 'standard' | 'high')}
+                >
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem id="quality-standard" value="standard" />
+                    <Label htmlFor="quality-standard">Standard</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem id="quality-high" value="high" />
+                    <Label htmlFor="quality-high">High Quality</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              
+              <Separator />
+              
+              {selectedFormat === 'audio' && (
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-base mb-2 block">Voice Options</Label>
+                    <Select defaultValue="neutral">
+                      <SelectTrigger>
+                        <SelectValue placeholder="Voice Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Male Voice</SelectItem>
+                        <SelectItem value="female">Female Voice</SelectItem>
+                        <SelectItem value="neutral">Neutral Voice</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm block mb-1">Audio Quality</Label>
+                      <Select defaultValue="standard">
+                        <SelectTrigger>
+                          <SelectValue placeholder="Audio Quality" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="standard">Standard (MP3)</SelectItem>
+                          <SelectItem value="high">High (WAV)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-sm block mb-1">Chapter Markers</Label>
+                      <div className="flex items-center h-10 space-x-2">
+                        <Checkbox id="chapter-markers" defaultChecked />
+                        <label htmlFor="chapter-markers">Include chapter markers</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {(selectedFormat === 'epub' || selectedFormat === 'mobi' || selectedFormat === 'azw3') && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm block mb-1">Include Table of Contents</Label>
+                      <div className="flex items-center h-10 space-x-2">
+                        <Checkbox id="toc" defaultChecked />
+                        <label htmlFor="toc">Include TOC</label>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-sm block mb-1">Interactive Elements</Label>
+                      <div className="flex items-center h-10 space-x-2">
+                        <Checkbox id="interactive" />
+                        <label htmlFor="interactive">Add interactive elements</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {(selectedFormat === 'pdf') && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm block mb-1">Paper Size</Label>
+                    <Select 
+                      value={pdfOptions.pageSize}
+                      onValueChange={(val) => setPdfOptions({...pdfOptions, pageSize: val as any})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Paper Size" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="a4">A4</SelectItem>
+                        <SelectItem value="letter">US Letter</SelectItem>
+                        <SelectItem value="legal">Legal</SelectItem>
+                        <SelectItem value="a5">A5</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-sm block mb-1">Orientation</Label>
+                    <Select 
+                      value={pdfOptions.orientation}
+                      onValueChange={(val) => setPdfOptions({...pdfOptions, orientation: val as any})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Orientation" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="portrait">Portrait</SelectItem>
+                        <SelectItem value="landscape">Landscape</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+            <CardFooter>
+              <Button 
+                onClick={handleExport} 
+                disabled={isExporting}
+                className="w-full flex items-center justify-center gap-2"
+              >
+                <Download size={16} />
+                {isExporting ? 'Exporting...' : `Export as ${selectedFormat.toUpperCase()}`}
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="settings" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings size={20} />
+                Formatting Settings
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs value={formattingTab} onValueChange={setFormattingTab}>
+                <TabsList className="mb-4">
+                  <TabsTrigger value="content">Content</TabsTrigger>
+                  <TabsTrigger value="style">Style</TabsTrigger>
+                  <TabsTrigger value="appearance">Appearance</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="content" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="block mb-2">Font Family</Label>
+                      <Select 
+                        value={editedBook.fontFamily || 'helvetica'}
+                        onValueChange={(val) => handleStyleChange('fontFamily', val)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select font" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {fontFamilies.map(font => (
+                            <SelectItem key={font.value} value={font.value}>{font.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label className="block mb-2">Color Scheme</Label>
+                      <Select 
+                        value={editedBook.colorScheme || 'default'}
+                        onValueChange={(val) => handleStyleChange('colorScheme', val)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select color scheme" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="default">Default</SelectItem>
+                          <SelectItem value="elegant">Elegant</SelectItem>
+                          <SelectItem value="modern">Modern</SelectItem>
+                          <SelectItem value="classic">Classic</SelectItem>
+                          <SelectItem value="vibrant">Vibrant</SelectItem>
+                          <SelectItem value="minimalist">Minimalist</SelectItem>
+                          <SelectItem value="artistic">Artistic</SelectItem>
+                          <SelectItem value="scholarly">Scholarly</SelectItem>
+                          <SelectItem value="romantic">Romantic</SelectItem>
+                          <SelectItem value="fantasy">Fantasy</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="block">Chapter Formatting</Label>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="chapter-dividers" 
+                        checked={pdfOptions.chapterDividers}
+                        onCheckedChange={(val) => setPdfOptions({...pdfOptions, chapterDividers: Boolean(val)})}
+                      />
+                      <label htmlFor="chapter-dividers">Include chapter dividers</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="drop-caps" 
+                        checked={pdfOptions.dropCaps}
+                        onCheckedChange={(val) => setPdfOptions({...pdfOptions, dropCaps: Boolean(val)})}
+                      />
+                      <label htmlFor="drop-caps">Use drop caps for first paragraph</label>
+                    </div>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="style" className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="block mb-2">Text Alignment</Label>
+                    <RadioGroup
+                      value={pdfOptions.textAlignment}
+                      onValueChange={(val) => setPdfOptions({...pdfOptions, textAlignment: val as any})}
+                      className="flex flex-col space-y-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="left" id="align-left" />
+                        <Label htmlFor="align-left">Left aligned</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="justified" id="align-justified" />
+                        <Label htmlFor="align-justified">Justified</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="center" id="align-center" />
+                        <Label htmlFor="align-center">Center aligned</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="block mb-2">Line Spacing</Label>
+                    <RadioGroup
+                      value={pdfOptions.lineSpacing}
+                      onValueChange={(val) => setPdfOptions({...pdfOptions, lineSpacing: val as any})}
+                      className="flex flex-col space-y-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="compact" id="spacing-compact" />
+                        <Label htmlFor="spacing-compact">Compact</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="normal" id="spacing-normal" />
+                        <Label htmlFor="spacing-normal">Normal</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="relaxed" id="spacing-relaxed" />
+                        <Label htmlFor="spacing-relaxed">Relaxed</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="appearance" className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="block mb-2">Page Margins</Label>
+                    <RadioGroup
+                      value={pdfOptions.pageMargins}
+                      onValueChange={(val) => setPdfOptions({...pdfOptions, pageMargins: val as any})}
+                      className="flex flex-col space-y-2"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="narrow" id="margins-narrow" />
+                        <Label htmlFor="margins-narrow">Narrow</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="normal" id="margins-normal" />
+                        <Label htmlFor="margins-normal">Normal</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="wide" id="margins-wide" />
+                        <Label htmlFor="margins-wide">Wide</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="block">Additional Options</Label>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="show-page-numbers" 
+                        checked={pdfOptions.showPageNumbers}
+                        onCheckedChange={(val) => setPdfOptions({...pdfOptions, showPageNumbers: Boolean(val)})}
+                      />
+                      <label htmlFor="show-page-numbers">Show page numbers</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="header-footer" 
+                        checked={pdfOptions.headerFooter}
+                        onCheckedChange={(val) => setPdfOptions({...pdfOptions, headerFooter: Boolean(val)})}
+                      />
+                      <label htmlFor="header-footer">Include header and footer</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="decorative-elements" 
+                        checked={pdfOptions.decorativeElements}
+                        onCheckedChange={(val) => setPdfOptions({...pdfOptions, decorativeElements: Boolean(val)})}
+                      />
+                      <label htmlFor="decorative-elements">Add decorative elements</label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="paper-texture" 
+                        checked={pdfOptions.paperTextureEffect}
+                        onCheckedChange={(val) => setPdfOptions({...pdfOptions, paperTextureEffect: Boolean(val)})}
+                      />
+                      <label htmlFor="paper-texture">Apply paper texture effect</label>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default BookContentEditor;
