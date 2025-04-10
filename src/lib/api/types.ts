@@ -45,7 +45,7 @@ export interface PDFExportOptions {
   fontSize: number;
   headerFooter: boolean;
   coverPage: boolean;
-  colorScheme: 'default' | 'elegant' | 'modern' | 'classic' | 'vibrant' | 'minimalist' | 'artistic' | 'scholarly' | 'romantic' | 'fantasy';
+  colorScheme: 'default' | 'elegant' | 'modern' | 'classic' | 'vibrant' | 'minimalist' | 'artistic' | 'scholarly' | 'romantic' | 'fantasy' | 'custom';
   pageSize: 'a4' | 'letter' | 'legal' | 'a5';
   orientation: 'portrait' | 'landscape';
   decorativeElements: boolean;
@@ -55,11 +55,13 @@ export interface PDFExportOptions {
   lineSpacing: 'normal' | 'relaxed' | 'compact';
   pageMargins: 'normal' | 'wide' | 'narrow';
   paperTextureEffect: boolean;
+  customTheme?: string;
 }
 
 // PDF Beautification types
 export interface BeautificationOptions {
   useAI: boolean;
   theme: 'auto' | 'custom';
+  enhancedGeneration: boolean;
   customSettings?: Record<string, any>;
 }
