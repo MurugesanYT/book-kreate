@@ -136,7 +136,11 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
     { value: 'azw3', label: 'Kindle AZW3', icon: <BookOpen size={16} /> },
     { value: 'fb2', label: 'FictionBook', icon: <BookOpen size={16} /> },
     { value: 'cbz', label: 'Comic Book Archive', icon: <Image size={16} /> },
-    { value: 'audio', label: 'Audiobook', icon: <Headphones size={16} /> }
+    { value: 'latex', label: 'LaTeX', icon: <FileText size={16} /> },
+    { value: 'odt', label: 'OpenDocument', icon: <FileText size={16} /> },
+    { value: 'pages', label: 'Apple Pages', icon: <FileText size={16} /> },
+    { value: 'xml', label: 'XML', icon: <FileText size={16} /> },
+    { value: 'json', label: 'JSON', icon: <FileText size={16} /> },
   ];
 
   const getDecorations = (theme: string, doc: jsPDF, pageWidth: number, pageHeight: number, margin: number) => {
@@ -354,7 +358,11 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
       case 'azw3':
       case 'fb2':
       case 'cbz':
-      case 'audio':
+      case 'latex':
+      case 'odt':
+      case 'pages':
+      case 'xml':
+      case 'json':
         simulateExport(selectedFormat);
         break;
       default:
@@ -366,20 +374,75 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
     setIsExporting(true);
     toast.loading(`Creating your ${format.toUpperCase()} file...`);
     
-    // Simulate processing time
-    setTimeout(() => {
-      setIsExporting(false);
-      toast.success(`Book exported to ${format.toUpperCase()} successfully!`);
+    // Use the exportBook function from pdfExporter
+    import('@/lib/pdf/pdfExporter').then(({ exportBook }) => {
+      const bookData: Book = {
+        id: 'temp-id',
+        title: editedBook.title,
+        author: '',
+        content: editedBook.chapters?.map(ch => ch.content) || [],
+        description: editedBook.description,
+        coverImage: editedBook.coverImageUrl,
+        chapters: editedBook.chapters?.map((ch, idx) => ({
+          id: `chapter-${idx}`,
+          title: ch.title,
+          content: ch.content,
+          order: idx
+        })) || [],
+        genre: editedBook.genre,
+        published: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
       
-      // Simulate download by creating a dummy download link
-      const element = document.createElement('a');
-      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent('Your book content would be here.'));
-      element.setAttribute('download', `${editedBook.title || 'untitled-book'}.${format}`);
-      element.style.display = 'none';
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-    }, 2000);
+      // For formats other than PDF, we use different options
+      const options = format === 'pdf' ? pdfOptions : {
+        fontFamily: pdfOptions.fontFamily,
+        fontSize: pdfOptions.fontSize,
+        colorScheme: pdfOptions.colorScheme
+      };
+      
+      // Export the book
+      const result = exportBook(bookData, format, options);
+      
+      setTimeout(() => {
+        setIsExporting(false);
+        
+        if (result.success) {
+          toast.success(`Book exported to ${format.toUpperCase()} successfully!`);
+          
+          // Create download for formats that return content directly
+          if (result.content) {
+            const element = document.createElement('a');
+            const fileType = format === 'json' ? 'application/json' : 
+                            format === 'txt' ? 'text/plain' : 
+                            format === 'markdown' ? 'text/markdown' : 'text/plain';
+            
+            const blob = new Blob([result.content], { type: fileType });
+            element.href = URL.createObjectURL(blob);
+            element.download = `${editedBook.title || 'untitled-book'}.${format}`;
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+          } else {
+            // For other formats without direct content, simulate download
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:application/octet-stream;charset=utf-8,' + encodeURIComponent('Your book content would be here.'));
+            element.setAttribute('download', `${editedBook.title || 'untitled-book'}.${format}`);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+          }
+        } else {
+          toast.error(`Failed to export to ${format.toUpperCase()}: ${result.message}`);
+        }
+      }, 1000);
+    }).catch(err => {
+      console.error('Export error:', err);
+      setIsExporting(false);
+      toast.error(`Failed to export ${format.toUpperCase()}. Please try again.`);
+    });
   };
 
   const exportToPdf = () => {
