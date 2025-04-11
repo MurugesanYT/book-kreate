@@ -9,21 +9,24 @@ export interface Credit {
 
 export interface BookData {
   id: string;
-  userId: string;
   title: string;
   description: string;
   type: string;
   category: string;
+  coverPage?: string;
+  chapters?: any[];
+  creditsPage?: string;
+  template?: string;
+  credits?: {
+    role: string;
+    name: string;
+  }[];
   genre?: string;
   status: "draft" | "published";
   coverImage?: string;
   publishedDate?: string;
   createdAt: string;
   updatedAt: string;
-  credits?: {
-    name: string;
-    role: string;
-  }[];
 }
 
 export interface ChapterItem {

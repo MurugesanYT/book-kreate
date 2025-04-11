@@ -50,14 +50,14 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
     headerFooter: true,
     coverPage: true,
     colorScheme: 'elegant',
-    pageSize: 'a4',
+    pageSize: 'a4' as 'a4' | 'letter' | 'legal' | 'a5',
     orientation: 'portrait',
     decorativeElements: true,
     chapterDividers: true,
     dropCaps: false,
-    textAlignment: 'justified',
-    lineSpacing: 'normal',
-    pageMargins: 'normal',
+    textAlignment: 'justified' as 'justified' | 'left' | 'center',
+    lineSpacing: 'normal' as 'normal' | 'relaxed' | 'compact',
+    pageMargins: 'normal' as 'normal' | 'wide' | 'narrow',
     paperTextureEffect: false
   });
   const [isExporting, setIsExporting] = useState(false);
@@ -906,7 +906,7 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
                           <Label htmlFor="pageSize">Page Size</Label>
                           <Select 
                             value={pdfOptions.pageSize} 
-                            onValueChange={(value) => setPdfOptions({...pdfOptions, pageSize: value})}
+                            onValueChange={(value) => setPdfOptions({...pdfOptions, pageSize: value as 'a4' | 'letter' | 'legal' | 'a5'})}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Select page size" />
@@ -915,6 +915,7 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
                               <SelectItem value="a4">A4</SelectItem>
                               <SelectItem value="letter">Letter</SelectItem>
                               <SelectItem value="legal">Legal</SelectItem>
+                              <SelectItem value="a5">A5</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -941,7 +942,7 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
                           <Label htmlFor="pageMargins">Margins</Label>
                           <Select 
                             value={pdfOptions.pageMargins} 
-                            onValueChange={(value) => setPdfOptions({...pdfOptions, pageMargins: value})}
+                            onValueChange={(value) => setPdfOptions({...pdfOptions, pageMargins: value as 'normal' | 'wide' | 'narrow'})}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Select margin size" />
@@ -958,7 +959,7 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
                           <Label htmlFor="lineSpacing">Line Spacing</Label>
                           <Select 
                             value={pdfOptions.lineSpacing} 
-                            onValueChange={(value) => setPdfOptions({...pdfOptions, lineSpacing: value})}
+                            onValueChange={(value) => setPdfOptions({...pdfOptions, lineSpacing: value as 'normal' | 'relaxed' | 'compact'})}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Select line spacing" />
@@ -1000,7 +1001,7 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
                           <Label htmlFor="textAlignment">Text Alignment</Label>
                           <Select 
                             value={pdfOptions.textAlignment} 
-                            onValueChange={(value) => setPdfOptions({...pdfOptions, textAlignment: value})}
+                            onValueChange={(value) => setPdfOptions({...pdfOptions, textAlignment: value as 'left' | 'center' | 'justified'})}
                           >
                             <SelectTrigger id="textAlignment">
                               <SelectValue placeholder="Select text alignment" />
