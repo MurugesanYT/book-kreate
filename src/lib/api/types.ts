@@ -9,17 +9,21 @@ export interface Credit {
 
 export interface BookData {
   id: string;
+  userId: string;
   title: string;
   description: string;
   type: string;
   category: string;
-  credits: Credit[];
-  needsGeneratedTitle?: boolean;
-  timestamp: string;
-  template?: string | null;
-  coverImageUrl?: string;
-  fontFamily?: string;
-  colorScheme?: string;
+  genre?: string;
+  status: "draft" | "published";
+  coverImage?: string;
+  publishedDate?: string;
+  createdAt: string;
+  updatedAt: string;
+  credits?: {
+    name: string;
+    role: string;
+  }[];
 }
 
 export interface ChapterItem {
@@ -42,22 +46,21 @@ export type ExportFormat = 'pdf' | 'epub' | 'mobi' | 'docx' | 'txt' | 'html' | '
 // PDF Export types
 export interface PDFExportOptions {
   showPageNumbers: boolean;
-  includeMargins: boolean; 
+  includeMargins: boolean;
   fontFamily: string;
   fontSize: number;
   headerFooter: boolean;
   coverPage: boolean;
-  colorScheme: 'default' | 'elegant' | 'modern' | 'classic' | 'vibrant' | 'minimalist' | 'artistic' | 'scholarly' | 'romantic' | 'fantasy' | 'custom';
-  pageSize: 'a4' | 'letter' | 'legal' | 'a5';
-  orientation: 'portrait' | 'landscape';
+  colorScheme: string;
+  pageSize: "a4" | "letter" | "legal" | "a5";
+  orientation: "portrait" | "landscape";
   decorativeElements: boolean;
   chapterDividers: boolean;
   dropCaps: boolean;
-  textAlignment: 'left' | 'justified' | 'center';
-  lineSpacing: 'normal' | 'relaxed' | 'compact';
-  pageMargins: 'normal' | 'wide' | 'narrow';
+  textAlignment: "left" | "justified" | "center";
+  lineSpacing: "normal" | "relaxed" | "compact";
+  pageMargins: "normal" | "wide" | "narrow";
   paperTextureEffect: boolean;
-  customTheme?: string;
 }
 
 // EPUB Export options
@@ -99,13 +102,13 @@ export interface DOCXExportOptions {
     fontSize: number;
     lineSpacing: number;
   };
-  pageSize: 'a4' | 'letter' | 'legal';
-  margins: 'normal' | 'narrow' | 'moderate' | 'wide';
-  orientation: 'portrait' | 'landscape';
+  pageSize: "a4" | "letter" | "legal";
+  margins: "normal" | "narrow" | "moderate" | "wide";
+  orientation: "portrait" | "landscape";
   trackChanges?: boolean;
   documentProtection?: boolean;
   watermark?: string;
-  styleSet?: 'modern' | 'classic' | 'elegant' | 'minimal';
+  styleSet?: "modern" | "classic" | "elegant" | "minimal";
   highlightedSections?: boolean;
   autoHyphenation?: boolean;
   footnotesEndnotes?: boolean;
@@ -116,22 +119,22 @@ export interface HTMLExportOptions {
   responsive: boolean;
   includeCSS: boolean;
   darkModeSupport?: boolean;
-  htmlVersion?: 'html5' | 'xhtml';
+  htmlVersion?: "html5" | "xhtml";
   includeFonts?: boolean;
   interactiveElements?: boolean;
   printOptimized?: boolean;
 }
 
 export interface TXTExportOptions {
-  encoding: 'utf8' | 'ascii';
-  lineBreaks: 'lf' | 'crlf';
+  encoding: "utf8" | "ascii";
+  lineBreaks: "lf" | "crlf";
   includeMetadata?: boolean;
   preserveFormatting?: boolean;
   wrapWidth?: number;
 }
 
 export interface MarkdownExportOptions {
-  format: 'standard' | 'github' | 'commonmark';
+  format: "standard" | "github" | "commonmark";
   includeMetadata: boolean;
   tableSupport?: boolean;
   frontMatter?: boolean;
@@ -149,10 +152,10 @@ export interface RTFExportOptions {
     fontSize: number;
     lineSpacing: number;
   };
-  pageSize: 'a4' | 'letter' | 'legal';
-  margins: 'normal' | 'narrow' | 'moderate' | 'wide';
+  pageSize: "a4" | "letter" | "legal";
+  margins: "normal" | "narrow" | "moderate" | "wide";
   embedImages: boolean;
-  colorSupport: 'full' | 'limited' | 'none';
+  colorSupport: "full" | "limited" | "none";
   specialCharacters: boolean;
 }
 
@@ -196,8 +199,8 @@ export interface FB2ExportOptions {
 // CBZ Export options
 export interface CBZExportOptions {
   coverImage: boolean;
-  imageQuality: 'low' | 'medium' | 'high';
-  pageSize: 'standard' | 'wide' | 'tall';
+  imageQuality: "low" | "medium" | "high";
+  pageSize: "standard" | "wide" | "tall";
   pageNumbering: boolean;
   metadata: {
     title: string;
@@ -205,55 +208,55 @@ export interface CBZExportOptions {
     publisher?: string;
     year?: string;
   };
-  compressionLevel: 'low' | 'medium' | 'high';
+  compressionLevel: "low" | "medium" | "high";
 }
 
 // Audio Export options
 export interface AudioExportOptions {
-  voiceType: 'male' | 'female' | 'neutral';
-  audioQuality: 'standard' | 'high';
-  fileFormat: 'mp3' | 'wav' | 'ogg' | 'flac';
-  sampleRate: '44.1kHz' | '48kHz' | '96kHz';
+  voiceType: "male" | "female" | "neutral";
+  audioQuality: "standard" | "high";
+  fileFormat: "mp3" | "wav" | "ogg" | "flac";
+  sampleRate: "44.1kHz" | "48kHz" | "96kHz";
   includeChapterMarkers: boolean;
   normalizeAudio: boolean;
   speedControl: boolean;
-  bitRate: '128kbps' | '192kbps' | '256kbps' | '320kbps';
+  bitRate: "128kbps" | "192kbps" | "256kbps" | "320kbps";
 }
 
 // PDF Beautification types
 export interface BeautificationOptions {
   useAI: boolean;
-  theme: 'auto' | 'custom';
+  theme: "auto" | "custom";
   enhancedGeneration: boolean;
   customSettings?: Record<string, any>;
 }
 
 // LaTeX Export options
 export interface LaTeXExportOptions {
-  documentClass: 'book' | 'article' | 'report' | 'memoir';
-  fontSize: '10pt' | '11pt' | '12pt';
-  paperSize: 'a4paper' | 'letterpaper' | 'a5paper';
+  documentClass: "book" | "article" | "report" | "memoir";
+  fontSize: "10pt" | "11pt" | "12pt";
+  paperSize: "a4paper" | "letterpaper" | "a5paper";
   twoSided: boolean;
   includeTableOfContents: boolean;
   includeIndex: boolean;
   includeBibliography: boolean;
-  template: 'basic' | 'academic' | 'thesis' | 'novel' | 'technical';
+  template: "basic" | "academic" | "thesis" | "novel" | "technical";
   customPreamble?: string;
   mathSupport: boolean;
-  chapterStyle: 'default' | 'elegant' | 'artistic';
-  bibliographyStyle?: 'plain' | 'abbrv' | 'alpha' | 'apalike';
-  fontPackage: 'default' | 'times' | 'palatino' | 'bookman' | 'charter';
+  chapterStyle: "default" | "elegant" | "artistic";
+  bibliographyStyle?: "plain" | "abbrv" | "alpha" | "apalike";
+  fontPackage: "default" | "times" | "palatino" | "bookman" | "charter";
 }
 
 // ODT (OpenDocument Text) Export options
 export interface ODTExportOptions {
   includeTableOfContents: boolean;
   includeCoverPage: boolean;
-  pageStyle: 'standard' | 'professional' | 'creative';
+  pageStyle: "standard" | "professional" | "creative";
   fontFamily: string;
   fontSize: number;
   lineSpacing: number;
-  margins: 'normal' | 'narrow' | 'wide';
+  margins: "normal" | "narrow" | "wide";
   headerFooter: boolean;
   metadata: {
     author: string;
@@ -261,49 +264,49 @@ export interface ODTExportOptions {
     keywords?: string[];
   };
   styles: {
-    headings: 'default' | 'numbered' | 'decorated';
-    paragraphs: 'default' | 'indented' | 'spaced';
+    headings: "default" | "numbered" | "decorated";
+    paragraphs: "default" | "indented" | "spaced";
   };
   includeImages: boolean;
-  compatibility: 'libreoffice' | 'msoffice' | 'standard';
+  compatibility: "libreoffice" | "msoffice" | "standard";
 }
 
 // Pages (Apple) Export options
 export interface PagesExportOptions {
-  template: 'blank' | 'book' | 'essay' | 'report' | 'novel';
+  template: "blank" | "book" | "essay" | "report" | "novel";
   fontFamily: string;
   fontSize: number;
-  pageSize: 'a4' | 'us-letter';
-  orientation: 'portrait' | 'landscape';
+  pageSize: "a4" | "us-letter";
+  orientation: "portrait" | "landscape";
   includeTableOfContents: boolean;
   headerFooter: boolean;
-  columnLayout: 'single' | 'double' | 'triple';
+  columnLayout: "single" | "double" | "triple";
   lineSpacing: number;
   includePageNumbers: boolean;
   includeImages: boolean;
   coverPage: boolean;
-  appleCompatibilityLevel: 'latest' | 'high-sierra' | 'catalina';
+  appleCompatibilityLevel: "latest" | "high-sierra" | "catalina";
 }
 
 // XML Export options
 export interface XMLExportOptions {
-  documentType: 'book' | 'article' | 'manuscript';
-  schema: 'docbook' | 'tei' | 'custom';
-  version: '5.0' | '4.5';
+  documentType: "book" | "article" | "manuscript";
+  schema: "docbook" | "tei" | "custom";
+  version: "5.0" | "4.5";
   includeMetadata: boolean;
   prettyPrint: boolean;
-  encoding: 'utf-8' | 'iso-8859-1';
+  encoding: "utf-8" | "iso-8859-1";
   dtdLocation?: string;
   validateOnExport: boolean;
   includeChapters: boolean;
   includeSections: boolean;
   stylesheet?: string;
-  outputFormat: 'xml' | 'html' | 'xhtml';
+  outputFormat: "xml" | "html" | "xhtml";
 }
 
 // JSON Export options
 export interface JSONExportOptions {
-  structure: 'flat' | 'nested' | 'hierarchical';
+  structure: "flat" | "nested" | "hierarchical";
   includeMetadata: boolean;
   includeContent: boolean;
   includeFormatting: boolean;
@@ -311,7 +314,7 @@ export interface JSONExportOptions {
   indentation: number;
   splitByChapter: boolean;
   includeImages: boolean;
-  imageHandling: 'base64' | 'urls' | 'none';
-  schema: 'standard' | 'custom';
+  imageHandling: "base64" | "urls" | "none";
+  schema: "standard" | "custom";
   includeStatistics: boolean;
 }

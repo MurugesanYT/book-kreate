@@ -1,3 +1,4 @@
+
 import { jsPDF } from "jspdf";
 import { BookData, PDFExportOptions } from "../api/types";
 import { generateBookBeautification, BeautificationResult } from "./beautificationService";
@@ -28,7 +29,7 @@ const COLOR_SCHEMES = {
   fantasy: { primary: "#44337A", background: "#FEFCBF", accent: "#6B46C1" },
   travel: { primary: "#2C3333", background: "#E7F6F2", accent: "#2E8B57" },
   mystery: { primary: "#263238", background: "#ECEFF1", accent: "#607D8B" },
-  "sci-fi": { primary: "#0B3954", background: "#E9F5F9", accent: "#00BCD4" },
+  scienceFiction: { primary: "#0B3954", background: "#E9F5F9", accent: "#00BCD4" },
   horror: { primary: "#1C1C1C", background: "#F5F5F5", accent: "#B71C1C" },
   thriller: { primary: "#252627", background: "#F8F9FA", accent: "#FF5252" },
   historical: { primary: "#3E2723", background: "#F5F5DC", accent: "#A1887F" },
@@ -37,6 +38,86 @@ const COLOR_SCHEMES = {
   drama: { primary: "#2C3639", background: "#F5F2E7", accent: "#A27B5C" },
   cooking: { primary: "#3A4750", background: "#FFFBF5", accent: "#D4634B" },
 };
+
+// Define additional theme sets (approximately 50 more themes)
+const EXTENDED_THEMES = {
+  // Nature-inspired
+  forestGreen: { primary: "#1B4332", background: "#F1F8E9", accent: "#4CAF50" },
+  oceanBlue: { primary: "#01579B", background: "#E1F5FE", accent: "#039BE5" },
+  desertSands: { primary: "#6D4C41", background: "#FFF8E1", accent: "#FF9800" },
+  mountainGray: { primary: "#37474F", background: "#ECEFF1", accent: "#607D8B" },
+  tropicalParadise: { primary: "#00695C", background: "#E0F7FA", accent: "#00BCD4" },
+  
+  // Time periods
+  victorianAge: { primary: "#4E342E", background: "#EFEBE9", accent: "#8D6E63" },
+  artDeco: { primary: "#212121", background: "#F5F5F5", accent: "#FFC107" },
+  neonFuture: { primary: "#311B92", background: "#F3E5F5", accent: "#7C4DFF" },
+  retroWave: { primary: "#4A148C", background: "#E1BEE7", accent: "#EA80FC" },
+  midcenturyModern: { primary: "#5D4037", background: "#FFEBEE", accent: "#EF5350" },
+  
+  // Emotional tones
+  contemplative: { primary: "#455A64", background: "#ECEFF1", accent: "#78909C" },
+  passionate: { primary: "#B71C1C", background: "#FFEBEE", accent: "#EF5350" },
+  serene: { primary: "#0277BD", background: "#E1F5FE", accent: "#4FC3F7" },
+  melancholic: { primary: "#37474F", background: "#CFD8DC", accent: "#90A4AE" },
+  joyful: { primary: "#FFA000", background: "#FFF8E1", accent: "#FFCA28" },
+  
+  // Cultural inspirations
+  scandinavian: { primary: "#37474F", background: "#FFFFFF", accent: "#78909C" },
+  japaneseMinimal: { primary: "#263238", background: "#ECEFF1", accent: "#B0BEC5" },
+  indianVibrant: { primary: "#6A1B9A", background: "#F3E5F5", accent: "#AB47BC" },
+  moroccanSpice: { primary: "#B71C1C", background: "#FFEBEE", accent: "#FF8A65" },
+  africanEarth: { primary: "#6D4C41", background: "#FFF3E0", accent: "#FF9800" },
+  egyptianGold: { primary: "#004D40", background: "#F5F5F5", accent: "#FFD700" },
+  
+  // Literary genres (extended)
+  childrensBook: { primary: "#039BE5", background: "#FFF9C4", accent: "#F57F17" },
+  detectiveNoir: { primary: "#212121", background: "#EEEEEE", accent: "#757575" },
+  epicPoetry: { primary: "#4E342E", background: "#EFEBE9", accent: "#6D4C41" },
+  dystopianFuture: { primary: "#263238", background: "#ECEFF1", accent: "#546E7A" },
+  urbanFantasy: { primary: "#303F9F", background: "#E8EAF6", accent: "#5C6BC0" },
+  spaceSaga: { primary: "#1A237E", background: "#E8EAF6", accent: "#3D5AFE" },
+  zombieApocalypse: { primary: "#1B5E20", background: "#E8F5E9", accent: "#43A047" },
+  vampireTales: { primary: "#4A148C", background: "#F3E5F5", accent: "#7B1FA2" },
+  youngAdult: { primary: "#0097A7", background: "#E0F7FA", accent: "#00BCD4" },
+  
+  // Philosophical
+  existential: { primary: "#212121", background: "#FAFAFA", accent: "#9E9E9E" },
+  transcendental: { primary: "#1A237E", background: "#E8EAF6", accent: "#3949AB" },
+  stoic: { primary: "#37474F", background: "#ECEFF1", accent: "#546E7A" },
+  postmodern: { primary: "#004D40", background: "#E0F2F1", accent: "#009688" },
+  absurdist: { primary: "#6A1B9A", background: "#F3E5F5", accent: "#8E24AA" },
+  
+  // Professional
+  corporate: { primary: "#0D47A1", background: "#FFFFFF", accent: "#1976D2" },
+  legalBrief: { primary: "#1B5E20", background: "#FFFFFF", accent: "#2E7D32" },
+  medicalJournal: { primary: "#0277BD", background: "#FFFFFF", accent: "#0288D1" },
+  academicPaper: { primary: "#37474F", background: "#FFFFFF", accent: "#546E7A" },
+  technicalManual: { primary: "#0D47A1", background: "#FAFAFA", accent: "#1565C0" },
+  
+  // Artistic movements
+  minimalism: { primary: "#212121", background: "#FFFFFF", accent: "#757575" },
+  impressionist: { primary: "#1976D2", background: "#E3F2FD", accent: "#42A5F5" },
+  surrealist: { primary: "#6A1B9A", background: "#F3E5F5", accent: "#AB47BC" },
+  cubist: { primary: "#455A64", background: "#ECEFF1", accent: "#90A4AE" },
+  expressionist: { primary: "#B71C1C", background: "#FFEBEE", accent: "#E57373" },
+  
+  // Geography-specific
+  nordicLight: { primary: "#455A64", background: "#ECEFF1", accent: "#78909C" },
+  mediterraneanWarmth: { primary: "#D84315", background: "#FBE9E7", accent: "#FF8A65" },
+  caribbeanBreeze: { primary: "#0097A7", background: "#E0F7FA", accent: "#4DD0E1" },
+  amazonLush: { primary: "#2E7D32", background: "#E8F5E9", accent: "#66BB6A" },
+  himalayanSnow: { primary: "#37474F", background: "#F5F5F5", accent: "#78909C" },
+  
+  // Seasonal
+  winterFrost: { primary: "#01579B", background: "#E1F5FE", accent: "#03A9F4" },
+  springBloom: { primary: "#558B2F", background: "#F1F8E9", accent: "#8BC34A" },
+  summerHeat: { primary: "#E64A19", background: "#FBE9E7", accent: "#FF7043" },
+  autumnLeaves: { primary: "#BF360C", background: "#FFF3E0", accent: "#FF9800" },
+};
+
+// Combined themes object
+const ALL_THEMES = {...COLOR_SCHEMES, ...EXTENDED_THEMES};
 
 /**
  * Export a book to PDF with custom beautification based on book genre/theme
@@ -68,7 +149,7 @@ export const exportBookToPDF = async (
       } else if (bookGenre.includes('mystery') || bookGenre.includes('detective')) {
         schemeKey = 'mystery';
       } else if (bookGenre.includes('sci-fi') || bookGenre.includes('science fiction')) {
-        schemeKey = 'sci-fi';
+        schemeKey = 'scienceFiction';
       } else if (bookGenre.includes('horror') || bookGenre.includes('scary')) {
         schemeKey = 'horror';
       } else if (bookGenre.includes('travel') || bookGenre.includes('journey')) {
@@ -598,6 +679,17 @@ const lightenColor = (color: { r: number, g: number, b: number }, factor: number
 };
 
 /**
+ * Get all available theme options
+ */
+export const getAllThemeOptions = (): { id: string; name: string; colors: { primary: string; background: string; accent: string } }[] => {
+  return Object.entries(ALL_THEMES).map(([id, colors]) => ({
+    id,
+    name: id.charAt(0).toUpperCase() + id.slice(1).replace(/([A-Z])/g, ' $1').trim(),
+    colors
+  }));
+};
+
+/**
  * Get default export options
  */
 export const getDefaultExportOptions = (): PDFExportOptions => {
@@ -609,14 +701,14 @@ export const getDefaultExportOptions = (): PDFExportOptions => {
     headerFooter: true,
     coverPage: true,
     colorScheme: 'default', // Changed to default so we can auto-select based on genre
-    pageSize: 'a4',
+    pageSize: 'a4' as "a4" | "letter" | "legal" | "a5",
     orientation: 'portrait',
     decorativeElements: true,
     chapterDividers: true,
     dropCaps: false,
-    textAlignment: 'left',
-    lineSpacing: 'normal',
-    pageMargins: 'normal',
+    textAlignment: 'left' as "left" | "justified" | "center",
+    lineSpacing: 'normal' as "normal" | "relaxed" | "compact",
+    pageMargins: 'normal' as "normal" | "wide" | "narrow",
     paperTextureEffect: false,
   };
 };

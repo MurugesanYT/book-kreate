@@ -247,7 +247,7 @@ const getCategoryColorScheme = (category: string, preferredScheme: string): stri
       fantasy: "#44337A,#FEFCBF,#6B46C1", // Deep purple, light yellow, bright purple
       travel: "#2C3333,#E7F6F2,#2E8B57", // Dark gray, mint, sea green
       mystery: "#263238,#ECEFF1,#607D8B", // Dark blue-gray, light gray, blue-gray
-      "sci-fi": "#0B3954,#E9F5F9,#00BCD4", // Dark blue, light blue, cyan
+      scienceFiction: "#0B3954,#E9F5F9,#00BCD4", // Dark blue, light blue, cyan
       horror: "#1C1C1C,#F5F5F5,#B71C1C", // Nearly black, off-white, dark red
       thriller: "#252627,#F8F9FA,#FF5252", // Almost black, off-white, bright red
       historical: "#3E2723,#F5F5DC,#A1887F", // Dark brown, beige, light brown
@@ -256,8 +256,7 @@ const getCategoryColorScheme = (category: string, preferredScheme: string): stri
       adventure: "#155263,#F8F9F9,#FF9A3C", // Teal, off-white, orange
       comedy: "#6C4A4A,#FFFFF0,#E7B10A", // Brown, ivory, mustard
       drama: "#2C3639,#F5F2E7,#A27B5C", // Dark gray, light beige, copper
-      "self-help": "#282F44,#FFFFFF,#4D9DE0", // Dark navy, white, sky blue
-      travel: "#2C3333,#E7F6F2,#2E8B57", // Dark gray, mint, sea green
+      selfHelp: "#282F44,#FFFFFF,#4D9DE0", // Dark navy, white, sky blue
       cooking: "#3A4750,#FFFBF5,#D4634B", // Dark slate, cream, terracotta
       cuba: "#1C6758,#FFF6EA,#EE9B00", // Dark green, warm cream, golden yellow - For Cuba themed books
       havana: "#5F4B32,#FFFAEB,#E09F3E", // Havana brown, cream, gold - For Havana themed books
@@ -285,8 +284,7 @@ const getCategoryColorScheme = (category: string, preferredScheme: string): stri
     adventure: "#155263,#F8F9F9,#FF9A3C", // Teal, off-white, orange
     comedy: "#6C4A4A,#FFFFF0,#E7B10A", // Brown, ivory, mustard
     drama: "#2C3639,#F5F2E7,#A27B5C", // Dark gray, light beige, copper
-    "self-help": "#282F44,#FFFFFF,#4D9DE0", // Dark navy, white, sky blue
-    travel: "#2C3333,#E7F6F2,#2E8B57", // Dark gray, mint, sea green
+    selfHelp: "#282F44,#FFFFFF,#4D9DE0", // Dark navy, white, sky blue
     cooking: "#3A4750,#FFFBF5,#D4634B", // Dark slate, cream, terracotta
     cuba: "#1C6758,#FFF6EA,#EE9B00", // Dark green, warm cream, golden yellow - For Cuba themed books
     havana: "#5F4B32,#FFFAEB,#E09F3E", // Havana brown, cream, gold - For Havana themed books
@@ -318,7 +316,7 @@ const getCategoryFontRecommendation = (category: string): string => {
     adventure: "Montserrat, Arial, sans-serif", // Bold sans
     comedy: "Comfortaa, Verdana, sans-serif", // Playful rounded
     drama: "Bitter, Georgia, serif", // Dramatic serif
-    "self-help": "Open Sans, Arial, sans-serif", // Approachable sans
+    selfHelp: "Open Sans, Arial, sans-serif", // Approachable sans
     travel: "Work Sans, Helvetica, sans-serif", // Modern sans
     cooking: "Cardo, Palatino, serif", // Elegant cooking serif
   };
