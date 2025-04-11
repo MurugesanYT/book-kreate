@@ -1,6 +1,25 @@
 
-import { jsPDF } from "jspdf";
-import { Book, BookData, ExportFormat, PDFExportOptions, ThemeOption, ThemeColors, EPUBExportOptions, DOCXExportOptions, MarkdownExportOptions, TXTExportOptions, HTMLExportOptions, RTFExportOptions } from "@/lib/api/types";
+import { Book, ExportFormat, PDFExportOptions, EPUBExportOptions, DOCXExportOptions, MarkdownExportOptions, TXTExportOptions, HTMLExportOptions, RTFExportOptions } from "@/lib/api/types";
+import { PDFExporter } from "./exporters/pdfExporter";
+import { EPUBExporter } from "./exporters/epubExporter";
+import { MOBIExporter } from "./exporters/mobiExporter";
+import { DOCXExporter } from "./exporters/docxExporter";
+import { TXTExporter } from "./exporters/txtExporter";
+import { MarkdownExporter } from "./exporters/markdownExporter";
+import { HTMLExporter } from "./exporters/htmlExporter";
+import { RTFExporter } from "./exporters/rtfExporter";
+import { AZW3Exporter } from "./exporters/azw3Exporter";
+import { FB2Exporter } from "./exporters/fb2Exporter";
+import { CBZExporter } from "./exporters/cbzExporter";
+import { LaTeXExporter } from "./exporters/latexExporter";
+import { ODTExporter } from "./exporters/odtExporter";
+import { PagesExporter } from "./exporters/pagesExporter";
+import { XMLExporter } from "./exporters/xmlExporter";
+import { JSONExporter } from "./exporters/jsonExporter";
+import { getAllThemeOptions, getThemeById, getThemesByCategory } from "./themes";
+
+// Re-export theme functions
+export { getAllThemeOptions, getThemeById, getThemesByCategory };
 
 // Function to export a book in various formats
 export const exportBook = (
@@ -11,107 +30,45 @@ export const exportBook = (
   try {
     console.log(`Exporting book in ${format} format`, book, options);
     
-    // In a real implementation, this would generate the actual file
-    // For now, we just simulate the export process
-    
-    let content: string | undefined;
-    
     switch (format) {
       case 'pdf':
-        // PDF export would be handled by a PDF generation library
-        // For now, just return success
-        break;
+        return new PDFExporter(options as PDFExportOptions).export(book);
       case 'epub':
-        // EPUB export would be handled by an EPUB generation library
-        break;
+        return new EPUBExporter(options as EPUBExportOptions).export(book);
       case 'mobi':
-        // MOBI export would be handled by a MOBI generation library
-        break;
+        return new MOBIExporter(options as EPUBExportOptions).export(book);
       case 'docx':
-        // DOCX export would be handled by a DOCX generation library
-        break;
+        return new DOCXExporter(options as DOCXExportOptions).export(book);
       case 'txt':
-        // Generate plain text content
-        content = `${book.title}\n\nBy: ${book.author || 'Unknown'}\n\n`;
-        content += `Description: ${book.description || ''}\n\n`;
-        
-        if (book.chapters && book.chapters.length > 0) {
-          book.chapters.forEach((chapter, index) => {
-            content += `CHAPTER ${index + 1}: ${chapter.title}\n\n`;
-            content += `${chapter.content}\n\n`;
-          });
-        }
-        break;
+        return new TXTExporter(options as TXTExportOptions).export(book);
       case 'markdown':
-        // Generate Markdown content
-        content = `# ${book.title}\n\n`;
-        content += `*By: ${book.author || 'Unknown'}*\n\n`;
-        content += `**Genre:** ${book.genre || 'Unknown'}\n\n`;
-        content += `## Description\n\n${book.description || ''}\n\n`;
-        
-        if (book.chapters && book.chapters.length > 0) {
-          book.chapters.forEach((chapter, index) => {
-            content += `## Chapter ${index + 1}: ${chapter.title}\n\n`;
-            content += `${chapter.content}\n\n`;
-          });
-        }
-        break;
+        return new MarkdownExporter(options as MarkdownExportOptions).export(book);
       case 'html':
-        // Generate HTML content
-        content = `<!DOCTYPE html>
-<html>
-<head>
-  <title>${book.title}</title>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-    h1 { color: #333; }
-    h2 { color: #555; margin-top: 30px; }
-    .author { font-style: italic; color: #777; }
-    .chapter { margin-top: 40px; }
-  </style>
-</head>
-<body>
-  <h1>${book.title}</h1>
-  <p class="author">By: ${book.author || 'Unknown'}</p>
-  <p><strong>Genre:</strong> ${book.genre || 'Unknown'}</p>
-  
-  <div class="description">
-    <h2>Description</h2>
-    <p>${book.description || ''}</p>
-  </div>
-  
-  <div class="content">`;
-        
-        if (book.chapters && book.chapters.length > 0) {
-          book.chapters.forEach((chapter, index) => {
-            content += `
-    <div class="chapter">
-      <h2>Chapter ${index + 1}: ${chapter.title}</h2>
-      <div>${chapter.content.replace(/\n/g, '<br>')}</div>
-    </div>`;
-          });
-        }
-        
-        content += `
-  </div>
-</body>
-</html>`;
-        break;
+        return new HTMLExporter(options as HTMLExportOptions).export(book);
+      case 'rtf':
+        return new RTFExporter(options as RTFExportOptions).export(book);
+      case 'azw3':
+        return new AZW3Exporter(options).export(book);
+      case 'fb2':
+        return new FB2Exporter(options).export(book);
+      case 'cbz':
+        return new CBZExporter(options).export(book);
+      case 'latex':
+        return new LaTeXExporter(options).export(book);
+      case 'odt':
+        return new ODTExporter(options).export(book);
+      case 'pages':
+        return new PagesExporter(options).export(book);
+      case 'xml':
+        return new XMLExporter(options).export(book);
       case 'json':
-        // Generate JSON content
-        content = JSON.stringify(book, null, 2);
-        break;
+        return new JSONExporter(options).export(book);
       default:
-        // For other formats, just return success without content
-        break;
+        return { 
+          success: false, 
+          message: `Unsupported export format: ${format}`
+        };
     }
-    
-    return { 
-      success: true, 
-      message: `Book exported to ${format.toUpperCase()} successfully!`,
-      content
-    };
   } catch (error) {
     console.error(`Error exporting book to ${format}:`, error);
     return { 
