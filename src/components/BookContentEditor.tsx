@@ -392,7 +392,7 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
       const doc = new jsPDF({
         orientation: pdfOptions.orientation,
         unit: 'mm',
-        format: pdfOptions.pageSize,
+        format: pdfOptions.pageSize as 'a4' | 'letter' | 'legal' | 'a5',
       });
       
       const pageWidth = doc.internal.pageSize.getWidth();
@@ -417,7 +417,7 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
       const baseFontSize = pdfOptions.fontSize || 12;
       
       let lineHeight;
-      switch(pdfOptions.lineSpacing) {
+      switch(pdfOptions.lineSpacing as 'normal' | 'relaxed' | 'compact') {
         case 'compact': lineHeight = 1.2; break;
         case 'relaxed': lineHeight = 1.8; break;
         default: lineHeight = 1.5;
@@ -477,7 +477,7 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
         doc.setTextColor(colorScheme.text);
         
         const descLines = doc.splitTextToSize(editedBook.description, contentWidth);
-        const textAlign = pdfOptions.textAlignment as any;
+        const textAlign = pdfOptions.textAlignment as 'left' | 'justified' | 'center';
         doc.text(descLines, pdfOptions.textAlignment === 'center' ? pageWidth / 2 : margin, 130, { 
           align: textAlign === 'justified' ? 'justify' : textAlign
         });
@@ -513,7 +513,7 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
         
         const coverLines = doc.splitTextToSize(editedBook.coverPage, contentWidth);
         
-        const textAlign = pdfOptions.textAlignment as any;
+        const textAlign = pdfOptions.textAlignment as 'left' | 'justified' | 'center';
         doc.text(coverLines, pdfOptions.textAlignment === 'center' ? pageWidth / 2 : margin, 50, { 
           align: textAlign === 'justified' ? 'justify' : textAlign 
         });
@@ -769,7 +769,7 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
         doc.setTextColor(colorScheme.text);
         
         const creditsLines = doc.splitTextToSize(editedBook.creditsPage, contentWidth);
-        const textAlign = pdfOptions.textAlignment as any;
+        const textAlign = pdfOptions.textAlignment as 'left' | 'justified' | 'center';
         doc.text(creditsLines, pdfOptions.textAlignment === 'center' ? pageWidth / 2 : margin, 50, { 
           align: textAlign === 'justified' ? 'justify' : textAlign 
         });
