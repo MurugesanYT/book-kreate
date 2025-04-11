@@ -7,4 +7,3 @@ export * from './contentService';
 export * from './bookService';
 export * from './types';
 export * from '../pdf/pdfExporter';
-// Removed the beautificationService export

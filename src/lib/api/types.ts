@@ -2,6 +2,43 @@
 
 export type BookItemType = 'cover' | 'chapter' | 'credits';
 
+// Add ThemeColors interface
+export interface ThemeColors {
+  primary: string;
+  background: string;
+  accent: string;
+}
+
+// Add ThemeOption interface
+export interface ThemeOption {
+  id: string;
+  name: string;
+  colors: ThemeColors;
+}
+
+// Add Book interface
+export interface Book {
+  id: string;
+  title: string;
+  author?: string;
+  content: string[];
+  description?: string;
+  coverImage?: string;
+  chapters?: Chapter[];
+  genre?: string;
+  published?: boolean;
+  publishedDate?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Chapter {
+  id: string;
+  title: string;
+  content: string;
+  order: number;
+}
+
 export interface Credit {
   role: string;
   name: string;

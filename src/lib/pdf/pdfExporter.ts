@@ -1,8 +1,5 @@
 
-import { PDFExportOptions, ThemeOption, ThemeColors } from "@/lib/api/types";
-import { Book } from "@/lib/api/types";
-
-// Remove the import for beautificationService
+import { PDFExportOptions, ThemeOption, ThemeColors, Book } from "@/lib/api/types";
 
 // Create a collection of theme options
 export const getAllThemeOptions = (): ThemeOption[] => {

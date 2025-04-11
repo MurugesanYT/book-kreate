@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import LandingHeader from '@/components/LandingHeader';
@@ -112,7 +113,7 @@ const AboutPage = () => {
                   <img 
                     src="https://i.ibb.co/2Y3Mshg/3d820bd3-58a4-4c1c-b447-b11043015ef8.png" 
                     alt="M.Kabilan - Founder & CEO" 
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-center"
                   />
                 </div>
                 <h3 className="text-xl font-semibold text-book-darkText">M.Kabilan</h3>
