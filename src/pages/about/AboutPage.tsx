@@ -44,8 +44,8 @@ const AboutPage = () => {
                 <div className="absolute -inset-4 bg-gradient-to-r from-book-purple/20 to-book-orange/20 rounded-lg transform rotate-3"></div>
                 <div className="absolute -inset-4 bg-gradient-to-l from-book-purple/20 to-book-orange/20 rounded-lg transform -rotate-3"></div>
                 <img 
-                  src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5" 
-                  alt="Matrix code visualization representing AI book creation" 
+                  src="https://images.unsplash.com/photo-1523712999610-f77fbcfc3843" 
+                  alt="Forest heat by sunbeam representing creative inspiration" 
                   className="relative rounded-lg shadow-xl w-full h-auto"
                 />
               </div>
@@ -110,7 +110,7 @@ const AboutPage = () => {
             <div className="flex justify-center">
               <div className="bg-book-lightGray p-6 rounded-lg max-w-md">
                 <img 
-                  src="/founder-image.jpg" 
+                  src="/lovable-uploads/21a233ec-2d97-4e6d-9847-1c6a885e9737.png" 
                   alt="M.Kabilan - Founder & CEO" 
                   className="w-full h-64 object-cover rounded-md mb-4"
                 />

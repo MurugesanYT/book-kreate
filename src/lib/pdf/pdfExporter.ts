@@ -14,7 +14,7 @@ const FONT_SIZES = {
   caption: 10,
 };
 
-// Map colorScheme option to actual color values
+// Map colorScheme option to actual color values based on book category/genre
 const COLOR_SCHEMES = {
   default: { primary: "#333333", background: "#ffffff", accent: "#666666" },
   elegant: { primary: "#2D3748", background: "#F7FAFC", accent: "#805AD5" },
@@ -25,11 +25,21 @@ const COLOR_SCHEMES = {
   artistic: { primary: "#44337A", background: "#FFF5F7", accent: "#B83280" },
   scholarly: { primary: "#1A365D", background: "#EDF2F7", accent: "#2C5282" },
   romantic: { primary: "#702459", background: "#FFF5F7", accent: "#B83280" },
-  fantasy: { primary: "#44337A", background: "#FEFCBF", accent: "#6B46C1" }
+  fantasy: { primary: "#44337A", background: "#FEFCBF", accent: "#6B46C1" },
+  travel: { primary: "#2C3333", background: "#E7F6F2", accent: "#2E8B57" },
+  mystery: { primary: "#263238", background: "#ECEFF1", accent: "#607D8B" },
+  "sci-fi": { primary: "#0B3954", background: "#E9F5F9", accent: "#00BCD4" },
+  horror: { primary: "#1C1C1C", background: "#F5F5F5", accent: "#B71C1C" },
+  thriller: { primary: "#252627", background: "#F8F9FA", accent: "#FF5252" },
+  historical: { primary: "#3E2723", background: "#F5F5DC", accent: "#A1887F" },
+  adventure: { primary: "#155263", background: "#F8F9F9", accent: "#FF9A3C" },
+  comedy: { primary: "#6C4A4A", background: "#FFFFF0", accent: "#E7B10A" },
+  drama: { primary: "#2C3639", background: "#F5F2E7", accent: "#A27B5C" },
+  cooking: { primary: "#3A4750", background: "#FFFBF5", accent: "#D4634B" },
 };
 
 /**
- * Export a book to PDF with custom beautification
+ * Export a book to PDF with custom beautification based on book genre/theme
  */
 export const exportBookToPDF = async (
   book: BookData,
@@ -42,6 +52,55 @@ export const exportBookToPDF = async (
     console.log("Starting PDF export with options:", options);
     toast.info("Preparing your book for export...");
     
+    // Determine the book's genre for theme selection
+    const bookGenre = book.genre?.toLowerCase() || book.category?.toLowerCase() || "default";
+    
+    // Select a color scheme that matches the book genre
+    let schemeKey = options.colorScheme;
+    
+    // Auto-select appropriate color scheme based on genre if using default
+    if (options.colorScheme === 'default') {
+      // Map the genre to a matching color scheme
+      if (bookGenre.includes('romance') || bookGenre.includes('love')) {
+        schemeKey = 'romantic';
+      } else if (bookGenre.includes('fantasy') || bookGenre.includes('magic')) {
+        schemeKey = 'fantasy';
+      } else if (bookGenre.includes('mystery') || bookGenre.includes('detective')) {
+        schemeKey = 'mystery';
+      } else if (bookGenre.includes('sci-fi') || bookGenre.includes('science fiction')) {
+        schemeKey = 'sci-fi';
+      } else if (bookGenre.includes('horror') || bookGenre.includes('scary')) {
+        schemeKey = 'horror';
+      } else if (bookGenre.includes('travel') || bookGenre.includes('journey')) {
+        schemeKey = 'travel';
+      } else if (bookGenre.includes('history') || bookGenre.includes('historical')) {
+        schemeKey = 'historical';
+      } else if (bookGenre.includes('thriller') || bookGenre.includes('suspense')) {
+        schemeKey = 'thriller';
+      } else if (bookGenre.includes('comedy') || bookGenre.includes('humor')) {
+        schemeKey = 'comedy';
+      } else if (bookGenre.includes('drama')) {
+        schemeKey = 'drama';
+      } else if (bookGenre.includes('academic') || bookGenre.includes('education')) {
+        schemeKey = 'scholarly';
+      } else if (bookGenre.includes('art') || bookGenre.includes('creative')) {
+        schemeKey = 'artistic';
+      } else if (bookGenre.includes('minimal') || bookGenre.includes('simple')) {
+        schemeKey = 'minimalist';
+      } else if (bookGenre.includes('adventure') || bookGenre.includes('expedition')) {
+        schemeKey = 'adventure';
+      } else {
+        // Default to elegant for unknown genres
+        schemeKey = 'elegant';
+      }
+    }
+    
+    // Override the options with our genre-appropriate scheme
+    const enhancedOptions = {
+      ...options,
+      colorScheme: schemeKey,
+    };
+    
     // Combine all text for content analysis
     const allContent = chapters
       .map(chapter => `# ${chapter.title}\n\n${chapter.content}`)
@@ -50,25 +109,25 @@ export const exportBookToPDF = async (
       + (creditsPage ? `\n\nCREDITS:\n${creditsPage}` : '');
     
     // Generate AI-powered beautification settings
-    const beautification = await generateBookBeautification(book, allContent, options);
+    const beautification = await generateBookBeautification(book, allContent, enhancedOptions);
     toast.info("Applying custom styling to your book...");
     
     // Create the PDF document
     const doc = new jsPDF({
-      orientation: options.orientation,
+      orientation: enhancedOptions.orientation,
       unit: "mm",
-      format: options.pageSize
+      format: enhancedOptions.pageSize
     });
     
     // Apply basic settings
-    configureDocument(doc, options, beautification);
+    configureDocument(doc, enhancedOptions, beautification);
     
     // Generate the PDF content
-    addCoverPage(doc, book, options, beautification, coverPage);
-    addTableOfContents(doc, chapters, options, beautification);
-    addChapters(doc, chapters, options, beautification);
+    addCoverPage(doc, book, enhancedOptions, beautification, coverPage);
+    addTableOfContents(doc, chapters, enhancedOptions, beautification);
+    addChapters(doc, chapters, enhancedOptions, beautification);
     if (creditsPage) {
-      addCreditsPage(doc, creditsPage, options, beautification);
+      addCreditsPage(doc, creditsPage, enhancedOptions, beautification);
     }
     
     // Return PDF as base64 string
@@ -549,10 +608,10 @@ export const getDefaultExportOptions = (): PDFExportOptions => {
     fontSize: 12,
     headerFooter: true,
     coverPage: true,
-    colorScheme: 'default',
+    colorScheme: 'default', // Changed to default so we can auto-select based on genre
     pageSize: 'a4',
     orientation: 'portrait',
-    decorativeElements: false,
+    decorativeElements: true,
     chapterDividers: true,
     dropCaps: false,
     textAlignment: 'left',

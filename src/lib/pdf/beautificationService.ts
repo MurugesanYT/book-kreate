@@ -244,7 +244,23 @@ const getCategoryColorScheme = (category: string, preferredScheme: string): stri
       artistic: "#44337A,#FFF5F7,#B83280", // Deep purple, light pink, magenta
       scholarly: "#1A365D,#EDF2F7,#2C5282", // Navy, light blue/gray, blue
       romantic: "#702459,#FFF5F7,#B83280", // Burgundy, light pink, pink
-      fantasy: "#44337A,#FEFCBF,#6B46C1" // Deep purple, light yellow, bright purple
+      fantasy: "#44337A,#FEFCBF,#6B46C1", // Deep purple, light yellow, bright purple
+      travel: "#2C3333,#E7F6F2,#2E8B57", // Dark gray, mint, sea green
+      mystery: "#263238,#ECEFF1,#607D8B", // Dark blue-gray, light gray, blue-gray
+      "sci-fi": "#0B3954,#E9F5F9,#00BCD4", // Dark blue, light blue, cyan
+      horror: "#1C1C1C,#F5F5F5,#B71C1C", // Nearly black, off-white, dark red
+      thriller: "#252627,#F8F9FA,#FF5252", // Almost black, off-white, bright red
+      historical: "#3E2723,#F5F5DC,#A1887F", // Dark brown, beige, light brown
+      biography: "#2D4B73,#F8F9FA,#2E86DE", // Navy, off-white, bright blue
+      academic: "#002147,#F5F5F5,#3F72AF", // Oxford blue, off-white, royal blue
+      adventure: "#155263,#F8F9F9,#FF9A3C", // Teal, off-white, orange
+      comedy: "#6C4A4A,#FFFFF0,#E7B10A", // Brown, ivory, mustard
+      drama: "#2C3639,#F5F2E7,#A27B5C", // Dark gray, light beige, copper
+      "self-help": "#282F44,#FFFFFF,#4D9DE0", // Dark navy, white, sky blue
+      travel: "#2C3333,#E7F6F2,#2E8B57", // Dark gray, mint, sea green
+      cooking: "#3A4750,#FFFBF5,#D4634B", // Dark slate, cream, terracotta
+      cuba: "#1C6758,#FFF6EA,#EE9B00", // Dark green, warm cream, golden yellow - For Cuba themed books
+      havana: "#5F4B32,#FFFAEB,#E09F3E", // Havana brown, cream, gold - For Havana themed books
     };
     
     return schemes[preferredScheme] || "#333333,#F8F8F8,#E0E0E0";
@@ -272,9 +288,12 @@ const getCategoryColorScheme = (category: string, preferredScheme: string): stri
     "self-help": "#282F44,#FFFFFF,#4D9DE0", // Dark navy, white, sky blue
     travel: "#2C3333,#E7F6F2,#2E8B57", // Dark gray, mint, sea green
     cooking: "#3A4750,#FFFBF5,#D4634B", // Dark slate, cream, terracotta
+    cuba: "#1C6758,#FFF6EA,#EE9B00", // Dark green, warm cream, golden yellow - For Cuba themed books
+    havana: "#5F4B32,#FFFAEB,#E09F3E", // Havana brown, cream, gold - For Havana themed books
   };
   
-  return categorySchemes[category.toLowerCase()] || "#333333,#F8F8F8,#E0E0E0";
+  // Try to find a match from the category or fallback to fiction
+  return categorySchemes[category.toLowerCase()] || categorySchemes.fiction || "#333333,#F8F8F8,#E0E0E0";
 };
 
 /**
@@ -429,11 +448,37 @@ const getDefaultDecorativeElements = (category: string): BeautificationResult['d
  * Create enhanced default beautification settings if AI generation fails
  */
 const getEnhancedDefaultBeautification = (category: string, colorScheme: string): BeautificationResult => {
+  // Further refine the default styles based on specific categories/genres
+  let decorativeStyle = getDefaultDecorativeElements(category);
+  
+  // For travel-related content, add appropriate styling
+  if (category.toLowerCase().includes('travel') || 
+      category.toLowerCase().includes('cuba') || 
+      category.toLowerCase().includes('havana')) {
+    decorativeStyle = {
+      headerStyle: "Travel destination name in elegant script with small compass or map icon",
+      footerStyle: "Page number with small minimalist wave or path symbol",
+      chapterDividers: [
+        "A sinuous path or road that fades at both ends",
+        "A sequence of small compass points or map markers",
+        "A gradient horizon line with small sun element",
+        "Small iconic silhouettes related to the travel destination"
+      ],
+      dropCapStyle: "A bold, slightly textured initial letter in a color that evokes the destination",
+      pageDecorations: [
+        "Subtle corner elements that evoke the architecture of the location",
+        "Tiny landmark silhouettes as section breaks",
+        "Delicate border elements inspired by local designs"
+      ],
+      backgroundTexture: "Very subtle texture suggesting local materials (aged paper for historical locations, textured stone for architecture-focused content)"
+    };
+  }
+  
   return {
     cssStyles: ".book-container { font-family: Georgia, serif; line-height: 1.6; color: #333; }",
     fontRecommendation: getCategoryFontRecommendation(category),
     colorScheme: getCategoryColorScheme(category, colorScheme),
-    decorativeElements: getDefaultDecorativeElements(category),
+    decorativeElements: decorativeStyle,
     layoutRecommendation: {
       margins: category.toLowerCase() === 'poetry' ? "1.5 inch (3.81 cm) side margins for emphasis" : "1 inch (2.54 cm) margins on all sides",
       lineSpacing: category.toLowerCase() === 'academic' ? "1.8 for improved readability of complex content" : "1.5 for balanced readability and aesthetics",

@@ -399,7 +399,7 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
       const pageHeight = doc.internal.pageSize.getHeight();
       
       let margin;
-      switch(pdfOptions.pageMargins) {
+      switch(pdfOptions.pageMargins as 'normal' | 'wide' | 'narrow') {
         case 'wide': margin = 25; break;
         case 'narrow': margin = 15; break;
         default: margin = 20;
@@ -472,10 +472,6 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
       }
       
       if (editedBook.description) {
-        doc.setFontSize(baseFontSize);
-        doc.setFont(fontFamily, 'normal');
-        doc.setTextColor(colorScheme.text);
-        
         const descLines = doc.splitTextToSize(editedBook.description, contentWidth);
         const textAlign = pdfOptions.textAlignment as 'left' | 'justified' | 'center';
         doc.text(descLines, pdfOptions.textAlignment === 'center' ? pageWidth / 2 : margin, 130, { 
@@ -912,7 +908,7 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
                             value={pdfOptions.pageSize} 
                             onValueChange={(value) => setPdfOptions({...pdfOptions, pageSize: value})}
                           >
-                            <SelectTrigger id="pageSize">
+                            <SelectTrigger>
                               <SelectValue placeholder="Select page size" />
                             </SelectTrigger>
                             <SelectContent>
@@ -929,7 +925,7 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
                             value={pdfOptions.orientation} 
                             onValueChange={(value: 'portrait' | 'landscape') => setPdfOptions({...pdfOptions, orientation: value})}
                           >
-                            <SelectTrigger id="orientation">
+                            <SelectTrigger>
                               <SelectValue placeholder="Select orientation" />
                             </SelectTrigger>
                             <SelectContent>
@@ -947,7 +943,7 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
                             value={pdfOptions.pageMargins} 
                             onValueChange={(value) => setPdfOptions({...pdfOptions, pageMargins: value})}
                           >
-                            <SelectTrigger id="pageMargins">
+                            <SelectTrigger>
                               <SelectValue placeholder="Select margin size" />
                             </SelectTrigger>
                             <SelectContent>
@@ -964,7 +960,7 @@ const BookContentEditor: React.FC<BookContentEditorProps> = ({ book, onSave }) =
                             value={pdfOptions.lineSpacing} 
                             onValueChange={(value) => setPdfOptions({...pdfOptions, lineSpacing: value})}
                           >
-                            <SelectTrigger id="lineSpacing">
+                            <SelectTrigger>
                               <SelectValue placeholder="Select line spacing" />
                             </SelectTrigger>
                             <SelectContent>
