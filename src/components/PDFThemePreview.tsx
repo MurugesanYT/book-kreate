@@ -3,7 +3,6 @@ import React from 'react';
 import { getAllThemeOptions } from '@/lib/pdf/pdfExporter';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface PDFThemePreviewProps {
   selectedTheme: string;
@@ -20,7 +19,7 @@ const PDFThemePreview: React.FC<PDFThemePreviewProps> = ({
     <div className="w-full">
       <h3 className="text-lg font-medium mb-2">Choose a Theme</h3>
       <p className="text-sm text-gray-500 mb-4">
-        Select from over 50 professional themes to match your book's style
+        Select a theme to match your book's style
       </p>
       
       <ScrollArea className="h-[300px] w-full pr-4">

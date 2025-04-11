@@ -19,6 +19,9 @@ const PDFExportFormatPreview: React.FC<PDFExportFormatPreviewProps> = ({
   pdfOptions,
   previewBook
 }) => {
+  // Fix TypeScript errors by ensuring proper type alignment
+  const textAlign = pdfOptions.textAlignment === 'justified' ? 'left' : pdfOptions.textAlignment;
+  
   return (
     <div className="w-full">
       <Tabs defaultValue="cover">
@@ -179,7 +182,7 @@ const PDFExportFormatPreview: React.FC<PDFExportFormatPreviewProps> = ({
               <div 
                 className="mt-6"
                 style={{
-                  textAlign: pdfOptions.textAlignment || 'left',
+                  textAlign,
                   lineHeight: pdfOptions.lineSpacing === 'relaxed' ? '1.8' : 
                               pdfOptions.lineSpacing === 'compact' ? '1.2' : '1.5',
                   fontSize: `${pdfOptions.fontSize || 12}px`,
@@ -221,7 +224,7 @@ const PDFExportFormatPreview: React.FC<PDFExportFormatPreviewProps> = ({
               <div 
                 className="space-y-4"
                 style={{
-                  textAlign: pdfOptions.textAlignment || 'left',
+                  textAlign,
                   lineHeight: pdfOptions.lineSpacing === 'relaxed' ? '1.8' : 
                               pdfOptions.lineSpacing === 'compact' ? '1.2' : '1.5',
                   fontSize: `${pdfOptions.fontSize || 12}px`,
@@ -260,7 +263,7 @@ const PDFExportFormatPreview: React.FC<PDFExportFormatPreviewProps> = ({
               {/* Page size visualization */}
               <div className="absolute inset-0 flex items-center justify-center z-0 opacity-30 pointer-events-none">
                 <div className="text-center">
-                  <p className="text-lg font-semibold">Page format: {pdfOptions.pageSize.toUpperCase()}</p>
+                  <p className="text-lg font-semibold">Page format: {pdfOptions.pageSize}</p>
                   <p>Orientation: {pdfOptions.orientation}</p>
                   <p>Margins: {pdfOptions.pageMargins}</p>
                 </div>
@@ -283,7 +286,7 @@ const PDFExportFormatPreview: React.FC<PDFExportFormatPreviewProps> = ({
               <div 
                 className="mt-12 relative z-10"
                 style={{
-                  textAlign: pdfOptions.textAlignment || 'left',
+                  textAlign,
                   lineHeight: pdfOptions.lineSpacing === 'relaxed' ? '1.8' : 
                               pdfOptions.lineSpacing === 'compact' ? '1.2' : '1.5',
                   fontSize: `${pdfOptions.fontSize || 12}px`,
