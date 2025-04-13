@@ -52,3 +52,8 @@ export const themes: ThemeOption[] = [
 
 // Export the themes for use in other components
 export default themes;
+
+// Export function to get all theme options
+export const getAllThemeOptions = (): ThemeOption[] => {
+  return themes;
+};

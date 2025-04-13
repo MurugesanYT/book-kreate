@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import LandingHeader from '@/components/LandingHeader';
@@ -97,7 +98,7 @@ const ContactPage = () => {
                     <Mail size={20} className="text-book-orange mr-4" />
                     <div>
                       <h3 className="text-lg font-medium text-book-darkText">Email</h3>
-                      <p className="text-slate-600">kabilanmurugesan2004@gmail.com</p>
+                      <p className="text-slate-600">youvegottabefreakingkiddingme@gmail.com</p>
                     </div>
                   </div>
                   
@@ -114,18 +115,18 @@ const ContactPage = () => {
                     <div>
                       <h3 className="text-lg font-medium text-book-darkText">Social Media</h3>
                       <div className="flex space-x-4 mt-2">
-                        <Link to="https://www.facebook.com/profile.php?id=61574131919351" className="text-slate-400 hover:text-book-purple transition-colors" aria-label="Facebook">
+                        <a href="https://www.facebook.com/profile.php?id=61574131919351" className="text-slate-400 hover:text-book-purple transition-colors" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
                           <FacebookIcon size={20} />
-                        </Link>
-                        <Link to="https://x.com/_fan_boi_lm10_" className="text-slate-400 hover:text-book-purple transition-colors" aria-label="X">
+                        </a>
+                        <a href="https://x.com/_fan_boi_lm10_" className="text-slate-400 hover:text-book-purple transition-colors" aria-label="X" target="_blank" rel="noopener noreferrer">
                           <XIcon size={20} />
-                        </Link>
-                        <Link to="https://www.instagram.com/@_fan_boi_lm10_" className="text-slate-400 hover:text-book-purple transition-colors" aria-label="Instagram">
+                        </a>
+                        <a href="https://www.instagram.com/_fan_boi_lm10_" className="text-slate-400 hover:text-book-purple transition-colors" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
                           <InstagramIcon size={20} />
-                        </Link>
-                        <Link to="https://www.github.com/MurugesanYT" className="text-slate-400 hover:text-book-purple transition-colors" aria-label="Github">
+                        </a>
+                        <a href="https://www.github.com/MurugesanYT" className="text-slate-400 hover:text-book-purple transition-colors" aria-label="Github" target="_blank" rel="noopener noreferrer">
                           <GithubIcon size={20} />
-                        </Link>
+                        </a>
                       </div>
                     </div>
                   </div>

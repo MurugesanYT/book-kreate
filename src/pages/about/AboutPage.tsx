@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import LandingHeader from '@/components/LandingHeader';
 import LandingFooter from '@/components/LandingFooter';
@@ -114,9 +114,14 @@ const AboutPage = () => {
                   <DialogTrigger asChild>
                     <div className="w-full h-64 overflow-hidden rounded-md mb-4 cursor-pointer transition-all duration-300 hover:opacity-90 hover:shadow-lg">
                       <img 
-                        src="https://i.ibb.co/2Y3Mshg/3d820bd3-58a4-4c1c-b447-b11043015ef8.png" 
+                        src="https://i.ibb.co/2Y3Mshgt/3d820bd3-58a4-4c1c-b447-b11043015ef8.png" 
                         alt="M.Kabilan - Founder & CEO" 
                         className="w-full h-full object-cover object-center"
+                        onError={(e) => {
+                          // Fallback in case image fails to load
+                          const target = e.target as HTMLImageElement;
+                          target.src = "https://i.ibb.co/2Y3Mshg/3d820bd3-58a4-4c1c-b447-b11043015ef8.png";
+                        }}
                       />
                     </div>
                   </DialogTrigger>
@@ -129,9 +134,14 @@ const AboutPage = () => {
                         <X className="h-4 w-4" />
                       </Button>
                       <img 
-                        src="https://i.ibb.co/2Y3Mshg/3d820bd3-58a4-4c1c-b447-b11043015ef8.png" 
+                        src="https://i.ibb.co/2Y3Mshgt/3d820bd3-58a4-4c1c-b447-b11043015ef8.png" 
                         alt="M.Kabilan - Founder & CEO (Full View)" 
                         className="w-full h-auto max-h-[80vh] object-contain"
+                        onError={(e) => {
+                          // Fallback in case image fails to load
+                          const target = e.target as HTMLImageElement;
+                          target.src = "https://i.ibb.co/2Y3Mshg/3d820bd3-58a4-4c1c-b447-b11043015ef8.png";
+                        }}
                       />
                     </div>
                   </DialogContent>

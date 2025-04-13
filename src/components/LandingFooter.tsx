@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Facebook, Twitter as X, Instagram, Github, Mail, MapPin } from 'lucide-react';
@@ -58,7 +57,7 @@ const LandingFooter = () => {
             <ul className="space-y-4">
               <li className="flex items-start">
                 <Mail size={18} className="text-book-orange mt-1 mr-2" />
-                <span className="text-slate-400">kabilanmurugesan2004@gmail.com</span>
+                <span className="text-slate-400">youvegottabefreakingkiddingme@gmail.com</span>
               </li>
               <li className="flex items-start">
                 <MapPin size={18} className="text-book-orange mt-1 mr-2" />
