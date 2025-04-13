@@ -85,13 +85,15 @@ const BookContentEditor: React.FC<BookEditorProps> = ({ book, onSave }) => {
     // Import the exportBook function
     import('@/lib/pdf/pdfExporter').then(({ exportBook }) => {
       // Create a Book object with all required properties
-      const bookData: import('@/lib/api/types').Book = {
+      const bookData: Book = {
         id: editedBook.id || 'temp-id',
         title: editedBook.title,
         author: editedBook.author || '',
         content: editedBook.chapters?.map(ch => ch.content) || [],
         description: editedBook.description || '',
-        coverImage: editedBook.coverImageUrl || '',
+        coverImage: editedBook.coverImage || '',
+        coverPage: editedBook.coverPage,
+        creditsPage: editedBook.creditsPage,
         chapters: editedBook.chapters?.map((ch, idx) => ({
           id: ch.id || `chapter-${idx}`,
           title: ch.title,
@@ -104,7 +106,7 @@ const BookContentEditor: React.FC<BookEditorProps> = ({ book, onSave }) => {
         updatedAt: editedBook.updatedAt || new Date().toISOString()
       };
       
-      // Basic options without beautification
+      // Basic options
       const options = {
         fontFamily: 'helvetica',
         fontSize: 12
@@ -124,10 +126,18 @@ const BookContentEditor: React.FC<BookEditorProps> = ({ book, onSave }) => {
             const element = document.createElement('a');
             const fileType = selectedFormat === 'json' ? 'application/json' : 
                             selectedFormat === 'txt' ? 'text/plain' : 
-                            selectedFormat === 'markdown' ? 'text/markdown' : 'text/plain';
+                            selectedFormat === 'markdown' ? 'text/markdown' : 
+                            selectedFormat === 'html' ? 'text/html' : 
+                            selectedFormat === 'pdf' ? 'application/pdf' : 'text/plain';
             
-            const blob = new Blob([result.content], { type: fileType });
-            element.href = URL.createObjectURL(blob);
+            // For PDF which returns a data URI
+            if (selectedFormat === 'pdf' && result.content.startsWith('data:')) {
+              element.href = result.content;
+            } else {
+              const blob = new Blob([result.content], { type: fileType });
+              element.href = URL.createObjectURL(blob);
+            }
+            
             element.download = `${editedBook.title || 'untitled-book'}.${selectedFormat}`;
             document.body.appendChild(element);
             element.click();
@@ -193,7 +203,7 @@ const BookContentEditor: React.FC<BookEditorProps> = ({ book, onSave }) => {
         </div>
       </div>
 
-      {editedBook.coverPage && (
+      {editedBook.coverPage !== undefined && (
         <Card>
           <CardHeader>
             <CardTitle>Cover Page</CardTitle>
@@ -253,7 +263,7 @@ const BookContentEditor: React.FC<BookEditorProps> = ({ book, onSave }) => {
         </div>
       )}
 
-      {editedBook.creditsPage && (
+      {editedBook.creditsPage !== undefined && (
         <Card>
           <CardHeader>
             <CardTitle>Credits Page</CardTitle>

@@ -24,6 +24,8 @@ export interface Book {
   content: string[];
   description?: string;
   coverImage?: string;
+  coverPage?: string;  // Added for cover page content
+  creditsPage?: string; // Added for credits page content
   chapters?: Chapter[];
   genre?: string;
   published?: boolean;
@@ -42,6 +44,12 @@ export interface Chapter {
 export interface Credit {
   role: string;
   name: string;
+}
+
+// Update BaseExporterOptions to be a common base type for all exporters
+export interface BaseExporterOptions {
+  fontFamily?: string;
+  fontSize?: number;
 }
 
 export interface BookData {
@@ -83,12 +91,10 @@ export interface PlanItem {
 // Export Formats
 export type ExportFormat = 'pdf' | 'epub' | 'mobi' | 'docx' | 'txt' | 'html' | 'markdown' | 'rtf' | 'azw3' | 'fb2' | 'cbz' | 'audio' | 'latex' | 'odt' | 'pages' | 'xml' | 'json';
 
-// PDF Export types
-export interface PDFExportOptions {
+// Update all export option interfaces to extend BaseExporterOptions
+export interface PDFExportOptions extends BaseExporterOptions {
   showPageNumbers: boolean;
   includeMargins: boolean;
-  fontFamily: string;
-  fontSize: number;
   headerFooter: boolean;
   coverPage: boolean;
   colorScheme: string;
@@ -103,8 +109,7 @@ export interface PDFExportOptions {
   paperTextureEffect: boolean;
 }
 
-// EPUB Export options
-export interface EPUBExportOptions {
+export interface EPUBExportOptions extends BaseExporterOptions {
   includeTableOfContents: boolean;
   coverImage: boolean;
   metadata: {
@@ -133,8 +138,7 @@ export interface EPUBExportOptions {
   };
 }
 
-// DOCX Export options
-export interface DOCXExportOptions {
+export interface DOCXExportOptions extends BaseExporterOptions {
   includeTableOfContents: boolean;
   includeHeaderFooter: boolean;
   styling: {
@@ -154,8 +158,7 @@ export interface DOCXExportOptions {
   footnotesEndnotes?: boolean;
 }
 
-// Additional export options
-export interface HTMLExportOptions {
+export interface HTMLExportOptions extends BaseExporterOptions {
   responsive: boolean;
   includeCSS: boolean;
   darkModeSupport?: boolean;
@@ -165,7 +168,7 @@ export interface HTMLExportOptions {
   printOptimized?: boolean;
 }
 
-export interface TXTExportOptions {
+export interface TXTExportOptions extends BaseExporterOptions {
   encoding: "utf8" | "ascii";
   lineBreaks: "lf" | "crlf";
   includeMetadata?: boolean;
@@ -173,7 +176,7 @@ export interface TXTExportOptions {
   wrapWidth?: number;
 }
 
-export interface MarkdownExportOptions {
+export interface MarkdownExportOptions extends BaseExporterOptions {
   format: "standard" | "github" | "commonmark";
   includeMetadata: boolean;
   tableSupport?: boolean;
@@ -183,8 +186,7 @@ export interface MarkdownExportOptions {
   includeTableOfContents?: boolean;
 }
 
-// RTF Export options
-export interface RTFExportOptions {
+export interface RTFExportOptions extends BaseExporterOptions {
   includeTableOfContents: boolean;
   includeHeaderFooter: boolean;
   styling: {
@@ -199,8 +201,7 @@ export interface RTFExportOptions {
   specialCharacters: boolean;
 }
 
-// AZW3 Export options
-export interface AZW3ExportOptions {
+export interface AZW3ExportOptions extends BaseExporterOptions {
   includeTableOfContents: boolean;
   coverImage: boolean;
   metadata: {
@@ -220,8 +221,7 @@ export interface AZW3ExportOptions {
   pageNumbering: boolean;
 }
 
-// FB2 Export options
-export interface FB2ExportOptions {
+export interface FB2ExportOptions extends BaseExporterOptions {
   includeTableOfContents: boolean;
   coverImage: boolean;
   metadata: {
@@ -236,8 +236,7 @@ export interface FB2ExportOptions {
   xhtmlSupport: boolean;
 }
 
-// CBZ Export options
-export interface CBZExportOptions {
+export interface CBZExportOptions extends BaseExporterOptions {
   coverImage: boolean;
   imageQuality: "low" | "medium" | "high";
   pageSize: "standard" | "wide" | "tall";
@@ -251,30 +250,9 @@ export interface CBZExportOptions {
   compressionLevel: "low" | "medium" | "high";
 }
 
-// Audio Export options
-export interface AudioExportOptions {
-  voiceType: "male" | "female" | "neutral";
-  audioQuality: "standard" | "high";
-  fileFormat: "mp3" | "wav" | "ogg" | "flac";
-  sampleRate: "44.1kHz" | "48kHz" | "96kHz";
-  includeChapterMarkers: boolean;
-  normalizeAudio: boolean;
-  speedControl: boolean;
-  bitRate: "128kbps" | "192kbps" | "256kbps" | "320kbps";
-}
-
-// PDF Beautification types
-export interface BeautificationOptions {
-  useAI: boolean;
-  theme: "auto" | "custom";
-  enhancedGeneration: boolean;
-  customSettings?: Record<string, any>;
-}
-
-// LaTeX Export options
-export interface LaTeXExportOptions {
+export interface LaTeXExportOptions extends BaseExporterOptions {
   documentClass: "book" | "article" | "report" | "memoir";
-  fontSize: "10pt" | "11pt" | "12pt";
+  fontSize: string; // This is a string in LaTeX like "10pt", "11pt", "12pt"
   paperSize: "a4paper" | "letterpaper" | "a5paper";
   twoSided: boolean;
   includeTableOfContents: boolean;
@@ -288,8 +266,7 @@ export interface LaTeXExportOptions {
   fontPackage: "default" | "times" | "palatino" | "bookman" | "charter";
 }
 
-// ODT (OpenDocument Text) Export options
-export interface ODTExportOptions {
+export interface ODTExportOptions extends BaseExporterOptions {
   includeTableOfContents: boolean;
   includeCoverPage: boolean;
   pageStyle: "standard" | "professional" | "creative";
@@ -311,8 +288,7 @@ export interface ODTExportOptions {
   compatibility: "libreoffice" | "msoffice" | "standard";
 }
 
-// Pages (Apple) Export options
-export interface PagesExportOptions {
+export interface PagesExportOptions extends BaseExporterOptions {
   template: "blank" | "book" | "essay" | "report" | "novel";
   fontFamily: string;
   fontSize: number;
@@ -328,8 +304,7 @@ export interface PagesExportOptions {
   appleCompatibilityLevel: "latest" | "high-sierra" | "catalina";
 }
 
-// XML Export options
-export interface XMLExportOptions {
+export interface XMLExportOptions extends BaseExporterOptions {
   documentType: "book" | "article" | "manuscript";
   schema: "docbook" | "tei" | "custom";
   version: "5.0" | "4.5";
@@ -344,8 +319,7 @@ export interface XMLExportOptions {
   outputFormat: "xml" | "html" | "xhtml";
 }
 
-// JSON Export options
-export interface JSONExportOptions {
+export interface JSONExportOptions extends BaseExporterOptions {
   structure: "flat" | "nested" | "hierarchical";
   includeMetadata: boolean;
   includeContent: boolean;

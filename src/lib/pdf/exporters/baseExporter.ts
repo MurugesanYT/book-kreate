@@ -1,15 +1,10 @@
 
-import { Book } from "@/lib/api/types";
+import { Book, BaseExporterOptions } from "@/lib/api/types";
 
 export interface ExportResult {
   success: boolean;
   message: string;
   content?: string;
-}
-
-export interface BaseExporterOptions {
-  fontFamily?: string;
-  fontSize?: number;
 }
 
 export abstract class BaseExporter<T extends BaseExporterOptions> {
