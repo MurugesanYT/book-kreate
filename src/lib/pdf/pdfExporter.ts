@@ -17,7 +17,7 @@ import { PagesExporter } from "./exporters/pagesExporter";
 import { XMLExporter } from "./exporters/xmlExporter";
 import { JSONExporter } from "./exporters/jsonExporter";
 import { ThemeOption } from "@/lib/api/types";
-import { themes } from "./themes";
+import themes from "./themes";
 
 // Export the theme options for use in other components
 export const getAllThemeOptions = (): ThemeOption[] => {
@@ -164,7 +164,7 @@ const createDefaultCBZOptions = (fontFamily: string, fontSize: number) => ({
 
 const createDefaultLaTeXOptions = (fontFamily: string, fontSize: number) => ({
   documentClass: "book" as const,
-  fontSize: `${fontSize}pt`,
+  fontSize: fontSize, // Changed to number instead of string
   paperSize: "a4paper" as const,
   twoSided: false,
   includeTableOfContents: true,

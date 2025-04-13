@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import LandingHeader from '@/components/LandingHeader';
 import LandingFooter from '@/components/LandingFooter';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Users, Award, Sparkles, Globe, Code } from 'lucide-react';
+import { BookOpen, Users, Award, Sparkles, Globe, Code, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 
 const AboutPage = () => {
   return (
@@ -109,13 +110,32 @@ const AboutPage = () => {
             
             <div className="flex justify-center">
               <div className="bg-book-lightGray p-6 rounded-lg max-w-md">
-                <div className="w-full h-64 overflow-hidden rounded-md mb-4">
-                  <img 
-                    src="https://i.ibb.co/2Y3Mshg/3d820bd3-58a4-4c1c-b447-b11043015ef8.png" 
-                    alt="M.Kabilan - Founder & CEO" 
-                    className="w-full h-full object-cover object-center"
-                  />
-                </div>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <div className="w-full h-64 overflow-hidden rounded-md mb-4 cursor-pointer transition-all duration-300 hover:opacity-90 hover:shadow-lg">
+                      <img 
+                        src="https://i.ibb.co/2Y3Mshg/3d820bd3-58a4-4c1c-b447-b11043015ef8.png" 
+                        alt="M.Kabilan - Founder & CEO" 
+                        className="w-full h-full object-cover object-center"
+                      />
+                    </div>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl p-0 overflow-hidden">
+                    <div className="relative">
+                      <Button 
+                        className="absolute top-2 right-2 rounded-full p-2 h-8 w-8 bg-black/50 hover:bg-black/70 z-10" 
+                        variant="ghost"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                      <img 
+                        src="https://i.ibb.co/2Y3Mshg/3d820bd3-58a4-4c1c-b447-b11043015ef8.png" 
+                        alt="M.Kabilan - Founder & CEO (Full View)" 
+                        className="w-full h-auto max-h-[80vh] object-contain"
+                      />
+                    </div>
+                  </DialogContent>
+                </Dialog>
                 <h3 className="text-xl font-semibold text-book-darkText">M.Kabilan</h3>
                 <p className="text-book-purple mb-2">Founder & CEO</p>
                 <p className="text-slate-600 text-sm">

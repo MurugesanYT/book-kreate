@@ -12,10 +12,40 @@ export class LaTeXExporter extends BaseExporter<LaTeXExportOptions> {
       console.log("Exporting to LaTeX format:", book.title);
       
       // In a real implementation, this would generate the actual LaTeX file
-      // For demo purposes, we'll just return success
+      // using the fontSize as a number, then converting to string with 'pt' suffix
+      const fontSizeWithUnit = `${this.options.fontSize}pt`;
+      
+      // For demo purposes, create a simple LaTeX document
+      const latexContent = `
+\\documentclass{${this.options.documentClass}}
+\\usepackage[${this.options.paperSize}]{geometry}
+\\usepackage{${this.options.fontPackage !== "default" ? this.options.fontPackage : "lmodern"}}
+\\usepackage{setspace}
+\\usepackage{titlesec}
+${this.options.mathSupport ? "\\usepackage{amsmath}" : ""}
+${this.options.twoSided ? "\\documentclass[twoside]{book}" : ""}
+
+\\title{${book.title}}
+${book.author ? `\\author{${book.author}}` : "\\author{Anonymous}"}
+\\date{\\today}
+
+\\begin{document}
+
+\\maketitle
+\\tableofcontents
+
+${book.chapters?.map(chapter => `
+\\chapter{${chapter.title}}
+${chapter.content}
+`).join('\n') || ''}
+
+\\end{document}
+      `;
+      
       return {
         success: true,
-        message: "Book exported to LaTeX successfully!"
+        message: "Book exported to LaTeX successfully!",
+        content: latexContent
       };
     } catch (error) {
       console.error("Error exporting to LaTeX:", error);

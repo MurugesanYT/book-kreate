@@ -252,7 +252,7 @@ export interface CBZExportOptions extends BaseExporterOptions {
 
 export interface LaTeXExportOptions extends BaseExporterOptions {
   documentClass: "book" | "article" | "report" | "memoir";
-  fontSize: string; // This is a string in LaTeX like "10pt", "11pt", "12pt"
+  fontSize: number; // Changed from string to number to match BaseExporterOptions
   paperSize: "a4paper" | "letterpaper" | "a5paper";
   twoSided: boolean;
   includeTableOfContents: boolean;
