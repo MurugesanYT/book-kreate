@@ -18,13 +18,11 @@ export const generateBookContent = async (
   const template = templateId ? allBookTemplates.find(t => t.id === templateId) : undefined;
   
   if (itemType === 'cover') {
-    prompt = `Create a cover page for a ${book.type} book titled "${book.title}" in the ${book.category} category. This book is about: ${book.description}.`;
+    prompt = `Create a cover page for a ${book.type} book titled "${book.title}" in the ${book.category} category. This book is about: ${book.description}. Format the response as plain text with a simple structure. No markdown formatting.`;
     
     if (template?.coverSuggestion) {
       prompt += ` Consider the following design concept: ${template.coverSuggestion}.`;
     }
-    
-    prompt += ` Format the response using markdown with a prominent title and any subtitle or author information you can infer. Only include the formatted cover page content, no additional instructions or explanations.`;
   } else if (itemType === 'chapter') {
     prompt = `Write a detailed chapter titled "${itemTitle}" for a ${book.type} book titled "${book.title}" in the ${book.category} category. 
     ${itemDescription ? `This chapter covers: ${itemDescription}.` : ''} 
@@ -38,7 +36,7 @@ export const generateBookContent = async (
       }
     }
     
-    prompt += ` Make it engaging, appropriate for the ${book.type} genre, and at least 500 words in length. Format the response using markdown with proper headings, paragraphs, and any dialogue formatting if needed. Only include the actual chapter content, no additional instructions or explanations.`;
+    prompt += ` Make it engaging, appropriate for the ${book.type} genre, and at least 500 words in length. Format the response as plain text with proper paragraphs. No markdown formatting.`;
   } else if (itemType === 'credits') {
     // Create a credits list prompt including the book's contributors
     const creditsList = book.credits && book.credits.length > 0
@@ -48,7 +46,7 @@ export const generateBookContent = async (
           .join("\n")
       : "Author: Anonymous";
     
-    prompt = `Create a credits page for a ${book.type} book titled "${book.title}". Include the following contributors:\n${creditsList}\n\nFormat it nicely with markdown, including appropriate headings and layout. Only include the formatted credits page content.`;
+    prompt = `Create a credits page for a ${book.type} book titled "${book.title}". Include the following contributors:\n${creditsList}\n\nFormat it as plain text with a simple structure. No markdown formatting.`;
   }
   
   console.log(`Generating content for ${itemType} "${itemTitle}" with prompt:`, prompt.substring(0, 150) + "...");
@@ -67,9 +65,9 @@ export const generateBookContent = async (
     try {
       let simplePrompt = "";
       if (itemType === 'cover') {
-        simplePrompt = `Create a simple cover page for "${book.title}" using markdown formatting. Just include the title, genre, and a brief subtitle.`;
+        simplePrompt = `Create a simple cover page for "${book.title}". Just include the title, genre, and a brief subtitle. Format as plain text, no markdown.`;
       } else if (itemType === 'chapter') {
-        simplePrompt = `Write a brief chapter titled "${itemTitle}" for the book "${book.title}". Keep it simple but engaging, about 250 words.`;
+        simplePrompt = `Write a brief chapter titled "${itemTitle}" for the book "${book.title}". Keep it simple but engaging, about 250 words. Format as plain text, no markdown.`;
       } else if (itemType === 'credits') {
         // Include actual credits in the fallback
         const creditsList = book.credits && book.credits.length > 0
@@ -79,7 +77,7 @@ export const generateBookContent = async (
               .join("\n")
           : "Author: Anonymous";
         
-        simplePrompt = `Create a simple credits page for "${book.title}" with markdown formatting. Include:\n${creditsList}`;
+        simplePrompt = `Create a simple credits page for "${book.title}". Include:\n${creditsList}\nFormat as plain text, no markdown.`;
       }
       
       const backupContent = await generateWithGemini(simplePrompt, 2000);
@@ -91,19 +89,19 @@ export const generateBookContent = async (
       
       // Provide a very basic fallback content with actual book data
       if (itemType === 'cover') {
-        return `# ${book.title}\n\n## A ${book.type} book in the ${book.category} category\n\n*${book.description}*`;
+        return `${book.title}\n\nA ${book.type} book in the ${book.category} category\n\n${book.description}`;
       } else if (itemType === 'chapter') {
-        return `# ${itemTitle}\n\n*This chapter was meant to cover: ${itemDescription || "various aspects of the book"}.*\n\nPlease try regenerating this content.`;
+        return `${itemTitle}\n\nThis chapter was meant to cover: ${itemDescription || "various aspects of the book"}.\n\nPlease try regenerating this content.`;
       } else {
         // Ensure credits include actual data
         const creditsContent = book.credits && book.credits.length > 0
           ? book.credits
               .filter((credit: any) => credit.role && credit.name)
-              .map((credit: any) => `- **${credit.role}**: ${credit.name}`)
+              .map((credit: any) => `${credit.role}: ${credit.name}`)
               .join("\n")
-          : "- **Author**: Anonymous";
+          : "Author: Anonymous";
           
-        return `# Credits\n\n${creditsContent}`;
+        return `Credits\n\n${creditsContent}`;
       }
     }
   }

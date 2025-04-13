@@ -10,7 +10,6 @@ export interface ExportResult {
 export interface BaseExporterOptions {
   fontFamily?: string;
   fontSize?: number;
-  colorScheme?: string;
 }
 
 export abstract class BaseExporter<T extends BaseExporterOptions> {
