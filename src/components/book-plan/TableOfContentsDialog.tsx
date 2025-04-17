@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { List, DragHandleDots2Icon } from 'lucide-react';
+import { List, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';

@@ -49,7 +49,9 @@ const TasksSection: React.FC<TasksSectionProps> = ({
 
         <PendingTaskList 
           tasks={pendingTasks} 
+          generatingTaskId={generatingTaskId}
           onGenerate={onGenerateContent} 
+          onMarkAsComplete={onMarkAsComplete}
           onDelete={onDeleteTask}
         />
 

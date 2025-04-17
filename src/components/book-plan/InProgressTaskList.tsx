@@ -13,9 +13,10 @@ interface Task {
 
 interface InProgressTaskListProps {
   tasks: Task[];
+  generatingTaskId: string | null;
 }
 
-const InProgressTaskList: React.FC<InProgressTaskListProps> = ({ tasks }) => {
+const InProgressTaskList: React.FC<InProgressTaskListProps> = ({ tasks, generatingTaskId }) => {
   if (tasks.length === 0) {
     return (
       <Card className="mb-6">
@@ -42,7 +43,7 @@ const InProgressTaskList: React.FC<InProgressTaskListProps> = ({ tasks }) => {
             <TaskItem
               key={task.id}
               task={task}
-              isGenerating={true}
+              isGenerating={generatingTaskId === task.id}
               showActions={false}
             />
           ))}
