@@ -6,6 +6,7 @@ import InProgressTaskList from './InProgressTaskList';
 import CompletedTaskList from './CompletedTaskList';
 import AddChapterDialog from './AddChapterDialog';
 import CharacterListDialog from './CharacterListDialog';
+import TableOfContentsDialog from './TableOfContentsDialog';
 
 interface TasksSectionProps {
   tasks: any[];
@@ -38,6 +39,7 @@ const TasksSection: React.FC<TasksSectionProps> = ({
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Tasks</CardTitle>
         <div className="flex space-x-2">
+          <TableOfContentsDialog book={book} onSave={onSave} />
           <CharacterListDialog book={book} onSave={onSave} />
         </div>
       </CardHeader>
@@ -60,7 +62,7 @@ const TasksSection: React.FC<TasksSectionProps> = ({
           onDelete={onDeleteTask}
         />
         
-        <AddChapterDialog onAddChapter={onAddChapter} />
+        <AddChapterDialog onAddChapter={onAddChapter} book={book} />
       </CardContent>
     </Card>
   );
