@@ -18,7 +18,8 @@ const BookPlanPage = () => {
     handleGenerateContent,
     handleMarkAsComplete,
     handleDeleteTask,
-    handleSaveBookContent
+    handleSaveBookContent,
+    handleAddChapter
   } = useBookData(bookId);
 
   if (loading) {
@@ -39,14 +40,21 @@ const BookPlanPage = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
-            <BookDescription description={book?.description || ''} />
+            <BookDescription 
+              book={book} 
+              description={book?.description || ''} 
+              onSave={handleSaveBookContent} 
+            />
 
             <TasksSection
               tasks={tasks}
+              book={book}
               generatingTaskId={generatingContent}
               onGenerateContent={handleGenerateContent}
               onMarkAsComplete={handleMarkAsComplete}
               onDeleteTask={handleDeleteTask}
+              onAddChapter={handleAddChapter}
+              onSave={handleSaveBookContent}
             />
           </div>
           

@@ -2,7 +2,10 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getBook, updateBook, generateBookContent } from '@/lib/api';
+import { getBook, updateBook } from '@/lib/api';
+import { generateBookContent } from '@/lib/api/contentService';
+import { generateBookChapterWithContext } from '@/lib/api/extendedContentService';
+import { v4 as uuidv4 } from 'uuid';
 
 interface Task {
   id: string;
@@ -77,13 +80,33 @@ export const useBookData = (bookId: string | undefined) => {
       setTasks(updatedTasks);
       updateBookWithTasks(updatedTasks);
       
-      // Generate content based on task type
-      const generatedContent = await generateBookContent(
-        book,
-        task.type as any,
-        task.title,
-        task.description
-      );
+      let generatedContent = '';
+      
+      // For chapters, use context-aware generation if it's a chapter
+      if (task.type === 'chapter') {
+        // Get previous chapters for context
+        const previousChapters = book.chapters && book.chapters.length > 0
+          ? book.chapters.map((ch: any) => ({
+              title: ch.title,
+              content: ch.content || ''
+            }))
+          : [];
+        
+        generatedContent = await generateBookChapterWithContext(
+          book,
+          task.title,
+          task.description,
+          previousChapters
+        );
+      } else {
+        // For other content types, use the standard generation
+        generatedContent = await generateBookContent(
+          book,
+          task.type as any,
+          task.title,
+          task.description
+        );
+      }
       
       // Update the book content based on task type
       const updatedBook = { ...book };
@@ -103,12 +126,16 @@ export const useBookData = (bookId: string | undefined) => {
             updatedBook.chapters = [];
           }
           updatedBook.chapters.push({
+            id: uuidv4(),
             title: task.title,
-            content: generatedContent
+            content: generatedContent,
+            order: updatedBook.chapters.length
           });
         }
       } else if (task.type === 'credits') {
         updatedBook.creditsPage = generatedContent;
+      } else if (task.type === 'characters') {
+        updatedBook.characterList = generatedContent;
       }
       
       // Mark task as completed
@@ -153,6 +180,13 @@ export const useBookData = (bookId: string | undefined) => {
     updateBookWithTasks(updatedTasks);
   };
 
+  // Add new chapter
+  const handleAddChapter = (newChapter: Task) => {
+    const updatedTasks = [...tasks, newChapter];
+    setTasks(updatedTasks);
+    updateBookWithTasks(updatedTasks);
+  };
+
   // Update book with tasks
   const updateBookWithTasks = (updatedTasks: Task[]) => {
     if (bookId && book) {
@@ -178,6 +212,7 @@ export const useBookData = (bookId: string | undefined) => {
     handleGenerateContent,
     handleMarkAsComplete,
     handleDeleteTask,
+    handleAddChapter,
     handleSaveBookContent
   };
 };
