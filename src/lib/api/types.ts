@@ -1,3 +1,4 @@
+
 // Common types used across API services
 
 export type BookItemType = 'cover' | 'chapter' | 'credits';
@@ -26,6 +27,8 @@ export interface Book {
   coverImage?: string;
   coverPage?: string;  // Added for cover page content
   creditsPage?: string; // Added for credits page content
+  tableOfContents?: string; // Added for table of contents
+  characterList?: string; // Added for character list
   chapters?: Chapter[];
   genre?: string;
   published?: boolean;
