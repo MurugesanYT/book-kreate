@@ -49,6 +49,20 @@ const BookContentEditor: React.FC<BookEditorProps> = ({ book, onSave }) => {
       creditsPage: newContent
     });
   };
+  
+  const handleCharactersChange = (newContent: string) => {
+    setEditedBook({
+      ...editedBook,
+      characterList: newContent
+    });
+  };
+  
+  const handleTableOfContentsChange = (newContent: string) => {
+    setEditedBook({
+      ...editedBook,
+      tableOfContents: newContent
+    });
+  };
 
   const handleSave = () => {
     onSave(editedBook);
@@ -106,6 +120,16 @@ const BookContentEditor: React.FC<BookEditorProps> = ({ book, onSave }) => {
         />
       )}
 
+      {editedBook.tableOfContents !== undefined && (
+        <PageCard
+          title="Table of Contents"
+          content={editedBook.tableOfContents || ''}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onContentChange={handleTableOfContentsChange}
+        />
+      )}
+
       {editedBook.chapters && editedBook.chapters.length > 0 && (
         <div className="space-y-4">
           {editedBook.chapters.map((chapter, index) => (
@@ -124,6 +148,16 @@ const BookContentEditor: React.FC<BookEditorProps> = ({ book, onSave }) => {
             />
           ))}
         </div>
+      )}
+
+      {editedBook.characterList !== undefined && (
+        <PageCard
+          title="Character List"
+          content={editedBook.characterList || ''}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onContentChange={handleCharactersChange}
+        />
       )}
 
       {editedBook.creditsPage !== undefined && (

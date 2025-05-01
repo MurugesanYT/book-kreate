@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Wand } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateBookChapterWithContext } from '@/lib/api/extendedContentService';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface AIChapterEditorProps {
   bookId: string;
@@ -33,14 +34,18 @@ const AIChapterEditor: React.FC<AIChapterEditorProps> = ({
   onSave 
 }) => {
   const [open, setOpen] = useState(false);
-  const [promptType, setPromptType] = useState<'enhance' | 'rewrite' | 'custom'>('enhance');
+  const [promptType, setPromptType] = useState<'enhance' | 'rewrite' | 'expand' | 'summarize' | 'custom'>('enhance');
   const [customPrompt, setCustomPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState('');
+  const [editorTab, setEditorTab] = useState<'edit' | 'compare'>('edit');
+  const [promptTemplate, setPromptTemplate] = useState('');
   
   const promptOptions = [
     { value: 'enhance', label: 'Enhance this chapter' },
     { value: 'rewrite', label: 'Rewrite this chapter' },
+    { value: 'expand', label: 'Expand this chapter' },
+    { value: 'summarize', label: 'Summarize this chapter' },
     { value: 'custom', label: 'Custom instruction' }
   ];
   
@@ -50,6 +55,10 @@ const AIChapterEditor: React.FC<AIChapterEditorProps> = ({
         return `Enhance this chapter by improving the language, adding more descriptive details, and making it more engaging without changing the main plot points.`;
       case 'rewrite':
         return `Rewrite this chapter to make it more engaging while keeping the same key events and character development.`;
+      case 'expand':
+        return `Expand this chapter by adding more detail, dialogue, and description to make it richer and more immersive.`;
+      case 'summarize':
+        return `Summarize this chapter into a more concise version while keeping the key plot points and character development.`;
       case 'custom':
         return customPrompt;
       default:
@@ -70,14 +79,33 @@ const AIChapterEditor: React.FC<AIChapterEditorProps> = ({
           content: ch.content || ''
         }));
       
+      // Get the current chapter index
+      const currentChapterIndex = allChapters.findIndex(ch => ch.id === chapter.id);
+      
       // Get the user's prompt
       const prompt = getPromptForType();
+      
+      // Prepare a more detailed context for the AI
+      const contextPrompt = `
+Book Title: ${book.title}
+Book Genre: ${book.genre || 'Unknown'}
+Book Description: ${book.description || 'N/A'}
+Chapter Title: ${chapter.title}
+Chapter Position: ${currentChapterIndex + 1} of ${allChapters.length}
+
+${book.characterList ? `Character Information: ${book.characterList}` : ''}
+
+Task: ${prompt}
+
+Make sure to maintain the style, tone, and narrative voice consistent with the rest of the book. 
+Consider the character development and plot progression that has happened so far.
+      `;
       
       // Generate content using existing service
       const content = await generateBookChapterWithContext(
         book,
         chapter.title,
-        prompt,
+        contextPrompt,
         previousChapters
       );
       
@@ -119,13 +147,13 @@ const AIChapterEditor: React.FC<AIChapterEditorProps> = ({
           <div className="space-y-4">
             <div>
               <Label>Edit Type</Label>
-              <div className="grid grid-cols-3 gap-2 mt-2">
+              <div className="grid grid-cols-5 gap-1 mt-2">
                 {promptOptions.map((option) => (
                   <Button
                     key={option.value}
                     variant={promptType === option.value ? "default" : "outline"}
                     onClick={() => setPromptType(option.value as any)}
-                    className="justify-start"
+                    className="justify-start text-xs py-1 h-auto"
                   >
                     {option.label}
                   </Button>
@@ -159,12 +187,42 @@ const AIChapterEditor: React.FC<AIChapterEditorProps> = ({
           
           {generatedContent && (
             <div className="space-y-2">
-              <Label>Generated Content</Label>
-              <Textarea
-                value={generatedContent}
-                onChange={(e) => setGeneratedContent(e.target.value)}
-                className="min-h-[300px] font-mono"
-              />
+              <Tabs value={editorTab} onValueChange={(value) => setEditorTab(value as 'edit' | 'compare')}>
+                <TabsList>
+                  <TabsTrigger value="edit">Edit</TabsTrigger>
+                  <TabsTrigger value="compare">Compare</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="edit">
+                  <Label>Generated Content</Label>
+                  <Textarea
+                    value={generatedContent}
+                    onChange={(e) => setGeneratedContent(e.target.value)}
+                    className="min-h-[300px] font-mono"
+                  />
+                </TabsContent>
+                
+                <TabsContent value="compare">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Original Content</Label>
+                      <div className="border rounded-md p-4 min-h-[300px] overflow-y-auto bg-gray-50">
+                        {chapter.content.split('\n').map((line, i) => (
+                          <p key={i}>{line || <br />}</p>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Generated Content</Label>
+                      <div className="border rounded-md p-4 min-h-[300px] overflow-y-auto bg-gray-50">
+                        {generatedContent.split('\n').map((line, i) => (
+                          <p key={i}>{line || <br />}</p>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
               
               <div className="flex justify-end">
                 <Button onClick={handleSaveContent}>
