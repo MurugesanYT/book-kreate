@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,8 @@ interface BookSummary {
   category: string;
   timestamp: string;
   progress: number; // 0-100
+  chaptersCount: number;
+  completedChaptersCount: number;
 }
 
 const DashboardPage = () => {
@@ -42,10 +45,24 @@ const DashboardPage = () => {
       
       // Calculate progress for each book
       const booksWithProgress = storedBooks.map((book: any) => {
-        const planItems = JSON.parse(localStorage.getItem(`bookPlan_${book.id}`) || '[]');
-        const totalItems = planItems.length || 1;
-        const completedItems = planItems.filter((item: any) => item.status === 'completed').length;
-        const progress = Math.round((completedItems / totalItems) * 100);
+        // Get book-specific data
+        const bookData = JSON.parse(localStorage.getItem(`book_${book.id}`) || '{}');
+        const planItems = bookData.tasks || [];
+        
+        // Count chapters and completed items
+        const chaptersCount = book.chapters?.length || 0;
+        const completedChaptersCount = (book.chapters || []).filter((ch: any) => ch.content && ch.content.length > 100).length;
+        
+        // Calculate book completion progress - more accurate calculation
+        const totalTasks = planItems.length || 1;
+        const completedTasks = planItems.filter((item: any) => item.status === 'completed').length;
+        
+        // Weight the progress based on chapters (70%) and tasks (30%)
+        const chapterProgress = chaptersCount > 0 ? (completedChaptersCount / chaptersCount) * 70 : 0;
+        const taskProgress = (completedTasks / totalTasks) * 30;
+        
+        // Combined progress
+        const progress = Math.round(chapterProgress + taskProgress);
         
         return {
           id: book.id,
@@ -53,7 +70,9 @@ const DashboardPage = () => {
           type: book.type,
           category: book.category,
           timestamp: book.timestamp,
-          progress
+          progress: Math.min(Math.max(progress, 0), 100), // Ensure between 0-100
+          chaptersCount,
+          completedChaptersCount
         };
       });
       
@@ -85,7 +104,8 @@ const DashboardPage = () => {
       // Save updated books list back to localStorage
       localStorage.setItem('bookKreateBooks', JSON.stringify(updatedBooks));
       
-      // Remove book plan data
+      // Remove book data
+      localStorage.removeItem(`book_${bookId}`);
       localStorage.removeItem(`bookPlan_${bookId}`);
       
       // Update state to reflect changes
@@ -111,6 +131,11 @@ const DashboardPage = () => {
   if (!currentUser && !loading) {
     return <Navigate to="/auth" replace />;
   }
+
+  // Sort books by most recent
+  const sortedBooks = [...books].sort((a, b) => 
+    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+  );
 
   return (
     <div className="min-h-screen bg-book-lightGray">
@@ -159,7 +184,7 @@ const DashboardPage = () => {
           </Button>
         </div>
         
-        {books.length === 0 ? (
+        {sortedBooks.length === 0 ? (
           <div className="bg-white rounded-lg shadow-md p-6 text-center">
             <h2 className="text-xl font-semibold mb-4 text-book-darkText">
               Your Book Dashboard
@@ -195,7 +220,7 @@ const DashboardPage = () => {
               </p>
             </div>
             
-            {books.map((book) => (
+            {sortedBooks.map((book) => (
               <div 
                 key={book.id} 
                 className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
@@ -250,6 +275,11 @@ const DashboardPage = () => {
                     <span className="bg-book-orange/10 text-book-orange px-2 py-0.5 rounded-full text-xs">
                       {book.category}
                     </span>
+                    {book.chaptersCount > 0 && (
+                      <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-xs">
+                        {book.completedChaptersCount}/{book.chaptersCount} chapters
+                      </span>
+                    )}
                   </div>
                   
                   <div 
@@ -277,7 +307,11 @@ const DashboardPage = () => {
                     onClick={() => handleViewBook(book.id)}
                   >
                     <div 
-                      className="bg-book-purple h-1.5 rounded-full" 
+                      className={`h-1.5 rounded-full ${
+                        book.progress === 100 
+                          ? 'bg-green-500' 
+                          : 'bg-book-purple'
+                      }`}
                       style={{ width: `${book.progress}%` }}
                     ></div>
                   </div>
