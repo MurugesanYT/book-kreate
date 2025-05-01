@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ExportFormat } from '@/lib/api/types';
@@ -614,3 +615,18 @@ Plain text preview - actual export will contain the full content of your book.</
           <div className="text-center p-8">
             <p className="text-gray-500 mb-2">Preview opened in a new tab</p>
             <p className="text-sm text-gray-400">
+              Check your browser for the preview window
+            </p>
+          </div>
+        ) : (
+          <div 
+            className="preview-container" 
+            dangerouslySetInnerHTML={{ __html: previewContent }}
+          />
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+export default VisualPreviewEditor;
