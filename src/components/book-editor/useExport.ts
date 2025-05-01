@@ -13,18 +13,16 @@ export const useExport = () => {
     
     // Import the exportBook function
     import('@/lib/pdf/pdfExporter').then(({ exportBook }) => {
-      // Generate table of contents text
-      const tableOfContents = book.chapters && book.chapters.length > 0 
+      // Generate table of contents text if not already present
+      const tableOfContents = book.tableOfContents || (book.chapters && book.chapters.length > 0 
         ? "TABLE OF CONTENTS\n\n" + book.chapters
             .sort((a, b) => a.order - b.order)
             .map((ch, idx) => `${idx + 1}. ${ch.title}`)
             .join('\n')
-        : "TABLE OF CONTENTS\n\nNo chapters available";
+        : "TABLE OF CONTENTS\n\nNo chapters available");
       
       // Use character list if available or create empty placeholder
-      const characterList = book.characterList 
-        ? book.characterList 
-        : "CHARACTER LIST\n\nNo character information available";
+      const characterList = book.characterList || "CHARACTER LIST\n\nNo character information available";
       
       // Create a Book object with all required properties including TOC and characters
       const bookData: Book = {
@@ -46,11 +44,12 @@ export const useExport = () => {
         })) || [],
         genre: book.genre || '',
         published: book.published || false,
+        publishedDate: book.publishedDate,
         createdAt: book.createdAt || new Date().toISOString(),
         updatedAt: book.updatedAt || new Date().toISOString()
       };
       
-      // Basic options
+      // Basic options that include table of contents and character list
       const options = {
         fontFamily: 'helvetica',
         fontSize: 12,

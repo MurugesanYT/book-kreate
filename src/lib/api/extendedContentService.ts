@@ -22,7 +22,7 @@ export const generateBookChapterWithContext = async (
         // Limit the amount of context to avoid token limits
         if (index >= Math.max(0, previousChapters.length - 3)) {
           previousContext += `Chapter: ${chapter.title}\n`;
-          previousContext += `${chapter.content.substring(0, 1000)}...\n\n`;
+          previousContext += `${chapter.content?.substring(0, 1000) || 'No content'}...\n\n`;
         }
       });
     }
@@ -32,15 +32,28 @@ export const generateBookChapterWithContext = async (
     const template = templateId ? allBookTemplates.find(t => t.id === templateId) : undefined;
     
     // Build the prompt with context
-    let prompt = `Write a detailed chapter titled "${chapterTitle}" for a ${book.type} book titled "${book.title}" in the ${book.category} category. 
-    ${chapterDescription ? `This chapter should cover: ${chapterDescription}.` : ''} 
-    The book overall is about: ${book.description}.`;
+    let prompt = `Write a detailed chapter titled "${chapterTitle}" for a ${book.type || 'novel'} book titled "${book.title}" `;
+    prompt += book.category ? `in the ${book.category} category. ` : ``;
+    
+    if (chapterDescription) {
+      if (chapterDescription.toLowerCase().includes('rewrite') || 
+          chapterDescription.toLowerCase().includes('edit') || 
+          chapterDescription.toLowerCase().includes('enhance')) {
+        // This is an edit instruction
+        prompt += `${chapterDescription} `;
+      } else {
+        // This is a content description
+        prompt += `This chapter should cover: ${chapterDescription}. `;
+      }
+    }
+    
+    prompt += `The book overall is about: ${book.description || 'A compelling story'}. `;
     
     // If using a template, find the matching chapter structure
     if (template) {
       const chapterStructureItem = template.structure.find(item => item.title === chapterTitle);
       if (chapterStructureItem) {
-        prompt += ` According to the book structure, this chapter should focus on: ${chapterStructureItem.description}.`;
+        prompt += `According to the book structure, this chapter should focus on: ${chapterStructureItem.description}. `;
       }
     }
     
@@ -49,7 +62,14 @@ export const generateBookChapterWithContext = async (
       prompt += `\n\nFor continuity, please consider the following content from previous chapters:\n${previousContext}`;
     }
     
-    prompt += `\nMake it engaging, appropriate for the ${book.type} genre, and at least 500 words in length. Format the response as plain text with proper paragraphs. No markdown formatting.`;
+    // If there's a character list available, use it for context
+    if (book.characterList) {
+      prompt += `\n\nHere are the characters in the story:\n${(book.characterList as any).substring(0, 1000)}...\n\n`;
+    }
+    
+    prompt += `\nMake it engaging, appropriate for the ${book.type || 'novel'} genre, and at least 800 words in length. Format the response as plain text with proper paragraphs. No markdown formatting.`;
+    
+    console.log('Using prompt:', prompt.substring(0, 200) + '...');
     
     // Generate content with increased token limit to accommodate context
     const content = await generateWithGemini(prompt, 6000);
@@ -70,8 +90,9 @@ export const generateCharacterList = async (book: BookData): Promise<string> => 
   try {
     console.log(`Generating character list for "${book.title}"`);
     
-    let prompt = `Create a detailed character list for a ${book.type} book titled "${book.title}" in the ${book.category} category. 
-    The book is about: ${book.description}.`;
+    let prompt = `Create a detailed character list for a ${book.type || 'novel'} book titled "${book.title}" `;
+    prompt += book.category ? `in the ${book.category} category. ` : ``;
+    prompt += `The book is about: ${book.description || 'A compelling story'}.`;
     
     if (book.chapters && book.chapters.length > 0) {
       // Add chapter titles to provide context
@@ -123,8 +144,9 @@ export const generateImprovedDescription = async (book: BookData): Promise<strin
   try {
     console.log(`Generating improved description for "${book.title}"`);
     
-    let prompt = `Create an engaging and marketable book description for a ${book.type} book titled "${book.title}" in the ${book.category} category. 
-    The current description is: "${book.description}".
+    let prompt = `Create an engaging and marketable book description for a ${book.type || 'novel'} book titled "${book.title}" `;
+    prompt += book.category ? `in the ${book.category} category. ` : ``;
+    prompt += `The current description is: "${book.description || 'No description provided'}".
     
     If there are chapters available, here are some chapter titles to help:`;
     
@@ -142,7 +164,7 @@ export const generateImprovedDescription = async (book: BookData): Promise<strin
     3. Hint at what makes this book unique
     4. Create intrigue without revealing too much
     5. Be approximately 150-200 words
-    6. Match the tone and style of the ${book.type} genre
+    6. Match the tone and style of the ${book.type || 'novel'} genre
     7. Use vivid language and avoid clichés
     
     Please provide only the improved description text without any additional commentary.`;
@@ -155,6 +177,6 @@ export const generateImprovedDescription = async (book: BookData): Promise<strin
     console.error(`Error generating improved description:`, error);
     toast.error(`Failed to improve description. Please try again.`);
     
-    return book.description || `A captivating ${book.type} book in the ${book.category} category.`;
+    return book.description || `A captivating ${book.type || 'novel'} book in the ${book.category || 'fiction'} category.`;
   }
 };

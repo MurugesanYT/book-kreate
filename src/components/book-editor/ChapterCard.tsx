@@ -1,7 +1,8 @@
 
 import React from 'react';
+import ContentSection from '@/components/book-editor/ContentSection';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import ContentSection from './ContentSection';
+import AIChapterEditor from '@/components/book-editor/AIChapterEditor';
 
 interface ChapterCardProps {
   index: number;
@@ -10,20 +11,44 @@ interface ChapterCardProps {
   activeTab: string;
   onTabChange: (value: string) => void;
   onContentChange: (content: string) => void;
+  chapterId?: string;
+  bookId?: string;
+  book?: any;
+  allChapters?: any[];
 }
 
-const ChapterCard: React.FC<ChapterCardProps> = ({
-  index,
-  title,
-  content,
-  activeTab,
-  onTabChange,
+const ChapterCard: React.FC<ChapterCardProps> = ({ 
+  index, 
+  title, 
+  content, 
+  activeTab, 
+  onTabChange, 
   onContentChange,
+  chapterId = `chapter-${index}`,
+  bookId = '',
+  book = null,
+  allChapters = []
 }) => {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Chapter {index + 1}: {title}</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-md font-medium">
+          Chapter {index + 1}: {title}
+        </CardTitle>
+        
+        {book && (
+          <AIChapterEditor 
+            bookId={bookId}
+            chapter={{
+              id: chapterId,
+              title,
+              content
+            }}
+            allChapters={allChapters}
+            book={book}
+            onSave={(_, updatedContent) => onContentChange(updatedContent)}
+          />
+        )}
       </CardHeader>
       <CardContent>
         <ContentSection

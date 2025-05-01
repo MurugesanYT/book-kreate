@@ -10,6 +10,7 @@ import PageCard from '@/components/book-editor/PageCard';
 import ExportButton from '@/components/book-editor/ExportButton';
 import SaveButton from '@/components/book-editor/SaveButton';
 import { useExport } from '@/components/book-editor/useExport';
+import EnhancedExportDialog from '@/components/book-editor/EnhancedExportDialog';
 
 interface BookEditorProps {
   book: Book;
@@ -58,6 +59,13 @@ const BookContentEditor: React.FC<BookEditorProps> = ({ book, onSave }) => {
     handleExport(editedBook);
   };
 
+  // Get all chapters for context in AI editor
+  const allChapters = editedBook.chapters?.map(ch => ({
+    id: ch.id,
+    title: ch.title,
+    content: ch.content
+  })) || [];
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-4">
@@ -69,6 +77,14 @@ const BookContentEditor: React.FC<BookEditorProps> = ({ book, onSave }) => {
           <ExportFormatSelector 
             selectedFormat={selectedFormat} 
             onFormatChange={setSelectedFormat} 
+          />
+          
+          <EnhancedExportDialog
+            book={editedBook}
+            selectedFormat={selectedFormat}
+            onFormatChange={setSelectedFormat}
+            isExporting={isExporting}
+            onExport={handleExportClick}
           />
           
           <ExportButton 
@@ -101,6 +117,10 @@ const BookContentEditor: React.FC<BookEditorProps> = ({ book, onSave }) => {
               activeTab={activeTab}
               onTabChange={setActiveTab}
               onContentChange={(content) => handleContentChange(index, content)}
+              chapterId={chapter.id}
+              bookId={book.id}
+              book={book}
+              allChapters={allChapters}
             />
           ))}
         </div>

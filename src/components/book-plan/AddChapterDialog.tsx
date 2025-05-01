@@ -1,226 +1,184 @@
 
 import React, { useState } from 'react';
-import { Plus, BookOpen, FileText, Sparkles } from 'lucide-react';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger,
+  DialogFooter
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from 'sonner';
+import { PlusCircle, Magic } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { v4 as uuidv4 } from 'uuid';
-import { generateBookChapterWithContext } from '@/lib/api/extendedContentService';
+import { toast } from 'sonner';
 
 interface AddChapterDialogProps {
-  onAddChapter: (chapter: {
-    id: string;
-    title: string;
-    type: string;
-    status: 'pending';
-    description: string;
-  }) => void;
-  book?: any;
+  onAddChapter: (chapter: any) => void;
+  book: any;
 }
 
 const AddChapterDialog: React.FC<AddChapterDialogProps> = ({ onAddChapter, book }) => {
   const [open, setOpen] = useState(false);
+  const [method, setMethod] = useState<'manual' | 'ai'>('manual');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [activeTab, setActiveTab] = useState('manual');
+  const [generationPrompt, setGenerationPrompt] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const resetForm = () => {
+    setTitle('');
+    setDescription('');
+    setGenerationPrompt('');
+    setMethod('manual');
+    setIsSubmitting(false);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!title.trim()) {
-      toast.error('Please enter a chapter title');
-      return;
-    }
-    
-    const newChapter = {
-      id: uuidv4(),
-      title: title.trim(),
-      type: 'chapter',
-      status: 'pending' as const,
-      description: description.trim()
-    };
-    
-    onAddChapter(newChapter);
-    setOpen(false);
-    
-    // Reset form
-    setTitle('');
-    setDescription('');
-    
-    toast.success(`Added new chapter: ${title}`);
-  };
-
-  const handleGenerateChapter = async () => {
-    if (!book) {
-      toast.error('Book information is required to generate a chapter');
-      return;
-    }
-
-    setIsGenerating(true);
+    setIsSubmitting(true);
     
     try {
-      // Generate a chapter title and description based on the book's context
-      const prompt = `Generate a creative and engaging chapter title and brief description (25-30 words) for the next chapter of a book titled "${book.title}". The book is about: ${book.description || 'No description available'}. Return the response in this exact format: {"title": "Chapter Title Here", "description": "Brief description here..."}`;
-      
-      // Get a simple, contextually appropriate chapter suggestion
-      const result = await generateBookChapterWithContext(
-        book,
-        "Next Chapter",
-        "Generate title and description only",
-        []
-      );
-      
-      // Try to parse the result as JSON
-      try {
-        // First try to extract a JSON object if it's embedded in text
-        const jsonMatch = result.match(/\{[\s\S]*\}/);
-        const jsonStr = jsonMatch ? jsonMatch[0] : result;
-        const chapterData = JSON.parse(jsonStr);
-        
-        if (chapterData.title && chapterData.description) {
-          setTitle(chapterData.title);
-          setDescription(chapterData.description);
-          toast.success('Generated chapter suggestion');
-        } else {
-          throw new Error('Invalid response format');
-        }
-      } catch (parseError) {
-        console.error('Failed to parse AI response:', parseError);
-        // Fallback if we couldn't parse JSON
-        const lines = result.split('\n');
-        let foundTitle = '';
-        let foundDescription = '';
-        
-        for (const line of lines) {
-          if (line.toLowerCase().includes('title:')) {
-            foundTitle = line.split('title:')[1]?.trim() || '';
-          } else if (line.toLowerCase().includes('description:')) {
-            foundDescription = line.split('description:')[1]?.trim() || '';
-          }
+      // For manual chapter creation
+      if (method === 'manual') {
+        if (!title.trim()) {
+          toast.error('Please enter a chapter title');
+          setIsSubmitting(false);
+          return;
         }
         
-        if (foundTitle) setTitle(foundTitle);
-        if (foundDescription) setDescription(foundDescription);
+        // Create a chapter task
+        const newTask = {
+          id: uuidv4(),
+          title: title.trim(),
+          description: description.trim(),
+          type: 'chapter',
+          status: 'pending'
+        };
         
-        if (foundTitle || foundDescription) {
-          toast.success('Generated chapter suggestion');
-        } else {
-          throw new Error('Could not extract title or description');
+        onAddChapter(newTask);
+        toast.success('Chapter added successfully');
+        setOpen(false);
+        resetForm();
+      } 
+      // For AI-generated chapters
+      else if (method === 'ai') {
+        // Create a chapter task with either the specified title or AI-generated title prompt
+        const effectiveTitle = title.trim() || `Generated Chapter ${(book?.chapters?.length || 0) + 1}`;
+        const effectiveDescription = description.trim() || generationPrompt.trim();
+        
+        if (!effectiveDescription) {
+          toast.error('Please provide either a description or generation prompt');
+          setIsSubmitting(false);
+          return;
         }
+        
+        const newTask = {
+          id: uuidv4(),
+          title: effectiveTitle,
+          description: effectiveDescription,
+          type: 'chapter',
+          status: 'pending'
+        };
+        
+        onAddChapter(newTask);
+        toast.success('Chapter task added and ready for generation');
+        setOpen(false);
+        resetForm();
       }
     } catch (error) {
-      console.error('Error generating chapter:', error);
-      toast.error('Failed to generate chapter. Please try manually.');
-    } finally {
-      setIsGenerating(false);
+      console.error('Error adding chapter:', error);
+      toast.error('Failed to add chapter. Please try again.');
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      setOpen(isOpen);
+      if (!isOpen) resetForm();
+    }}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="w-full mt-4">
-          <Plus className="h-4 w-4 mr-2" />
-          Add New Chapter
+        <Button className="w-full">
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Add Chapter
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Add New Chapter</DialogTitle>
-          <DialogDescription>
-            Create a new chapter for your book. This will be added to your task list for generation.
-          </DialogDescription>
         </DialogHeader>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
-          <TabsList className="grid grid-cols-2">
-            <TabsTrigger value="manual">Manual Entry</TabsTrigger>
-            <TabsTrigger value="ai">AI Suggestion</TabsTrigger>
+        <Tabs value={method} onValueChange={(v) => setMethod(v as 'manual' | 'ai')}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="manual">Manual Create</TabsTrigger>
+            <TabsTrigger value="ai">
+              <Magic className="h-4 w-4 mr-2" />
+              AI Generate
+            </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="manual">
-            <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          <form onSubmit={handleSubmit}>
+            <TabsContent value="manual" className="space-y-4 mt-4">
               <div className="space-y-2">
-                <label htmlFor="title" className="text-sm font-medium">
-                  Chapter Title
-                </label>
-                <Input
+                <Label htmlFor="title">Chapter Title</Label>
+                <Input 
                   id="title"
-                  placeholder="e.g., The Beginning of the Journey"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  required
+                  placeholder="Enter chapter title"
                 />
               </div>
               
               <div className="space-y-2">
-                <label htmlFor="description" className="text-sm font-medium">
-                  Chapter Description (Optional)
-                </label>
-                <Textarea
+                <Label htmlFor="description">Chapter Description (optional)</Label>
+                <Textarea 
                   id="description"
-                  placeholder="Brief description of what this chapter should cover..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  rows={4}
+                  placeholder="Brief description of the chapter"
                 />
               </div>
+            </TabsContent>
+            
+            <TabsContent value="ai" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="ai-title">Chapter Title (optional)</Label>
+                <Input 
+                  id="ai-title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Enter title or leave blank for AI to name"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Leave blank to use a placeholder title that you can change later.
+                </p>
+              </div>
               
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Add Chapter
-                </Button>
-              </DialogFooter>
-            </form>
-          </TabsContent>
-          
-          <TabsContent value="ai">
-            <div className="space-y-4 mt-4">
-              <Button 
-                onClick={handleGenerateChapter} 
-                className="w-full"
-                disabled={isGenerating}
-              >
-                <Sparkles className="h-4 w-4 mr-2" />
-                {isGenerating ? 'Generating...' : 'Generate Chapter Suggestion'}
+              <div className="space-y-2">
+                <Label htmlFor="ai-prompt">Generation Prompt</Label>
+                <Textarea 
+                  id="ai-prompt"
+                  value={generationPrompt}
+                  onChange={(e) => setGenerationPrompt(e.target.value)}
+                  placeholder="What should this chapter be about?"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Describe what should happen in this chapter, key events, or characters involved.
+                </p>
+              </div>
+            </TabsContent>
+            
+            <DialogFooter className="mt-4">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Adding...' : 'Add Chapter'}
               </Button>
-              
-              {(title || description) && (
-                <div className="border rounded-md p-4 space-y-3">
-                  <div>
-                    <p className="text-sm font-medium">Generated Title:</p>
-                    <p className="text-base">{title || "No title generated yet"}</p>
-                  </div>
-                  
-                  <div>
-                    <p className="text-sm font-medium">Generated Description:</p>
-                    <p className="text-base">{description || "No description generated yet"}</p>
-                  </div>
-                </div>
-              )}
-              
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleSubmit}
-                  disabled={!title.trim()}
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Use This Chapter
-                </Button>
-              </DialogFooter>
-            </div>
-          </TabsContent>
+            </DialogFooter>
+          </form>
         </Tabs>
       </DialogContent>
     </Dialog>
