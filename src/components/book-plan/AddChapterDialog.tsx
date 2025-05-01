@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { PlusCircle, Magic } from 'lucide-react';
+import { PlusCircle, Wand } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
@@ -117,7 +117,7 @@ const AddChapterDialog: React.FC<AddChapterDialogProps> = ({ onAddChapter, book 
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="manual">Manual Create</TabsTrigger>
             <TabsTrigger value="ai">
-              <Magic className="h-4 w-4 mr-2" />
+              <Wand className="h-4 w-4 mr-2" />
               AI Generate
             </TabsTrigger>
           </TabsList>

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Magic, Wand } from 'lucide-react';
+import { Wand } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateBookChapterWithContext } from '@/lib/api/extendedContentService';
 
@@ -106,7 +106,7 @@ const AIChapterEditor: React.FC<AIChapterEditorProps> = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="mr-2">
-          <Magic className="h-4 w-4 mr-2" />
+          <Wand className="h-4 w-4 mr-2" />
           Edit with AI
         </Button>
       </DialogTrigger>

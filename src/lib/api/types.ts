@@ -1,4 +1,3 @@
-
 // Common types used across API services
 
 export type BookItemType = 'cover' | 'chapter' | 'credits';
@@ -73,6 +72,8 @@ export interface BookData {
   status: "draft" | "published";
   coverImage?: string;
   publishedDate?: string;
+  characterList?: string; // Added missing property
+  tableOfContents?: string; // Added missing property
   createdAt: string;
   updatedAt: string;
 }
