@@ -1,747 +1,616 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ExternalLink, Eye, Edit } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
-import { Book, ExportFormat } from '@/lib/api/types';
-import { PDFExportOptions } from '@/lib/api/types';
-import PDFExportFormatPreview from '@/components/PDFExportFormatPreview';
-import { toast } from 'sonner';
+import { ExportFormat } from '@/lib/api/types';
 
 interface VisualPreviewEditorProps {
   format: ExportFormat;
-  book: Book;
-  content?: string;
+  book: any;
   options?: any;
+  content?: string;
   onContentChange?: (content: string) => void;
   onOptionsChange?: (options: any) => void;
+  previewInNewTab?: boolean;
 }
 
-const VisualPreviewEditor: React.FC<VisualPreviewEditorProps> = ({
-  format,
-  book,
+const VisualPreviewEditor: React.FC<VisualPreviewEditorProps> = ({ 
+  format, 
+  book, 
+  options, 
   content,
-  options,
   onContentChange,
-  onOptionsChange
+  onOptionsChange,
+  previewInNewTab = false
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editableContent, setEditableContent] = useState(content || '');
-  const [activeView, setActiveView] = useState<'preview' | 'code'>('preview');
-  
+  const [previewContent, setPreviewContent] = useState<string>('');
+  const [previewWindow, setPreviewWindow] = useState<Window | null>(null);
+
+  // Generate preview content based on format and options
   useEffect(() => {
-    if (content !== undefined) {
-      setEditableContent(content);
-    }
-  }, [content]);
+    const generatePreview = () => {
+      let preview = '';
+      
+      switch (format) {
+        case 'pdf':
+          preview = generatePDFPreview(book, options);
+          break;
+        case 'epub':
+        case 'mobi':
+        case 'azw3':
+          preview = generateEbookPreview(book, options);
+          break;
+        case 'html':
+          preview = generateHTMLPreview(book, options);
+          break;
+        case 'docx':
+          preview = generateDocxPreview(book, options);
+          break;
+        case 'markdown':
+          preview = generateMarkdownPreview(book, options);
+          break;
+        case 'txt':
+          preview = generateTxtPreview(book, options);
+          break;
+        case 'rtf':
+          preview = generateRichTextPreview(book, options);
+          break;
+        case 'latex':
+          preview = generateLaTeXPreview(book, options);
+          break;
+        case 'odt':
+          preview = generateODTPreview(book, options);
+          break;
+        case 'pages':
+          preview = generatePagesPreview(book, options);
+          break;
+        case 'fb2':
+          preview = generateFB2Preview(book, options);
+          break;
+        case 'cbz':
+          preview = generateCBZPreview(book, options);
+          break;
+        default:
+          preview = `<div class="p-6">
+            <h2 class="text-xl font-bold mb-2">${book.title}</h2>
+            <p class="text-gray-600">By ${book.author || 'Unknown'}</p>
+            <div class="mt-4">Preview not available for ${format} format</div>
+          </div>`;
+      }
+      
+      setPreviewContent(preview);
+      
+      // Send content to preview window if it exists
+      if (previewInNewTab && previewWindow && !previewWindow.closed) {
+        previewWindow.postMessage(preview, '*');
+      }
+    };
+    
+    generatePreview();
+  }, [format, book, options, previewInNewTab, previewWindow]);
   
-  // Sample book content for preview
-  const previewBook = {
-    title: book.title || 'Book Title',
-    author: book.author || 'Author Name',
-    chapter: book.chapters && book.chapters.length > 0 
-      ? book.chapters[0].title 
-      : 'Chapter Title',
-    content: book.chapters && book.chapters.length > 0 
-      ? book.chapters[0].content.substring(0, 500) + '...' 
-      : 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
-  };
-
-  // Default PDF options if none provided
-  const defaultPdfOptions: PDFExportOptions = {
-    showPageNumbers: true,
-    includeMargins: true,
-    headerFooter: true,
-    coverPage: true,
-    colorScheme: "default",
-    pageSize: "a4",
-    orientation: "portrait",
-    decorativeElements: true,
-    chapterDividers: true,
-    dropCaps: false,
-    textAlignment: "left",
-    lineSpacing: "normal",
-    pageMargins: "normal",
-    paperTextureEffect: true,
-    fontFamily: 'Georgia',
-    fontSize: 12
-  };
-
-  const handleContentSave = () => {
-    if (onContentChange) {
-      onContentChange(editableContent);
-      setIsEditing(false);
-      toast.success("Content updated successfully!");
-    }
-  };
+  // Listen for messages from preview window
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data === 'ready' && previewInNewTab) {
+        // Store the reference to the window that sent the message
+        setPreviewWindow(event.source as Window);
+      }
+    };
+    
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [previewInNewTab]);
   
-  const openPreviewInNewTab = () => {
-    // Create a new window with a full preview of the book
-    const previewWindow = window.open('', '_blank');
-    if (!previewWindow) {
-      toast.error("Pop-up blocked. Please allow pop-ups to view the preview.");
-      return;
+  // Generate PDF preview
+  const generatePDFPreview = (book: any, options?: any) => {
+    const fontFamily = options?.fontFamily || 'Georgia';
+    const fontSize = options?.fontSize || 12;
+    const textAlignment = options?.textAlignment || 'left';
+    const lineSpacing = convertLineSpacing(options?.lineSpacing || 'normal');
+    const colorScheme = options?.colorScheme || 'default';
+    const showPageNumbers = options?.showPageNumbers !== false;
+    const dropCaps = options?.dropCaps || false;
+    const decorativeElements = options?.decorativeElements !== false;
+    
+    // Apply color scheme
+    let bgColor = '#fff';
+    let textColor = '#000';
+    let borderColor = '#eee';
+    
+    switch (colorScheme) {
+      case 'sepia':
+        bgColor = '#f7f2e9';
+        textColor = '#5a4a39';
+        borderColor = '#e0d6c7';
+        break;
+      case 'night':
+        bgColor = '#1a1a1a';
+        textColor = '#e6e6e6';
+        borderColor = '#333';
+        break;
+      case 'contrast':
+        bgColor = '#fff';
+        textColor = '#000';
+        borderColor = '#000';
+        break;
+      case 'classic':
+        bgColor = '#fbfbf8';
+        textColor = '#333333';
+        borderColor = '#d1d1c2';
+        break;
+      case 'modern':
+        bgColor = '#ffffff';
+        textColor = '#202124';
+        borderColor = '#e0e0e0';
+        break;
     }
     
-    // Customize the preview based on format
-    let htmlContent = '';
+    let preview = `
+      <div style="font-family: ${fontFamily}; font-size: ${fontSize}px; text-align: ${textAlignment}; line-height: ${lineSpacing}; background-color: ${bgColor}; color: ${textColor}; padding: 40px 50px; min-height: 1056px; max-width: 816px; margin: 0 auto; position: relative; border: 1px solid ${borderColor}; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">`;
     
-    switch (format) {
-      case 'pdf':
-        htmlContent = generatePDFPreviewHTML(book, options || defaultPdfOptions);
-        break;
-      case 'epub':
-      case 'mobi':
-      case 'azw3':
-        htmlContent = generateEbookPreviewHTML(book, format);
-        break;
-      case 'html':
-        htmlContent = generateHTMLPreviewHTML(book);
-        break;
-      case 'markdown':
-      case 'txt':
-        htmlContent = generatePlainTextPreviewHTML(book, format);
-        break;
-      default:
-        htmlContent = generateGenericPreviewHTML(book, format);
+    // Add header if enabled
+    if (options?.headerFooter) {
+      preview += `
+        <div style="position: absolute; top: 20px; left: 0; right: 0; text-align: center; font-size: ${fontSize * 0.8}px; color: ${textColor}; opacity: 0.7;">
+          ${book.title}
+        </div>`;
     }
     
-    previewWindow.document.write(htmlContent);
-    previewWindow.document.close();
-    previewWindow.document.title = `${book.title || 'Book'} - ${format.toUpperCase()} Preview`;
-  };
-  
-  const generatePDFPreviewHTML = (book: Book, pdfOptions: PDFExportOptions): string => {
-    const fontFamily = pdfOptions.fontFamily || 'Georgia, serif';
-    const fontSize = pdfOptions.fontSize || 12;
-    const lineHeight = pdfOptions.lineSpacing === 'relaxed' ? '1.8' : 
-                      pdfOptions.lineSpacing === 'compact' ? '1.2' : '1.5';
-    const textAlign = pdfOptions.textAlignment === 'justified' ? 'justify' : pdfOptions.textAlignment;
+    // Add page number if enabled
+    if (showPageNumbers) {
+      preview += `
+        <div style="position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; font-size: ${fontSize * 0.8}px; color: ${textColor}; opacity: 0.7;">
+          1
+        </div>`;
+    }
     
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>${book.title || 'Book Preview'} - PDF</title>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap');
-          @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&display=swap');
-          @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+    // Add title
+    preview += `
+      <div style="text-align: center; margin-bottom: 40px;">
+        <h1 style="font-size: ${fontSize * 2}px; margin-bottom: 10px;">${book.title}</h1>
+        <p style="font-size: ${fontSize * 1.2}px;">By ${book.author || 'Unknown'}</p>
+      </div>`;
+    
+    // Add chapter sample
+    if (book.chapters && book.chapters.length > 0) {
+      const chapter = book.chapters[0];
+      
+      // Add decorative element before chapter if enabled
+      if (decorativeElements) {
+        preview += `
+          <div style="text-align: center; margin-bottom: 20px;">
+            <div style="display: inline-block; width: 150px; height: 1px; background-color: ${textColor}; opacity: 0.5;"></div>
+            <div style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: ${textColor}; margin: 0 10px; vertical-align: middle; opacity: 0.5;"></div>
+            <div style="display: inline-block; width: 150px; height: 1px; background-color: ${textColor}; opacity: 0.5;"></div>
+          </div>`;
+      }
+      
+      preview += `
+        <h2 style="font-size: ${fontSize * 1.5}px; margin-bottom: 20px; text-align: center;">${chapter.title}</h2>`;
+      
+      // Process chapter content
+      const paragraphs = chapter.content.split('\n\n');
+      if (paragraphs.length > 0) {
+        // Apply drop caps to first paragraph if enabled
+        if (dropCaps && paragraphs[0].length > 0) {
+          const firstChar = paragraphs[0].charAt(0);
+          const restOfParagraph = paragraphs[0].substring(1);
           
-          body {
-            font-family: ${fontFamily};
-            font-size: ${fontSize}px;
-            line-height: ${lineHeight};
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 40px 20px;
-            color: #333;
-            background-color: ${pdfOptions.paperTextureEffect ? '#f9f7f1' : '#ffffff'};
-            ${pdfOptions.paperTextureEffect ? 
-              `background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAUVBMVEWFhYWDg4N3d3dtbW17e3t1dXWBgYGHh4d5eXlzc3OLi4ubm5uVlZWPj4+NjY19fX2JiYl/f39ra2uRkZGZmZlpaWmXl5dvb29xcXGTk5NnZ2c8TV1mAAAAG3RSTlNAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAvEOwtAAAFVklEQVR4XpWWB67c2BUFb3g557T/hRo9/WUMZHlgr4Bg8Z4qQgQJlHI4A8SzFVrapvmTF9O7dmYRFZ60YiBhJRCgh1FYhiLAmdvX0CzTOpNE77ME0Zty/nWWzchDtiqrmQDeuv3powQ5ta2eN0FY0InkqDD73lT9c9lEzwUNqgFHs9VQce3TVClFCQrSTfOiYkVJQBmpbq2L6iZavPnAPcoU0dSw0SUTqz/GtrGuXfbyyBniKykOWQWGqwwMA7QiYAxi+IlPdqo+hYHnUt5ZPfnsHJyNiDtnpJyayNBkF6cWoYGAMY92U2hXHF/C1M8uP/ZtYdiuj26UdAdQQSXQErwSOMzt/XWRWAz5GuSBIkwG1H3FabJ2OsUOUhGC6tK4EMtJO0ttC6IBD3kM0ve0tJwMdSfjZo+EEISaeTr9P3wYrGjXqyC1krcKdhMpxEnt5JetoulscpyzhXN5FRpuPHvbeQaKxFAEB6EN+cYN6xD7RYGpXpNndMmZgM5Dcs3YSNFDHUo2LGfZuukSWyUYirJAdYbF3MfqEKmjM+I2EfhA94iG3L7uKrR+GdWD73ydlIB+6hgref1QTlmgmbM3/LeX5GI1Ux1RWpgxpLuZ2+I+IjzZ8wqE4nilvQdkUdfhzI5QDWy+kw5Wgg2pGpeEVeCCA7b85BO3F9DzxB3cdqvBzWcmzbyMiqhzuYqtHRVG2y4x+KOlnyqla8AoWWpuBoYRxzXrfKuILl6SfiWCbjxoZJUaCBj1CjH7GIaDbc9kqBY3W/Rgjda1iqQcOJu2WW+76pZC9QG7M00dffe9hNnseupFL53r8F7YHSwJWUKP2q+k7RdsxyOB11n0xtOvnW4irMMFNV4H0uqwS5ExsmP9AxbDTc9JwgneAT5vTiUSm1E7BSflSt3bfa1tv8Di3R8n3Af7MNWzs49hmauE2wP+ttrq+AsWpFG2awvsuOqbipWHgtuvuaAE+A1Z/7gC9hesnr+7wqCwG8c5yAg3AL1fm8T9AZtp/bbJGwl1pNrE7RuOX7PeMRUERVaPpEs+yqeoSmuOlokqw49pgomjLeh7icHNlG19yjs6XXOMedYm5xH2YxpV2tc0Ro2jJfxC50ApuxGob7lMsxfTbeUv07TyYxpeLucEH1gNd4IKH2LAg5TdVhlCafZvpskfncCfx8pOhJzd76bJWeYFnFciwcYfubRc12Ip/ppIhA1/mSZ/RxjFDrJC5xifFjJpY2Xl5zXdguFqYyTR1zSp1Y9p+tktDYYSNflcxI0iyO4TPBdlRcpeqjK/piF5bklq77VSEaA+z8qmJTFzIWiitbnzR794USKBUaT0NTEsVjZqLaFVqJoPN9ODG70IPbfBHKK+/q/AWR0tJzYHRULOa4MP+W/HfGadZUbfw177G7j/OGbIs8TahLyynl4X4RinF793Oz+BU0saXtUHrVBFT/DnA3ctNPoGbs4hRIjTok8i+algT1lTHi4SxFvONKNrgQFAq2/gFnWMXgwffgYMJpiKYkmW3tTg3ZQ9Jq+f8XN+A5eeUKHWvJWJ2sgJ1Sop+wwhqFVijqWaJhwtD8MNlSBeWNNWTa5Z5kPZw5+LbVT99wqTdx29lMUH4OIG/D86ruKEauBjvH5xy6um/Sfj7ei6UUVk4AIl3MyD4MSSTOFgSwsH/QJWaQ5as7ZcmgBZkzjjU1UrQ74ci1gWBCSGHtuV1H2mhSnO3Wp/3fEV5a+4wz//6qy8JxjZsmxxy5+4w9CDNJY09T072iKG0EnOS0arEYgXqYnXcYHwjTtUNAcMelOd4xpkoqiTYICWFq0JSiPfPDQdnt+4/wuqcXY47QILbgAAAABJRU5ErkJggg==");` 
-              : ''}
+          preview += `
+            <p style="margin-bottom: 20px; text-indent: 20px;">
+              <span style="float: left; font-size: ${fontSize * 3}px; line-height: 0.8; margin-right: 5px;">${firstChar}</span>${restOfParagraph}
+            </p>`;
+          
+          // Add the rest of the paragraphs
+          for (let i = 1; i < Math.min(paragraphs.length, 5); i++) {
+            preview += `
+              <p style="margin-bottom: 20px; text-indent: 20px;">${paragraphs[i]}</p>`;
           }
-          .title-page {
-            text-align: center;
-            padding: 60px 0;
+        } else {
+          // No drop caps, add all paragraphs normally
+          for (let i = 0; i < Math.min(paragraphs.length, 5); i++) {
+            preview += `
+              <p style="margin-bottom: 20px; text-indent: 20px;">${paragraphs[i]}</p>`;
           }
-          .title-page h1 {
-            font-size: 32px;
-            margin-bottom: 16px;
-          }
-          .title-page .author {
-            font-size: 20px;
-            margin-bottom: 40px;
-            font-style: italic;
-          }
-          .chapter {
-            margin-top: 40px;
-            page-break-before: always;
-          }
-          .chapter-title {
-            font-size: 24px;
-            margin-bottom: 20px;
-            ${pdfOptions.chapterDividers ? 'border-bottom: 1px solid #ddd; padding-bottom: 10px;' : ''}
-            text-align: ${textAlign};
-          }
-          .content {
-            text-align: ${textAlign};
-          }
-          p {
-            margin-bottom: 16px;
-          }
-          .drop-cap:first-letter {
-            float: left;
-            font-size: 60px;
-            line-height: 1;
-            font-weight: bold;
-            margin-right: 8px;
-          }
-          .page-footer {
-            text-align: center;
-            margin-top: 40px;
-            font-size: 12px;
-            color: #666;
-          }
-          ${pdfOptions.showPageNumbers ? `
-          .page-number:after {
-            content: counter(page);
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            font-size: 12px;
-          }` : ''}
-        </style>
-      </head>
-      <body>
-        <div class="title-page">
-          <h1>${book.title || 'Book Title'}</h1>
-          <div class="author">by ${book.author || 'Author Name'}</div>
-          ${pdfOptions.decorativeElements ? '<div style="width: 100px; height: 1px; background-color: #ccc; margin: 0 auto;"></div>' : ''}
-        </div>
-        
-        ${book.tableOfContents ? `
-        <div class="chapter">
-          <h2 class="chapter-title">Table of Contents</h2>
-          <div class="content">${book.tableOfContents.replace(/\n/g, '<br>')}</div>
-        </div>` : ''}
-        
-        ${book.chapters ? 
-          book.chapters.map((chapter, index) => `
-            <div class="chapter">
-              <h2 class="chapter-title">Chapter ${index + 1}: ${chapter.title}</h2>
-              <div class="content ${pdfOptions.dropCaps ? 'drop-cap' : ''}">
-                ${chapter.content.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}
-              </div>
-            </div>
-          `).join('') : ''
         }
-        
-        ${book.characterList ? `
-        <div class="chapter">
-          <h2 class="chapter-title">Characters</h2>
-          <div class="content">${book.characterList.replace(/\n/g, '<br>')}</div>
-        </div>` : ''}
-        
-        <div class="page-footer">
-          ${pdfOptions.headerFooter ? `${book.title} - ${book.author || 'Author'}` : ''}
-          <div class="page-number"></div>
-        </div>
-      </body>
-      </html>
-    `;
-  };
-  
-  const generateEbookPreviewHTML = (book: Book, format: ExportFormat): string => {
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>${book.title || 'Book Preview'} - ${format.toUpperCase()}</title>
-        <style>
-          body {
-            font-family: 'Georgia', serif;
-            line-height: 1.6;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f8f8f8;
-            color: #333;
-          }
-          .ebook-container {
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-            padding: 40px;
-            margin-bottom: 40px;
-          }
-          .ebook-info {
-            background-color: #f0f0f0;
-            border-radius: 5px;
-            padding: 20px;
-            margin-bottom: 40px;
-          }
-          .format-name {
-            text-transform: uppercase;
-            color: #666;
-            font-size: 14px;
-          }
-          .title-page {
-            text-align: center;
-            padding: 20px 0 40px;
-          }
-          h1 {
-            margin-top: 0;
-          }
-          .toc {
-            margin-bottom: 30px;
-          }
-          .chapter {
-            margin-top: 30px;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="ebook-info">
-          <h2>${format.toUpperCase()} E-Book Preview</h2>
-          <p>This is a preview of how your book would appear in ${format.toUpperCase()} format.</p>
-          <p class="format-name">Format: ${format.toUpperCase()}</p>
-        </div>
-        
-        <div class="ebook-container">
-          <div class="title-page">
-            <h1>${book.title || 'Book Title'}</h1>
-            <p>by ${book.author || 'Author Name'}</p>
-          </div>
-          
-          ${book.tableOfContents ? `
-          <div class="toc">
-            <h2>Table of Contents</h2>
-            ${book.tableOfContents.replace(/\n/g, '<br>')}
-          </div>` : ''}
-          
-          ${book.chapters ? 
-            book.chapters.map((chapter, index) => `
-              <div class="chapter">
-                <h2>Chapter ${index + 1}: ${chapter.title}</h2>
-                <div>
-                  ${chapter.content.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}
-                </div>
-              </div>
-            `).join('') : ''
-          }
-          
-          ${book.characterList ? `
-          <div class="chapter">
-            <h2>Characters</h2>
-            ${book.characterList.replace(/\n/g, '<br>')}
-          </div>` : ''}
-        </div>
-      </body>
-      </html>
-    `;
-  };
-  
-  const generateHTMLPreviewHTML = (book: Book): string => {
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>${book.title || 'Book Preview'} - HTML</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-          }
-          .html-preview {
-            border: 1px solid #ddd;
-            padding: 20px;
-            margin-bottom: 20px;
-            background-color: #f9f9f9;
-          }
-          pre {
-            background-color: #f0f0f0;
-            padding: 10px;
-            border-radius: 5px;
-            overflow-x: auto;
-          }
-          code {
-            font-family: Consolas, Monaco, "Courier New", monospace;
-            font-size: 14px;
-            color: #333;
-          }
-          .preview-title {
-            font-weight: bold;
-            margin-top: 20px;
-          }
-        </style>
-      </head>
-      <body>
-        <h1>HTML Export Preview: ${book.title || 'Book Title'}</h1>
-        <p>This is a preview of how your book would be exported to HTML format:</p>
-        
-        <div class="html-preview">
-          <pre><code>&lt;!DOCTYPE html&gt;
-&lt;html&gt;
-&lt;head&gt;
-  &lt;title&gt;${book.title || 'Book Title'}&lt;/title&gt;
-  &lt;meta charset="UTF-8"&gt;
-  &lt;meta name="author" content="${book.author || 'Author'}"&gt;
-  &lt;style&gt;
-    body {
-      font-family: Arial, sans-serif;
-      line-height: 1.6;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    h1 { text-align: center; }
-    .author { text-align: center; font-style: italic; margin-bottom: 40px; }
-    .chapter { margin-top: 30px; }
-    .chapter-title { border-bottom: 1px solid #eee; padding-bottom: 10px; }
-  &lt;/style&gt;
-&lt;/head&gt;
-&lt;body&gt;
-  &lt;h1&gt;${book.title || 'Book Title'}&lt;/h1&gt;
-  &lt;div class="author"&gt;by ${book.author || 'Author'}&lt;/div&gt;
-  
-  ${book.tableOfContents ? `&lt;div class="toc"&gt;
-    &lt;h2&gt;Table of Contents&lt;/h2&gt;
-    ${book.tableOfContents.split('\n').map(line => `    ${line}`).join('\n')}
-  &lt;/div&gt;` : ''}
-  
-  ${book.chapters && book.chapters.length > 0 ? 
-    book.chapters.map((chapter, index) => 
-      `  &lt;div class="chapter"&gt;
-    &lt;h2 class="chapter-title"&gt;Chapter ${index + 1}: ${chapter.title}&lt;/h2&gt;
-    &lt;div class="chapter-content"&gt;
-      ${chapter.content.split('\n\n').map(p => `      &lt;p&gt;${p}&lt;/p&gt;`).join('\n')}
-    &lt;/div&gt;
-  &lt;/div&gt;`
-    ).join('\n\n') : '  &lt;!-- No chapters available --&gt;'
-  }
-  
-  ${book.characterList ? `&lt;div class="characters"&gt;
-    &lt;h2&gt;Characters&lt;/h2&gt;
-    ${book.characterList.split('\n').map(line => `    ${line}`).join('\n')}
-  &lt;/div&gt;` : ''}
-&lt;/body&gt;
-&lt;/html&gt;</code></pre>
-        </div>
-        
-        <h2>HTML Preview:</h2>
-        <div style="border: 1px solid #ddd; padding: 20px; margin-top: 20px;">
-          <h1 style="text-align: center;">${book.title || 'Book Title'}</h1>
-          <div style="text-align: center; font-style: italic; margin-bottom: 40px;">by ${book.author || 'Author'}</div>
-          
-          ${book.tableOfContents ? `
-          <div>
-            <h2>Table of Contents</h2>
-            ${book.tableOfContents.replace(/\n/g, '<br>')}
-          </div>` : ''}
-          
-          ${book.chapters && book.chapters.length > 0 ? 
-            book.chapters.map((chapter, index) => `
-              <div style="margin-top: 30px;">
-                <h2 style="border-bottom: 1px solid #eee; padding-bottom: 10px;">Chapter ${index + 1}: ${chapter.title}</h2>
-                <div>
-                  ${chapter.content.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}
-                </div>
-              </div>
-            `).join('') : '<p>No chapters available</p>'
-          }
-          
-          ${book.characterList ? `
-          <div style="margin-top: 30px;">
-            <h2>Characters</h2>
-            ${book.characterList.replace(/\n/g, '<br>')}
-          </div>` : ''}
-        </div>
-      </body>
-      </html>
-    `;
-  };
-  
-  const generatePlainTextPreviewHTML = (book: Book, format: ExportFormat): string => {
-    // Create a representation of plain text formats
-    const isMarkdown = format === 'markdown';
-    
-    // Generate the plain text content
-    let plainContent = '';
-    
-    if (isMarkdown) {
-      // Markdown format
-      plainContent += `# ${book.title || 'Book Title'}\n\n`;
-      plainContent += `*By ${book.author || 'Author'}*\n\n`;
-      
-      if (book.tableOfContents) {
-        plainContent += `## Table of Contents\n\n${book.tableOfContents}\n\n`;
-      }
-      
-      if (book.chapters && book.chapters.length > 0) {
-        book.chapters.forEach((chapter, index) => {
-          plainContent += `## Chapter ${index + 1}: ${chapter.title}\n\n`;
-          plainContent += `${chapter.content}\n\n`;
-        });
-      }
-      
-      if (book.characterList) {
-        plainContent += `## Characters\n\n${book.characterList}\n\n`;
       }
     } else {
-      // Plain text format
-      plainContent += `${book.title || 'Book Title'}\n`;
-      plainContent += `By ${book.author || 'Author'}\n\n`;
+      // No chapters, show placeholder text
+      preview += `
+        <p style="margin-bottom: 20px; text-indent: 20px; font-style: italic;">
+          This is a preview of how your book will look when exported to PDF. 
+          The actual PDF will contain all your chapters and content.
+        </p>`;
+    }
+    
+    // Close the container
+    preview += '</div>';
+    
+    return preview;
+  };
+  
+  // Generate E-book preview (EPUB, MOBI, AZW3)
+  const generateEbookPreview = (book: any, options?: any) => {
+    const fontFamily = options?.fontFamily || 'serif';
+    const fontSize = options?.fontSize || 12;
+    const textAlign = options?.styling?.textAlign || 'left';
+    const lineHeight = options?.styling?.lineHeight || '1.5';
+    const includeTableOfContents = options?.includeTableOfContents !== false;
+    
+    let preview = `
+      <div style="font-family: ${fontFamily}; font-size: ${fontSize}px; text-align: ${textAlign}; line-height: ${lineHeight}; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fff; border: 1px solid #eee; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+        <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #eee;">
+          <h1 style="font-size: ${fontSize * 1.5}px; margin-bottom: 10px;">${book.title}</h1>
+          <p style="font-size: ${fontSize}px; color: #666;">By ${book.author || 'Unknown'}</p>
+        </div>`;
+    
+    // Table of Contents
+    if (includeTableOfContents && book.chapters && book.chapters.length > 0) {
+      preview += `
+        <div style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #eee;">
+          <h2 style="font-size: ${fontSize * 1.2}px; margin-bottom: 15px;">Table of Contents</h2>
+          <ul style="list-style-type: none; padding: 0;">`;
       
-      if (book.tableOfContents) {
-        plainContent += `TABLE OF CONTENTS\n\n${book.tableOfContents}\n\n`;
+      book.chapters.forEach((chapter: any, index: number) => {
+        preview += `
+            <li style="margin-bottom: 8px;">
+              <a href="#chapter-${index + 1}" style="color: #0066cc; text-decoration: none;">Chapter ${index + 1}: ${chapter.title}</a>
+            </li>`;
+      });
+      
+      preview += `
+          </ul>
+        </div>`;
+    }
+    
+    // Sample chapter content
+    if (book.chapters && book.chapters.length > 0) {
+      const chapter = book.chapters[0];
+      preview += `
+        <div id="chapter-1">
+          <h2 style="font-size: ${fontSize * 1.2}px; margin-bottom: 20px;">Chapter 1: ${chapter.title}</h2>`;
+      
+      const paragraphs = chapter.content.split('\n\n');
+      for (let i = 0; i < Math.min(paragraphs.length, 5); i++) {
+        preview += `
+          <p style="margin-bottom: 15px;">${paragraphs[i]}</p>`;
       }
       
-      if (book.chapters && book.chapters.length > 0) {
-        book.chapters.forEach((chapter, index) => {
-          plainContent += `CHAPTER ${index + 1}: ${chapter.title}\n\n`;
-          plainContent += `${chapter.content}\n\n`;
-        });
+      preview += `
+        </div>`;
+    }
+    
+    // Device frame and indicators
+    preview += `
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; display: flex; justify-content: space-between; color: #999; font-size: ${fontSize * 0.8}px;">
+          <span>Location 1-254</span>
+          <span>Page 1 of 328</span>
+        </div>
+      </div>`;
+    
+    return preview;
+  };
+  
+  // Generate HTML preview
+  const generateHTMLPreview = (book: any, options?: any) => {
+    const fontFamily = options?.fontFamily || 'serif';
+    const fontSize = options?.fontSize || 16;
+    const theme = options?.theme || 'light';
+    const layout = options?.layout || 'book';
+    const includeTableOfContents = options?.includeTableOfContents !== false;
+    const chapterNavigation = options?.chapterNavigation !== false;
+    
+    // Theme colors
+    let bgColor = '#ffffff';
+    let textColor = '#333333';
+    let accentColor = '#0066cc';
+    let borderColor = '#eee';
+    
+    switch (theme) {
+      case 'dark':
+        bgColor = '#1a1a1a';
+        textColor = '#e6e6e6';
+        accentColor = '#7ba9e0';
+        borderColor = '#333';
+        break;
+      case 'sepia':
+        bgColor = '#f7f2e9';
+        textColor = '#5a4a39';
+        accentColor = '#9b6c3a';
+        borderColor = '#e0d6c7';
+        break;
+      case 'contrast':
+        bgColor = '#ffffff';
+        textColor = '#000000';
+        accentColor = '#0000ff';
+        borderColor = '#000000';
+        break;
+    }
+    
+    // Layout styles
+    let maxWidth = '800px';
+    let padding = '40px';
+    let titleStyle = 'text-align: center; margin-bottom: 30px;';
+    
+    switch (layout) {
+      case 'article':
+        maxWidth = '700px';
+        padding = '30px';
+        titleStyle = 'text-align: left; margin-bottom: 20px;';
+        break;
+      case 'manuscript':
+        maxWidth = '650px';
+        padding = '50px';
+        titleStyle = 'text-align: left; margin-bottom: 30px;';
+        break;
+      case 'blog':
+        maxWidth = '800px';
+        padding = '20px';
+        titleStyle = 'text-align: left; margin-bottom: 15px;';
+        break;
+    }
+    
+    let preview = `
+      <div style="font-family: ${fontFamily}; font-size: ${fontSize}px; line-height: 1.6; color: ${textColor}; background-color: ${bgColor}; max-width: ${maxWidth}; margin: 0 auto; padding: ${padding}; border: 1px solid ${borderColor};">
+        <header style="${titleStyle}">
+          <h1 style="margin-bottom: 10px; color: ${textColor};">${book.title}</h1>
+          <p style="color: ${textColor}; opacity: 0.8;">By ${book.author || 'Unknown'}</p>
+        </header>`;
+    
+    // Table of Contents
+    if (includeTableOfContents && book.chapters && book.chapters.length > 0) {
+      preview += `
+        <nav style="margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid ${borderColor};">
+          <h2 style="margin-bottom: 15px; font-size: ${fontSize * 1.2}px;">Contents</h2>
+          <ul style="list-style-type: none; padding-left: 0;">`;
+      
+      book.chapters.forEach((chapter: any, index: number) => {
+        preview += `
+            <li style="margin-bottom: 8px;">
+              <a href="#chapter-${index + 1}" style="color: ${accentColor}; text-decoration: none;">
+                ${chapter.title}
+              </a>
+            </li>`;
+      });
+      
+      preview += `
+          </ul>
+        </nav>`;
+    }
+    
+    // Sample chapter content
+    if (book.chapters && book.chapters.length > 0) {
+      const chapter = book.chapters[0];
+      
+      preview += `
+        <article id="chapter-1" style="margin-bottom: 40px;">
+          <h2 style="font-size: ${fontSize * 1.4}px; margin-bottom: 20px; color: ${textColor};">${chapter.title}</h2>`;
+      
+      const paragraphs = chapter.content.split('\n\n');
+      for (let i = 0; i < Math.min(paragraphs.length, 5); i++) {
+        preview += `
+          <p style="margin-bottom: 20px;">${paragraphs[i]}</p>`;
       }
       
-      if (book.characterList) {
-        plainContent += `CHARACTERS\n\n${book.characterList}\n\n`;
+      preview += `
+        </article>`;
+      
+      // Chapter navigation
+      if (chapterNavigation && book.chapters.length > 1) {
+        preview += `
+          <nav style="display: flex; justify-content: space-between; margin-top: 40px; padding-top: 20px; border-top: 1px solid ${borderColor};">
+            <div></div>
+            <a href="#chapter-2" style="color: ${accentColor}; text-decoration: none;">
+              Next: Chapter 2 - ${book.chapters[1]?.title || 'Next Chapter'} →
+            </a>
+          </nav>`;
       }
     }
     
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>${book.title || 'Book Preview'} - ${format.toUpperCase()}</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-          }
-          pre {
-            background-color: #f5f5f5;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            white-space: pre-wrap;
-            font-family: Consolas, Monaco, 'Courier New', monospace;
-            font-size: 14px;
-            overflow-x: auto;
-          }
-          h1 { margin-bottom: 30px; }
-          .format-label {
-            display: inline-block;
-            background-color: #eee;
-            padding: 3px 8px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            font-size: 14px;
-          }
-        </style>
-      </head>
-      <body>
-        <h1>${format.toUpperCase()} Preview: ${book.title || 'Book Title'}</h1>
-        <div class="format-label">${format.toUpperCase()} Format</div>
-        <pre>${plainContent}</pre>
-      </body>
-      </html>
-    `;
+    // Close container
+    preview += '</div>';
+    
+    return preview;
   };
   
-  const generateGenericPreviewHTML = (book: Book, format: ExportFormat): string => {
+  // Generate DOCX preview
+  const generateDocxPreview = (book: any, options?: any) => {
     return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>${book.title || 'Book Preview'} - ${format.toUpperCase()}</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-          }
-          .preview-container {
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 30px;
-            margin-top: 20px;
-          }
-          .format-badge {
-            display: inline-block;
-            background-color: #007bff;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            margin-bottom: 20px;
-          }
-        </style>
-      </head>
-      <body>
-        <h1>${format.toUpperCase()} Export Preview</h1>
-        <p>This is a preview of how your book would appear when exported to ${format.toUpperCase()} format.</p>
-        
-        <div class="preview-container">
-          <div class="format-badge">${format.toUpperCase()}</div>
-          
-          <h1>${book.title || 'Book Title'}</h1>
-          <p><em>By ${book.author || 'Author'}</em></p>
-          
-          <hr />
-          
-          ${book.tableOfContents ? `
-          <h2>Table of Contents</h2>
-          <div>${book.tableOfContents.replace(/\n/g, '<br>')}</div>
-          <hr />` : ''}
-          
-          ${book.chapters && book.chapters.length > 0 ? 
-            book.chapters.map((chapter, index) => `
-              <div>
-                <h2>Chapter ${index + 1}: ${chapter.title}</h2>
-                <div>
-                  ${chapter.content.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}
-                </div>
-              </div>
-            `).join('<hr />') : '<p>No chapters available</p>'
-          }
-          
-          ${book.characterList ? `
-          <hr />
-          <h2>Characters</h2>
-          <div>${book.characterList.replace(/\n/g, '<br>')}</div>` : ''}
+      <div style="font-family: 'Times New Roman', serif; padding: 40px; background-color: #fff; border: 1px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 800px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 40px;">
+          <h1 style="font-size: 24px; margin-bottom: 10px;">${book.title}</h1>
+          <p>By ${book.author || 'Unknown'}</p>
         </div>
-      </body>
-      </html>
-    `;
+        
+        <div style="margin-bottom: 30px;">
+          <h2 style="font-size: 18px; margin-bottom: 15px;">Chapter 1: ${book.chapters?.[0]?.title || 'Introduction'}</h2>
+          <p style="line-height: 1.6; margin-bottom: 15px;">${book.chapters?.[0]?.content?.split('\n')[0] || 'This is a preview of how your book will look when exported to DOCX format.'}</p>
+          <p style="line-height: 1.6;">The actual DOCX file will contain all of your book content, properly formatted according to your selected options.</p>
+        </div>
+        
+        <div style="color: #777; font-size: 12px; margin-top: 40px; text-align: center;">
+          Word document preview
+        </div>
+      </div>`;
   };
+  
+  // Generate Markdown preview
+  const generateMarkdownPreview = (book: any, options?: any) => {
+    return `
+      <div style="font-family: monospace; white-space: pre-wrap; padding: 30px; background-color: #f7f7f7; border: 1px solid #ddd; max-width: 800px; margin: 0 auto; font-size: 14px; line-height: 1.5;">
+        <pre style="margin: 0;"># ${book.title}
 
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <Tabs value={activeView} onValueChange={(value) => setActiveView(value as 'preview' | 'code')}>
-          <TabsList>
-            <TabsTrigger value="preview"><Eye className="h-4 w-4 mr-2" />Preview</TabsTrigger>
-            <TabsTrigger value="code"><Edit className="h-4 w-4 mr-2" />Edit</TabsTrigger>
-          </TabsList>
-        </Tabs>
-        
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={openPreviewInNewTab}
-          >
-            <ExternalLink className="h-4 w-4 mr-2" />
-            Preview in new tab
-          </Button>
-          
-          {isEditing && (
-            <Button 
-              size="sm" 
-              onClick={handleContentSave}
-            >
-              Save Changes
-            </Button>
-          )}
-          
-          {!isEditing && activeView === 'code' && onContentChange && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setIsEditing(true)}
-            >
-              Edit Content
-            </Button>
-          )}
+*By ${book.author || 'Unknown'}*
+
+## ${book.chapters?.[0]?.title || 'Chapter 1'}
+
+${book.chapters?.[0]?.content?.substring(0, 200) || 'This is a preview of how your book will look in Markdown format.'} ...
+
+---
+
+> Markdown preview - actual export will contain the full content of your book.
+</pre>
+      </div>`;
+  };
+  
+  // Generate TXT preview
+  const generateTxtPreview = (book: any, options?: any) => {
+    return `
+      <div style="font-family: monospace; white-space: pre-wrap; padding: 30px; background-color: #f7f7f7; border: 1px solid #ddd; max-width: 800px; margin: 0 auto; font-size: 14px; line-height: 1.5;">
+        <pre style="margin: 0;">${book.title.toUpperCase()}
+by ${book.author || 'Unknown'}
+
+${book.chapters?.[0]?.title?.toUpperCase() || 'CHAPTER 1'}
+
+${book.chapters?.[0]?.content?.substring(0, 200) || 'This is a preview of how your book will look in plain text format.'} ...
+
+-----------------------------------------------
+Plain text preview - actual export will contain the full content of your book.</pre>
+      </div>`;
+  };
+  
+  // Generate Rich Text preview
+  const generateRichTextPreview = (book: any, options?: any) => {
+    return `
+      <div style="font-family: 'Times New Roman', serif; padding: 40px; background-color: #fff; border: 1px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 800px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="font-size: 24px; margin-bottom: 5px;">${book.title}</h1>
+          <p><em>By ${book.author || 'Unknown'}</em></p>
         </div>
-      </div>
-
-      <TabsContent value="preview" className="mt-0">
-        <Card>
-          <CardContent className="p-6">
-            {format === 'pdf' && (
-              <PDFExportFormatPreview 
-                pdfOptions={options || defaultPdfOptions} 
-                previewBook={previewBook}
-              />
-            )}
-            
-            {(format === 'epub' || format === 'mobi' || format === 'azw3') && (
-              <div className="aspect-[3/4] bg-white border rounded-md p-4 flex flex-col">
-                <div className="text-center mb-8">
-                  <h1 className="text-2xl font-bold">{previewBook.title}</h1>
-                  <p className="text-sm text-gray-500 mt-2">by {previewBook.author}</p>
-                </div>
-                <div className="text-sm">
-                  <p className="font-semibold">Format: {format.toUpperCase()}</p>
-                  <p className="font-semibold mt-4">Chapter Preview:</p>
-                  <p className="mt-2">{previewBook.content}</p>
-                </div>
-              </div>
-            )}
-            
-            {format === 'html' && (
-              <div className="bg-white border rounded-md p-4">
-                <div className="font-mono text-xs text-gray-600 mb-4">&lt;html&gt;</div>
-                <div className="font-mono text-xs text-gray-600 ml-4 mb-2">&lt;head&gt;...&lt;/head&gt;</div>
-                <div className="font-mono text-xs text-gray-600 ml-4 mb-2">&lt;body&gt;</div>
-                <div className="ml-8 mb-4">
-                  <div className="font-mono text-xs text-gray-600">&lt;h1&gt;{previewBook.title}&lt;/h1&gt;</div>
-                  <div className="font-mono text-xs text-gray-600">&lt;p&gt;by {previewBook.author}&lt;/p&gt;</div>
-                  <div className="font-mono text-xs text-gray-600">&lt;div class="chapter"&gt;</div>
-                  <div className="font-mono text-xs text-gray-600 ml-4">&lt;h2&gt;{previewBook.chapter}&lt;/h2&gt;</div>
-                  <div className="font-mono text-xs text-gray-600 ml-4">&lt;p&gt;{previewBook.content.substring(0, 100)}...&lt;/p&gt;</div>
-                  <div className="font-mono text-xs text-gray-600">&lt;/div&gt;</div>
-                </div>
-                <div className="font-mono text-xs text-gray-600 ml-4">&lt;/body&gt;</div>
-                <div className="font-mono text-xs text-gray-600">&lt;/html&gt;</div>
-              </div>
-            )}
-            
-            {(format === 'txt' || format === 'markdown') && (
-              <div className="bg-gray-50 border rounded-md p-4 font-mono text-sm whitespace-pre-wrap">
-                {format === 'markdown' ? (
-                  <>
-                    # {previewBook.title}<br /><br />
-                    *By {previewBook.author}*<br /><br />
-                    ## {previewBook.chapter}<br /><br />
-                    {previewBook.content}
-                  </>
-                ) : (
-                  <>
-                    {previewBook.title}<br />
-                    By {previewBook.author}<br /><br />
-                    CHAPTER: {previewBook.chapter}<br /><br />
-                    {previewBook.content}
-                  </>
-                )}
-              </div>
-            )}
-            
-            {!['pdf', 'epub', 'mobi', 'azw3', 'html', 'txt', 'markdown'].includes(format) && (
-              <div className="text-center p-4">
-                <p>Preview not available for {format.toUpperCase()} format</p>
-                <p className="text-sm text-gray-500 mt-2">You can still export to this format.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </TabsContent>
-      
-      <TabsContent value="code" className="mt-0">
-        <Card>
-          <CardContent className="p-6">
-            {isEditing ? (
-              <Textarea 
-                value={editableContent} 
-                onChange={(e) => setEditableContent(e.target.value)}
-                className="min-h-[400px] font-mono text-sm"
-                placeholder={`Enter ${format.toUpperCase()} content here...`}
-              />
-            ) : (
-              <pre className="bg-gray-50 p-4 rounded-md overflow-auto max-h-[400px] text-sm">
-                {editableContent || content || `No content available for ${format.toUpperCase()} format.`}
-              </pre>
-            )}
-          </CardContent>
-        </Card>
-      </TabsContent>
-    </div>
-  );
-};
-
-export default VisualPreviewEditor;
+        
+        <div style="margin-bottom: 30px;">
+          <h2 style="font-size: 18px; margin-bottom: 15px;">${book.chapters?.[0]?.title || 'Chapter 1'}</h2>
+          <p style="line-height: 1.5; margin-bottom: 15px; text-indent: 20px;">${book.chapters?.[0]?.content?.split('\n')[0] || 'This is a preview of how your book will look when exported to RTF format.'}</p>
+          <p style="line-height: 1.5; text-indent: 20px;">The actual RTF file will contain all of your book content, properly formatted with rich text.</p>
+        </div>
+        
+        <div style="color: #777; font-size: 12px; margin-top: 40px; text-align: center; font-style: italic;">
+          Rich Text Format preview
+        </div>
+      </div>`;
+  };
+  
+  // Generate LaTeX preview
+  const generateLaTeXPreview = (book: any, options?: any) => {
+    return `
+      <div style="font-family: 'Latin Modern Roman', serif; padding: 40px; background-color: #f9f9f9; border: 1px solid #ddd; max-width: 800px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 40px;">
+          <h1 style="font-size: 24px; margin-bottom: 10px; font-weight: normal;">${book.title}</h1>
+          <p>By ${book.author || 'Unknown'}</p>
+        </div>
+        
+        <div style="margin-bottom: 30px;">
+          <h2 style="font-size: 18px; margin-bottom: 20px; font-weight: normal;">Chapter 1: ${book.chapters?.[0]?.title || 'Introduction'}</h2>
+          <p style="line-height: 1.6; margin-bottom: 15px; text-align: justify;">${book.chapters?.[0]?.content?.split('\n')[0] || 'This is a preview of how your book will look when exported to LaTeX format.'}</p>
+          <p style="line-height: 1.6; text-align: justify;">The actual LaTeX file will contain all of your book content, ready for academic publishing.</p>
+        </div>
+        
+        <div style="color: #777; font-size: 12px; margin-top: 40px; text-align: center;">
+          LaTeX document preview
+        </div>
+      </div>`;
+  };
+  
+  // Generate ODT preview
+  const generateODTPreview = (book: any, options?: any) => {
+    return `
+      <div style="font-family: 'Liberation Serif', serif; padding: 40px; background-color: #fff; border: 1px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 800px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 40px;">
+          <h1 style="font-size: 24px; margin-bottom: 10px;">${book.title}</h1>
+          <p>By ${book.author || 'Unknown'}</p>
+        </div>
+        
+        <div style="margin-bottom: 30px;">
+          <h2 style="font-size: 18px; margin-bottom: 15px;">Chapter 1: ${book.chapters?.[0]?.title || 'Introduction'}</h2>
+          <p style="line-height: 1.6; margin-bottom: 15px;">${book.chapters?.[0]?.content?.split('\n')[0] || 'This is a preview of how your book will look when exported to ODT format.'}</p>
+          <p style="line-height: 1.6;">The actual ODT file will contain all of your book content, properly formatted for LibreOffice or OpenOffice.</p>
+        </div>
+        
+        <div style="color: #777; font-size: 12px; margin-top: 40px; text-align: center;">
+          OpenDocument Text preview
+        </div>
+      </div>`;
+  };
+  
+  // Generate Pages preview
+  const generatePagesPreview = (book: any, options?: any) => {
+    return `
+      <div style="font-family: 'Helvetica', sans-serif; padding: 40px; background-color: #fff; border: 1px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 800px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 40px;">
+          <h1 style="font-size: 28px; margin-bottom: 5px; font-weight: 300;">${book.title}</h1>
+          <p style="color: #666;">By ${book.author || 'Unknown'}</p>
+        </div>
+        
+        <div style="margin-bottom: 30px;">
+          <h2 style="font-size: 20px; margin-bottom: 20px; font-weight: 500; color: #333;">Chapter 1: ${book.chapters?.[0]?.title || 'Introduction'}</h2>
+          <p style="line-height: 1.6; margin-bottom: 15px; color: #333;">${book.chapters?.[0]?.content?.split('\n')[0] || 'This is a preview of how your book will look when exported to Apple Pages format.'}</p>
+          <p style="line-height: 1.6; color: #333;">The actual Pages file will contain all of your book content, formatted for Apple Pages.</p>
+        </div>
+        
+        <div style="color: #999; font-size: 12px; margin-top: 40px; text-align: center; font-weight: 300;">
+          Apple Pages preview
+        </div>
+      </div>`;
+  };
+  
+  // Generate FB2 preview
+  const generateFB2Preview = (book: any, options?: any) => {
+    return `
+      <div style="font-family: 'Georgia', serif; padding: 30px; background-color: #f9f9f9; border: 1px solid #ddd; max-width: 700px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="font-size: 22px; margin-bottom: 8px;">${book.title}</h1>
+          <p style="color: #666;">By ${book.author || 'Unknown'}</p>
+        </div>
+        
+        <div style="margin-bottom: 30px; padding: 20px; background-color: #fff; border: 1px solid #eee;">
+          <h2 style="font-size: 18px; margin-bottom: 15px;">${book.chapters?.[0]?.title || 'Chapter 1'}</h2>
+          <p style="line-height: 1.6; margin-bottom: 15px;">${book.chapters?.[0]?.content?.split('\n')[0] || 'This is a preview of how your book will look when exported to FB2 format.'}</p>
+          <p style="line-height: 1.6;">The actual FB2 file will contain all of your book content, formatted for e-readers that support the Fiction Book format.</p>
+        </div>
+        
+        <div style="color: #999; font-size: 12px; margin-top: 20px; text-align: center;">
+          FictionBook (FB2) preview
+        </div>
+      </div>`;
+  };
+  
+  // Generate CBZ preview
+  const generateCBZPreview = (book: any, options?: any) => {
+    return `
+      <div style="font-family: 'Comic Sans MS', cursive; padding: 20px; background-color: #f0f0f0; border: 1px solid #ddd; max-width: 600px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 20px; background-color: #fff; padding: 15px; border: 1px solid #ccc;">
+          <h1 style="font-size: 22px; margin-bottom: 5px; color: #333;">${book.title}</h1>
+          <p style="color: #666;">By ${book.author || 'Unknown'}</p>
+        </div>
+        
+        <div style="background-color: #fff; padding: 20px; border: 1px solid #ccc; margin-bottom: 20px;">
+          <div style="text-align: center; margin-bottom: 15px;">
+            <h2 style="font-size: 18px; margin-bottom: 0;">${book.chapters?.[0]?.title || 'Page 1'}</h2>
+          </div>
+          <p style="line-height: 1.5; background-color: #f9f9f9; padding: 15px; border-radius: 5px; font-size: 14px;">${book.chapters?.[0]?.content?.split('\n')[0] || 'This is a preview of how your book will look when exported to CBZ format.'}</p>
+        </div>
+        
+        <div style="color: #666; font-size: 12px; margin-top: 20px; text-align: center; background-color: #fff; padding: 10px; border: 1px solid #ccc;">
+          Comic Book Archive (CBZ) preview - Page 1 of ${book.chapters?.length || 1}
+        </div>
+      </div>`;
+  };
+  
+  // Helper functions for styling
+  const convertLineSpacing = (spacing: string): string => {
+    switch (spacing) {
+      case 'single': return '1.0';
+      case 'double': return '2.0';
+      case 'relaxed': return '1.5';
+      case 'normal':
+      default:
+        return '1.15';
+    }
+  };
+  
+  return (
+    <Card className="w-full">
+      <CardContent className="p-6">
+        {previewInNewTab ? (
+          <div className="text-center p-8">
+            <p className="text-gray-500 mb-2">Preview opened in a new tab</p>
+            <p className="text-sm text-gray-400">

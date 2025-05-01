@@ -1,12 +1,13 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, Eye, ZoomIn } from 'lucide-react';
 import ExportFormatSelector from '@/components/book-editor/ExportFormatSelector';
 import { Book, ExportFormat } from '@/lib/api/types';
-import VisualPreviewEditor from './VisualPreviewEditor';
+import ExportFormatPreview from './ExportFormatPreview';
+import ExportProgress from './ExportProgress';
+import { toast } from 'sonner';
 
 interface EnhancedExportDialogProps {
   book: Book;
@@ -25,12 +26,72 @@ const EnhancedExportDialog: React.FC<EnhancedExportDialogProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'preview' | 'options'>('preview');
-  const [previewContent, setPreviewContent] = useState<string>('');
   const [exportOptions, setExportOptions] = useState<any>({});
+  const [exportProgress, setExportProgress] = useState<number>(0);
+  const [exportStatus, setExportStatus] = useState<'idle' | 'processing' | 'completed' | 'error'>('idle');
+  const [processingStage, setProcessingStage] = useState<string>('');
+  const [previewInNewTab, setPreviewInNewTab] = useState(false);
   
+  // Reset progress when format changes
+  useEffect(() => {
+    if (isExporting) {
+      // Simulate export progress
+      const timer = setInterval(() => {
+        setExportProgress((prevProgress) => {
+          if (prevProgress >= 100) {
+            clearInterval(timer);
+            setExportStatus('completed');
+            return 100;
+          }
+          
+          // Update processing stage based on progress
+          if (prevProgress < 25) {
+            setProcessingStage('Preparing content...');
+          } else if (prevProgress < 50) {
+            setProcessingStage(`Formatting ${selectedFormat.toUpperCase()} structure...`);
+          } else if (prevProgress < 75) {
+            setProcessingStage('Applying style options...');
+          } else {
+            setProcessingStage('Finalizing export...');
+          }
+          
+          return prevProgress + 5;
+        });
+      }, 200);
+      
+      return () => clearInterval(timer);
+    } else {
+      setExportProgress(0);
+      setExportStatus('idle');
+    }
+  }, [isExporting, selectedFormat]);
+
+  // Reset progress and status when format changes
+  useEffect(() => {
+    setExportProgress(0);
+    setExportStatus('idle');
+  }, [selectedFormat]);
+
   const handleExport = () => {
+    setExportStatus('processing');
+    setExportProgress(0);
+    
+    // Start the export process
     onExport();
-    setOpen(false);
+    
+    // We'll keep the dialog open to show progress
+    toast.success(`Starting ${selectedFormat.toUpperCase()} export...`);
+  };
+
+  // Handle export options change from the preview component
+  const handleOptionsChange = (options: any) => {
+    setExportOptions(options);
+  };
+
+  // Create a custom export handler that uses the selected options
+  const handleCustomExport = () => {
+    console.log("Exporting with custom options:", exportOptions);
+    handleExport();
   };
 
   return (
@@ -53,13 +114,22 @@ const EnhancedExportDialog: React.FC<EnhancedExportDialogProps> = ({
               onFormatChange={onFormatChange}
             />
             <Button 
-              onClick={handleExport}
-              disabled={isExporting}
+              onClick={handleCustomExport}
+              disabled={isExporting || exportStatus === 'processing'}
             >
               <Download className="h-4 w-4 mr-2" />
               Export {selectedFormat.toUpperCase()}
             </Button>
           </div>
+          
+          {(isExporting || exportStatus === 'processing' || exportStatus === 'completed') && (
+            <ExportProgress 
+              progress={exportProgress} 
+              status={exportStatus} 
+              format={selectedFormat}
+              processingStage={processingStage}
+            />
+          )}
           
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'preview' | 'options')}>
             <TabsList>
@@ -68,13 +138,11 @@ const EnhancedExportDialog: React.FC<EnhancedExportDialogProps> = ({
             </TabsList>
             
             <TabsContent value="preview" className="pt-4">
-              <VisualPreviewEditor 
+              <ExportFormatPreview
                 format={selectedFormat}
                 book={book}
-                content={previewContent}
                 options={exportOptions}
-                onContentChange={setPreviewContent}
-                onOptionsChange={setExportOptions}
+                onOptionsChange={handleOptionsChange}
               />
             </TabsContent>
             
@@ -86,10 +154,12 @@ const EnhancedExportDialog: React.FC<EnhancedExportDialogProps> = ({
                   Customize the appearance and behavior of your {selectedFormat.toUpperCase()} export.
                 </p>
                 
-                {/* We would add specific format options here */}
-                <div className="bg-gray-50 p-4 rounded-md text-sm text-gray-600">
-                  Export options for {selectedFormat.toUpperCase()} format will be available soon.
-                </div>
+                <ExportFormatPreview
+                  format={selectedFormat}
+                  book={book}
+                  options={exportOptions}
+                  onOptionsChange={handleOptionsChange}
+                />
               </div>
             </TabsContent>
           </Tabs>
