@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { 
   Dialog, 
   DialogContent, 
@@ -7,17 +8,18 @@ import {
   DialogTitle, 
   DialogTrigger,
   DialogFooter,
-  DialogDescription
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { PlusCircle, Wand, BookOpen, FileText, BookUp } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { v4 as uuidv4 } from 'uuid';
-import { toast } from 'sonner';
+import { Label } from '@/components/ui/label';
+import { Plus, RefreshCcw, CheckCircle, AlertCircle, BookOpen } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
+import { generateChapterOutline, generateChapterContent } from '@/lib/ai/chapterGenerationService';
+import { toast } from 'sonner';
 
 interface AddChapterDialogProps {
   onAddChapter: (chapter: any) => void;
@@ -26,362 +28,350 @@ interface AddChapterDialogProps {
 
 const AddChapterDialog: React.FC<AddChapterDialogProps> = ({ onAddChapter, book }) => {
   const [open, setOpen] = useState(false);
-  const [method, setMethod] = useState<'manual' | 'ai' | 'template'>('manual');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [generationPrompt, setGenerationPrompt] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [generatingPreview, setGeneratingPreview] = useState(false);
-  const [previewContent, setPreviewContent] = useState<string | null>(null);
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('character-intro');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatingStep, setGeneratingStep] = useState<string | null>(null);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [previewMode, setPreviewMode] = useState<'outline' | 'full'>('outline');
+  const [generatedOutline, setGeneratedOutline] = useState<string | null>(null);
+  const [generatedContent, setGeneratedContent] = useState<string | null>(null);
+  const [stylePreferences, setStylePreferences] = useState({
+    tone: 'casual',
+    pacing: 'medium',
+    perspective: 'third-person'
+  });
 
-  const chapterTemplates = [
-    { id: 'character-intro', name: 'Character Introduction', 
-      description: 'Introduce a new character to the story' },
-    { id: 'action-scene', name: 'Action Scene', 
-      description: 'Write a dynamic action scene with tension and excitement' },
-    { id: 'plot-twist', name: 'Plot Twist', 
-      description: 'Create a surprising turn of events that changes the direction of the story' },
-    { id: 'emotional-moment', name: 'Emotional Moment', 
-      description: 'Craft a scene with emotional depth and character development' },
-    { id: 'world-building', name: 'World Building', 
-      description: 'Develop the setting and environment of your story world' },
-  ];
+  const handleAddChapter = () => {
+    if (title.trim()) {
+      const newTask = {
+        id: uuidv4(),
+        title: title.trim(),
+        type: 'chapter',
+        description: description.trim(),
+        status: 'pending' as const
+      };
+
+      onAddChapter(newTask);
+      resetForm();
+      setOpen(false);
+      toast.success(`Added new chapter: ${title}`);
+    } else {
+      toast.error('Please enter a chapter title');
+    }
+  };
 
   const resetForm = () => {
     setTitle('');
     setDescription('');
-    setGenerationPrompt('');
-    setMethod('manual');
-    setIsSubmitting(false);
-    setPreviewContent(null);
-    setGeneratingPreview(false);
+    setGeneratedOutline(null);
+    setGeneratedContent(null);
+    setGenerationProgress(0);
+    setGeneratingStep(null);
+    setPreviewMode('outline');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    try {
-      // For manual chapter creation
-      if (method === 'manual') {
-        if (!title.trim()) {
-          toast.error('Please enter a chapter title');
-          setIsSubmitting(false);
-          return;
-        }
-        
-        // Create a chapter task
-        const newTask = {
-          id: uuidv4(),
-          title: title.trim(),
-          description: description.trim(),
-          type: 'chapter',
-          status: 'pending'
-        };
-        
-        onAddChapter(newTask);
-        toast.success('Chapter added successfully');
-        setOpen(false);
+  const handleClose = () => {
+    if (isGenerating) {
+      // Confirm before closing if generation is in progress
+      if (window.confirm('Generation is in progress. Are you sure you want to close?')) {
         resetForm();
-      } 
-      // For AI-generated chapters
-      else if (method === 'ai') {
-        // Create a chapter task with either the specified title or AI-generated title prompt
-        const effectiveTitle = title.trim() || `Generated Chapter ${(book?.chapters?.length || 0) + 1}`;
-        const effectiveDescription = description.trim() || generationPrompt.trim();
-        
-        if (!effectiveDescription) {
-          toast.error('Please provide either a description or generation prompt');
-          setIsSubmitting(false);
-          return;
-        }
-        
-        // If we have preview content, use it in the description for better AI generation
-        const finalDescription = previewContent 
-          ? `${effectiveDescription}\n\nPreview content: ${previewContent}`
-          : effectiveDescription;
-        
-        const newTask = {
-          id: uuidv4(),
-          title: effectiveTitle,
-          description: finalDescription,
-          type: 'chapter',
-          status: 'pending',
-          aiGenerated: true
-        };
-        
-        onAddChapter(newTask);
-        toast.success('Chapter task added and ready for generation');
         setOpen(false);
-        resetForm();
-      } else if (method === 'template') {
-        // Get the selected template
-        const template = chapterTemplates.find(t => t.id === selectedTemplate);
-        if (!template) {
-          toast.error('Please select a valid template');
-          setIsSubmitting(false);
-          return;
-        }
-        
-        const effectiveTitle = title.trim() || template.name;
-        const effectiveDescription = description.trim() || 
-          `${template.description}. ${generationPrompt.trim()}`;
-        
-        const newTask = {
-          id: uuidv4(),
-          title: effectiveTitle,
-          description: effectiveDescription,
-          type: 'chapter',
-          status: 'pending',
-          aiGenerated: true,
-          template: selectedTemplate
-        };
-        
-        onAddChapter(newTask);
-        toast.success(`Chapter template "${template.name}" added and ready for generation`);
-        setOpen(false);
-        resetForm();
       }
-    } catch (error) {
-      console.error('Error adding chapter:', error);
-      toast.error('Failed to add chapter. Please try again.');
-      setIsSubmitting(false);
+    } else {
+      resetForm();
+      setOpen(false);
     }
   };
 
-  const handleGeneratePreview = async () => {
-    if (!generationPrompt.trim()) {
-      toast.error('Please provide a generation prompt');
+  const generateOutline = async () => {
+    if (!title) {
+      toast.error('Please enter a chapter title first');
       return;
     }
 
-    setGeneratingPreview(true);
-    
+    setIsGenerating(true);
+    setGeneratingStep('Generating outline');
+    setGenerationProgress(10);
+
     try {
-      // Mock AI preview generation - in a real app this would call your AI service
-      // This would use your existing generateBookChapterWithContext function
-      setTimeout(() => {
-        const mockPreview = `Sample preview for "${title || 'New Chapter'}":\n\n` +
-          `This chapter will explore ${generationPrompt.trim().substring(0, 100)}...\n\n` +
-          `The content will be generated based on the book's existing context and your prompt.`;
-        
-        setPreviewContent(mockPreview);
-        toast.success('Preview generated!');
-        setGeneratingPreview(false);
-      }, 1500);
-      
+      setGenerationProgress(30);
+      const outline = await generateChapterOutline(book, title, description);
+      setGeneratedOutline(outline);
+      setGenerationProgress(100);
+      toast.success('Chapter outline generated successfully!');
     } catch (error) {
-      console.error('Error generating preview:', error);
-      toast.error('Failed to generate preview');
-      setGeneratingPreview(false);
+      console.error('Error generating outline:', error);
+      toast.error('Failed to generate chapter outline');
+    } finally {
+      setIsGenerating(false);
+      setGeneratingStep(null);
+    }
+  };
+
+  const generateFullChapter = async () => {
+    if (!title) {
+      toast.error('Please enter a chapter title first');
+      return;
+    }
+
+    setIsGenerating(true);
+    setGeneratingStep('Analyzing book context');
+    setGenerationProgress(10);
+
+    try {
+      // Get previous chapters for context
+      const previousChapters = book.chapters && book.chapters.length > 0
+        ? book.chapters.map((ch: any) => ({
+            title: ch.title,
+            content: ch.content || ''
+          }))
+        : [];
+
+      setGeneratingStep('Generating initial draft');
+      setGenerationProgress(30);
+
+      // Generate content with style preferences
+      const content = await generateChapterContent(
+        book,
+        title,
+        description,
+        previousChapters,
+        stylePreferences
+      );
+
+      setGeneratedContent(content);
+      setGenerationProgress(100);
+      toast.success('Chapter content generated successfully!');
+      setPreviewMode('full'); // Switch to full content preview
+    } catch (error) {
+      console.error('Error generating chapter:', error);
+      toast.error('Failed to generate chapter content');
+    } finally {
+      setIsGenerating(false);
+      setGeneratingStep(null);
+    }
+  };
+
+  const addGeneratedChapter = () => {
+    if (generatedContent && title) {
+      // Create the chapter task
+      const chapterTask = {
+        id: uuidv4(),
+        title: title.trim(),
+        type: 'chapter',
+        description: description.trim(),
+        status: 'completed' as const
+      };
+
+      // Add the chapter to the book
+      const updatedBook = { ...book };
+      
+      if (!updatedBook.chapters) {
+        updatedBook.chapters = [];
+      }
+      
+      updatedBook.chapters.push({
+        id: uuidv4(),
+        title: title,
+        content: generatedContent,
+        order: updatedBook.chapters.length
+      });
+
+      // Add the task
+      onAddChapter(chapterTask);
+      
+      resetForm();
+      setOpen(false);
+      toast.success(`Added new chapter: ${title}`);
+    } else {
+      toast.error('Please generate chapter content first');
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      setOpen(isOpen);
-      if (!isOpen) resetForm();
-    }}>
-      <DialogTrigger asChild>
-        <Button className="w-full">
-          <PlusCircle className="h-4 w-4 mr-2" />
-          Add Chapter
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Add New Chapter</DialogTitle>
-          <DialogDescription>
-            Create a new chapter manually or let AI help you generate content
-          </DialogDescription>
-        </DialogHeader>
-        
-        <Tabs value={method} onValueChange={(v) => setMethod(v as 'manual' | 'ai' | 'template')}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="manual">
-              <FileText className="h-4 w-4 mr-2" />
-              Manual Create
-            </TabsTrigger>
-            <TabsTrigger value="ai">
-              <Wand className="h-4 w-4 mr-2" />
-              AI Generate
-            </TabsTrigger>
-            <TabsTrigger value="template">
-              <BookOpen className="h-4 w-4 mr-2" />
-              Templates
-            </TabsTrigger>
-          </TabsList>
-          
-          <form onSubmit={handleSubmit}>
-            <TabsContent value="manual" className="space-y-4 mt-4">
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline" className="w-full" onClick={() => setOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add New Chapter
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add New Chapter</DialogTitle>
+            <DialogDescription>
+              Create a new chapter for your book. You can generate content with AI or add it manually.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="title">Chapter Title</Label>
-                <Input 
+                <Input
                   id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
                   placeholder="Enter chapter title"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="description">Chapter Description (optional)</Label>
-                <Textarea 
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Brief description of the chapter"
-                  className="min-h-24"
-                />
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="ai" className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label htmlFor="ai-title">Chapter Title (optional)</Label>
-                <Input 
-                  id="ai-title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Enter title or leave blank for AI to name"
+                  disabled={isGenerating}
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  Leave blank to use a placeholder title that you can change later.
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="ai-prompt">Generation Prompt</Label>
-                <Textarea 
-                  id="ai-prompt"
-                  value={generationPrompt}
-                  onChange={(e) => setGenerationPrompt(e.target.value)}
-                  placeholder="What should this chapter be about?"
-                  className="min-h-24"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Describe what should happen in this chapter, key events, or characters involved.
-                </p>
               </div>
 
-              {!previewContent && (
-                <div className="flex justify-center">
+              <div className="space-y-2">
+                <Label htmlFor="description">Chapter Description/Requirements</Label>
+                <Textarea
+                  id="description"
+                  placeholder="Describe what this chapter should be about"
+                  className="min-h-[100px]"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  disabled={isGenerating}
+                />
+              </div>
+
+              {isGenerating && (
+                <Card className="mt-4">
+                  <CardContent className="pt-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">
+                          {generatingStep || 'Generating...'}
+                        </span>
+                        <span className="text-xs text-muted-foreground">{generationProgress}%</span>
+                      </div>
+                      <Progress value={generationProgress} className="h-2" />
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {!isGenerating && !generatedOutline && !generatedContent && (
+                <div className="flex justify-end mt-4 space-x-2">
                   <Button
-                    type="button"
                     variant="outline"
-                    onClick={handleGeneratePreview}
-                    disabled={generatingPreview || !generationPrompt.trim()}
+                    onClick={generateOutline}
+                    disabled={!title || isGenerating}
                   >
-                    {generatingPreview ? (
-                      <>
-                        <Loader className="h-4 w-4 mr-2 animate-spin" />
-                        Generating Preview...
-                      </>
-                    ) : (
-                      <>
-                        <Wand className="h-4 w-4 mr-2" />
-                        Generate Preview
-                      </>
-                    )}
+                    <RefreshCcw className="h-4 w-4 mr-2" />
+                    Generate Outline
+                  </Button>
+                  <Button
+                    variant="default"
+                    onClick={generateFullChapter}
+                    disabled={!title || isGenerating}
+                  >
+                    <BookOpen className="h-4 w-4 mr-2" />
+                    Generate Full Chapter
                   </Button>
                 </div>
               )}
 
-              {generatingPreview && (
-                <div className="space-y-2 py-4">
-                  <Progress value={65} className="h-2" />
-                  <p className="text-xs text-center text-gray-500">
-                    Analyzing book context and generating preview...
-                  </p>
-                </div>
+              {(generatedOutline || generatedContent) && (
+                <Tabs defaultValue={previewMode} onValueChange={(v) => setPreviewMode(v as any)}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="outline" disabled={!generatedOutline}>Outline</TabsTrigger>
+                    <TabsTrigger value="full" disabled={!generatedContent}>Full Content</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="outline">
+                    {generatedOutline ? (
+                      <Card>
+                        <CardContent className="pt-4">
+                          <h3 className="font-semibold mb-2">Chapter Outline</h3>
+                          <div className="whitespace-pre-wrap text-sm">
+                            {generatedOutline}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <Card>
+                        <CardContent className="pt-4 text-center text-muted-foreground">
+                          <AlertCircle className="h-8 w-8 mx-auto mb-2" />
+                          <p>No outline generated yet. Click "Generate Outline" to create one.</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </TabsContent>
+                  
+                  <TabsContent value="full">
+                    {generatedContent ? (
+                      <Card>
+                        <CardContent className="pt-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="font-semibold">{title}</h3>
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                          </div>
+                          <div className="max-h-[400px] overflow-y-auto whitespace-pre-wrap text-sm border p-4 rounded-md">
+                            {generatedContent}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <Card>
+                        <CardContent className="pt-4 text-center text-muted-foreground">
+                          <AlertCircle className="h-8 w-8 mx-auto mb-2" />
+                          <p>No content generated yet. Click "Generate Full Chapter" to create one.</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </TabsContent>
+                </Tabs>
               )}
 
-              {previewContent && (
-                <div className="space-y-2 border rounded-md p-4 bg-slate-50">
-                  <Label>Preview</Label>
-                  <div className="whitespace-pre-wrap text-sm">
-                    {previewContent}
-                  </div>
-                  <div className="flex justify-end">
-                    <Button 
-                      type="button"
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        setPreviewContent(null);
-                        setGeneratingPreview(false);
-                      }}
+              {(generatedOutline || generatedContent) && !isGenerating && (
+                <div className="flex justify-between mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setGeneratedOutline(null);
+                      setGeneratedContent(null);
+                      setGenerationProgress(0);
+                    }}
+                  >
+                    Reset Generation
+                  </Button>
+                  <div className="space-x-2">
+                    <Button
+                      variant="secondary"
+                      onClick={generatedContent ? generateFullChapter : generateOutline}
                     >
+                      <RefreshCcw className="h-4 w-4 mr-2" />
                       Regenerate
                     </Button>
+                    {!generatedContent && (
+                      <Button
+                        variant="default"
+                        onClick={generateFullChapter}
+                        disabled={isGenerating}
+                      >
+                        <BookOpen className="h-4 w-4 mr-2" />
+                        Generate Full
+                      </Button>
+                    )}
                   </div>
                 </div>
               )}
-            </TabsContent>
+            </div>
+          </div>
 
-            <TabsContent value="template" className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label htmlFor="template-title">Chapter Title (optional)</Label>
-                <Input 
-                  id="template-title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Enter title or use template name"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Select Template</Label>
-                <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-2">
-                  {chapterTemplates.map((template) => (
-                    <div 
-                      key={template.id}
-                      className={`border rounded-md p-3 cursor-pointer transition-colors ${
-                        selectedTemplate === template.id 
-                          ? 'border-blue-500 bg-blue-50' 
-                          : 'hover:bg-slate-50'
-                      }`}
-                      onClick={() => setSelectedTemplate(template.id)}
-                    >
-                      <div className="font-medium">{template.name}</div>
-                      <div className="text-sm text-gray-500">{template.description}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="template-prompt">Additional Instructions (optional)</Label>
-                <Textarea 
-                  id="template-prompt"
-                  value={generationPrompt}
-                  onChange={(e) => setGenerationPrompt(e.target.value)}
-                  placeholder="Any specific details to include in this template..."
-                  className="min-h-20"
-                />
-              </div>
-            </TabsContent>
-            
-            <DialogFooter className="mt-6">
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader className="h-4 w-4 mr-2 animate-spin" /> 
-                    Adding...
-                  </>
-                ) : (
-                  <>
-                    <BookUp className="h-4 w-4 mr-2" />
-                    Add Chapter
-                  </>
-                )}
+          <DialogFooter>
+            <Button variant="outline" onClick={handleClose}>
+              Cancel
+            </Button>
+            {generatedContent ? (
+              <Button onClick={addGeneratedChapter} disabled={isGenerating}>
+                Add Generated Chapter
               </Button>
-            </DialogFooter>
-          </form>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+            ) : (
+              <Button onClick={handleAddChapter} disabled={!title || isGenerating}>
+                Add Empty Chapter
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
