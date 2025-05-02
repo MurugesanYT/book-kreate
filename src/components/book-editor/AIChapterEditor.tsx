@@ -1,12 +1,11 @@
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Wand } from 'lucide-react';
 import { toast } from 'sonner';
-import AIPromptSelector from './AIPromptSelector';
-import AIEditPreview from './AIEditPreview';
-import { useAIChapterEdit, PromptType } from '@/hooks/useAIChapterEdit';
+import { useAIChapterEdit } from '@/hooks/useAIChapterEdit';
+import AIEditorContent from './AIEditorContent';
 
 interface AIChapterEditorProps {
   bookId: string;
@@ -32,7 +31,6 @@ const AIChapterEditor: React.FC<AIChapterEditorProps> = ({
   onSave 
 }) => {
   const [open, setOpen] = useState(false);
-  const [editorTab, setEditorTab] = useState<'edit' | 'compare'>('edit');
   
   const {
     promptType,
@@ -65,31 +63,18 @@ const AIChapterEditor: React.FC<AIChapterEditorProps> = ({
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>AI Chapter Editor - {chapter.title}</DialogTitle>
-        </DialogHeader>
-        
-        <div className="grid gap-6">
-          <AIPromptSelector
-            promptType={promptType}
-            onPromptTypeChange={setPromptType}
-            customPrompt={customPrompt}
-            onCustomPromptChange={setCustomPrompt}
-            onGenerate={handleGenerateContent}
-            isGenerating={isGenerating}
-          />
-          
-          {generatedContent && (
-            <AIEditPreview
-              activeTab={editorTab}
-              onTabChange={setEditorTab}
-              generatedContent={generatedContent}
-              onGeneratedContentChange={setGeneratedContent}
-              originalContent={chapter.content}
-              onSave={handleSaveContent}
-            />
-          )}
-        </div>
+        <AIEditorContent 
+          chapter={chapter}
+          promptType={promptType}
+          setPromptType={setPromptType}
+          customPrompt={customPrompt}
+          setCustomPrompt={setCustomPrompt}
+          isGenerating={isGenerating}
+          generatedContent={generatedContent}
+          setGeneratedContent={setGeneratedContent}
+          handleGenerateContent={handleGenerateContent}
+          handleSaveContent={handleSaveContent}
+        />
       </DialogContent>
     </Dialog>
   );

@@ -1,9 +1,10 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Wand } from 'lucide-react';
 import { PromptType, promptOptions } from '@/hooks/useAIChapterEdit';
+import CustomPromptInput from './CustomPromptInput';
 
 interface AIPromptSelectorProps {
   promptType: PromptType;
@@ -41,16 +42,10 @@ const AIPromptSelector: React.FC<AIPromptSelectorProps> = ({
       </div>
       
       {promptType === 'custom' && (
-        <div className="space-y-2">
-          <Label htmlFor="customPrompt">Custom Instruction</Label>
-          <Textarea
-            id="customPrompt"
-            placeholder="Provide clear instructions for the AI about how to edit this chapter..."
-            value={customPrompt}
-            onChange={(e) => onCustomPromptChange(e.target.value)}
-            className="min-h-[100px]"
-          />
-        </div>
+        <CustomPromptInput 
+          customPrompt={customPrompt}
+          onCustomPromptChange={onCustomPromptChange}
+        />
       )}
       
       <div className="flex justify-center">
