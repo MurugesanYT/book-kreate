@@ -1,8 +1,10 @@
 
-import React from 'react';
-import ContentSection from '@/components/book-editor/ContentSection';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import AIChapterEditor from '@/components/book-editor/AIChapterEditor';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { FileText } from 'lucide-react';
+import AIChapterEditor from './AIChapterEditor';
 
 interface ChapterCardProps {
   index: number;
@@ -11,53 +13,76 @@ interface ChapterCardProps {
   activeTab: string;
   onTabChange: (value: string) => void;
   onContentChange: (content: string) => void;
-  chapterId?: string;
-  bookId?: string;
-  book?: any;
-  allChapters?: any[];
+  chapterId: string;
+  bookId: string;
+  book: any;
+  allChapters: {
+    id: string;
+    title: string;
+    content: string;
+  }[];
 }
 
-const ChapterCard: React.FC<ChapterCardProps> = ({ 
-  index, 
-  title, 
-  content, 
-  activeTab, 
-  onTabChange, 
+const ChapterCard: React.FC<ChapterCardProps> = ({
+  index,
+  title,
+  content,
+  activeTab,
+  onTabChange,
   onContentChange,
-  chapterId = `chapter-${index}`,
-  bookId = '',
-  book = null,
-  allChapters = []
+  chapterId,
+  bookId,
+  book,
+  allChapters,
 }) => {
+  const handleEditorSave = (chapterId: string, updatedContent: string) => {
+    onContentChange(updatedContent);
+  };
+  
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-md font-medium">
-          Chapter {index + 1}: {title}
-        </CardTitle>
-        
-        {book && (
-          <AIChapterEditor 
+      <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-4">
+        <div className="flex items-center">
+          <FileText className="h-4 w-4 mr-2 text-gray-500" />
+          <span className="font-medium">
+            {index + 1}. {title}
+          </span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <AIChapterEditor
             bookId={bookId}
-            chapter={{
-              id: chapterId,
-              title,
-              content
-            }}
+            chapter={{ id: chapterId, title, content }}
             allChapters={allChapters}
             book={book}
-            onSave={(_, updatedContent) => onContentChange(updatedContent)}
+            onSave={handleEditorSave}
           />
-        )}
+        </div>
       </CardHeader>
-      <CardContent>
-        <ContentSection
-          title={title}
-          content={content}
-          activeTab={activeTab}
-          onTabChange={onTabChange}
-          onContentChange={onContentChange}
-        />
+      <CardContent className="px-4 py-2">
+        <Tabs 
+          value={activeTab} 
+          onValueChange={(value) => onTabChange(value)}
+          className="w-full"
+        >
+          <TabsList className="grid grid-cols-2">
+            <TabsTrigger value="edit">Edit</TabsTrigger>
+            <TabsTrigger value="preview">Preview</TabsTrigger>
+          </TabsList>
+          <TabsContent value="edit">
+            <Textarea
+              value={content}
+              onChange={(e) => onContentChange(e.target.value)}
+              className="min-h-[200px] font-mono"
+            />
+          </TabsContent>
+          <TabsContent value="preview">
+            <div className="border rounded-md p-4 min-h-[200px] prose max-w-none overflow-auto">
+              {content.split('\n').map((line, i) => (
+                <p key={i}>{line || <br />}</p>
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
