@@ -91,3 +91,41 @@ export const getAllowedExportFormats = (): string[] => {
   const plan = getUserPlan();
   return PLANS[plan].exportFormats;
 };
+
+// Generate a book plan based on book details
+export const generateBookPlan = async (book: BookData): Promise<any[]> => {
+  try {
+    // In a real application, this would call an AI service to generate a plan
+    // For now, we'll create a simple default plan based on the book type
+    const defaultTasks = [
+      {
+        id: 'task-1',
+        title: 'Plan book structure',
+        description: `Create an outline for "${book.title}"`,
+        status: 'pending',
+        type: 'planning'
+      },
+      {
+        id: 'task-2',
+        title: 'Write introduction',
+        description: `Write the opening chapter for "${book.title}"`,
+        status: 'pending',
+        type: 'writing'
+      },
+      {
+        id: 'task-3',
+        title: 'Create character profiles',
+        description: 'Define the main characters and their motivations',
+        status: 'pending',
+        type: 'planning'
+      }
+    ];
+    
+    return defaultTasks;
+  } catch (error) {
+    console.error("Error generating book plan:", error);
+    toast.error("Failed to generate book plan");
+    return [];
+  }
+};
+
