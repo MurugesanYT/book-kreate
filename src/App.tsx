@@ -12,6 +12,7 @@ import Index from "./pages/Index";
 import LandingPage from "./pages/LandingPage";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
+import DashboardHome from "./pages/DashboardHome"; // Add our new dashboard home
 import BookCreationPage from "./pages/BookCreationPage";
 import BookPlanPage from "./pages/BookPlanPage";
 import NotFound from "./pages/NotFound";
@@ -48,6 +49,14 @@ const App = () => {
                 path="/dashboard" 
                 element={
                   <RequireAuth>
+                    <DashboardHome />
+                  </RequireAuth>
+                } 
+              />
+              <Route 
+                path="/dashboard/editor" 
+                element={
+                  <RequireAuth>
                     <DashboardPage />
                   </RequireAuth>
                 } 
@@ -73,6 +82,7 @@ const App = () => {
               <Route path="/about" element={<AboutPage />} />
               <Route path="/features" element={<FeaturesPage />} />
               <Route path="/blog" element={<BlogPage />} />
+              <Route path="/pricing" element={<LandingPage />} />
               
               {/* Support Pages */}
               <Route path="/help" element={<HelpCenterPage />} />

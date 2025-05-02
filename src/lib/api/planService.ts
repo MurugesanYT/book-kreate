@@ -1,120 +1,93 @@
 
-import { toast } from "sonner";
-import { generateWithGemini } from "./geminiService";
-import { BookData, PlanItem, BookItemType } from "./types";
+import { BookData } from './types';
+import { toast } from 'sonner';
 
-// Function to generate a book plan with descriptive chapter titles
-export const generateBookPlan = async (book: BookData): Promise<PlanItem[]> => {
-  try {
-    const prompt = `Create a detailed chapter plan for a ${book.type} book titled "${book.title}" in the ${book.category} category. The book is about: ${book.description}.
-
-    Provide a JSON array with 5-7 chapters. Each chapter should have a "title" field with a compelling chapter title and a "description" field with a brief (25-30 word) summary of what the chapter will cover. Format exactly as:
-    [
-      {"title": "Chapter Title 1", "description": "Brief description of chapter 1 content..."},
-      {"title": "Chapter Title 2", "description": "Brief description of chapter 2 content..."},
-      ... and so on
-    ]
-    
-    Only return the valid JSON array, nothing else.`;
-    
-    console.log("Generating book plan with prompt:", prompt.substring(0, 150) + "...");
-    const planText = await generateWithGemini(prompt, 1000);
-    
-    console.log("Raw plan text received:", planText);
-    
-    // Extract just the JSON part in case there's any extra text
-    const jsonMatch = planText.match(/\[\s*\{.*\}\s*\]/s);
-    if (!jsonMatch) {
-      console.error("Failed to extract valid JSON from response:", planText);
-      
-      // Try a more direct approach - attempt to parse the entire response as JSON
-      try {
-        const chapterPlan = JSON.parse(planText);
-        if (Array.isArray(chapterPlan)) {
-          console.log("Successfully parsed JSON array directly");
-          
-          // Create a complete plan with cover and credits
-          return createCompletePlan(book, chapterPlan);
-        }
-      } catch (parseError) {
-        console.error("Could not parse entire response as JSON either:", parseError);
-      }
-      
-      throw new Error("Failed to generate valid chapter plan");
-    }
-    
-    try {
-      const chapterPlan = JSON.parse(jsonMatch[0]);
-      console.log("Generated chapter plan:", chapterPlan);
-      
-      return createCompletePlan(book, chapterPlan);
-    } catch (error) {
-      console.error("Error parsing AI response as JSON:", error);
-      throw new Error("Generated plan was not in valid JSON format");
-    }
-  } catch (error) {
-    console.error("Error generating book plan:", error);
-    toast.error("Failed to generate a custom book plan. Using default plan instead.");
-    
-    // Return default plan if generation fails
-    return createDefaultPlan(book);
+// Define available plans
+export const PLANS = {
+  Basic: {
+    books: 3,
+    chapters: 5,
+    exportFormats: ['pdf'],
+    price: '$5'
+  },
+  Pro: {
+    books: 10,
+    chapters: 12,
+    exportFormats: ['pdf', 'epub', 'docx', 'html', 'markdown'],
+    price: '$19'
+  },
+  Ultimate: {
+    books: Infinity,
+    chapters: Infinity,
+    exportFormats: ['pdf', 'epub', 'mobi', 'docx', 'txt', 'html', 'markdown', 'rtf', 'azw3', 'fb2', 'latex', 'odt'],
+    price: '$49'
   }
 };
 
-// Helper function to create a complete plan with cover and credits
-const createCompletePlan = (book: BookData, chapterPlan: any[]): PlanItem[] => {
-  const timestamp = Date.now();
-  return [
-    {
-      id: `item_${timestamp}_cover`,
-      title: 'Cover Page',
-      type: 'cover' as BookItemType,
-      status: 'pending' as const
-    },
-    ...chapterPlan.map((chapter: any, index: number) => ({
-      id: `item_${timestamp}_${index+1}`,
-      title: chapter.title || `Chapter ${index+1}`,
-      description: chapter.description || `Content for ${chapter.title || `Chapter ${index+1}`}`,
-      type: 'chapter' as BookItemType,
-      status: 'pending' as const
-    })),
-    {
-      id: `item_${timestamp}_credits`,
-      title: 'Credits Page',
-      type: 'credits' as BookItemType,
-      status: 'pending' as const
-    }
-  ];
+type PlanKey = keyof typeof PLANS;
+
+// Get user's current plan
+export const getUserPlan = (): PlanKey => {
+  const storedPlan = localStorage.getItem('userPlan');
+  if (!storedPlan || !PLANS[storedPlan as PlanKey]) {
+    // Default to Basic plan if no valid plan is found
+    localStorage.setItem('userPlan', 'Basic');
+    return 'Basic';
+  }
+  return storedPlan as PlanKey;
 };
 
-// Create a default plan if generation fails - now includes book title and info
-const createDefaultPlan = (book: BookData): PlanItem[] => {
-  const timestamp = Date.now();
-  const defaultPlanItems: PlanItem[] = [
-    {
-      id: `item_${timestamp}_cover`,
-      title: 'Cover Page',
-      type: 'cover' as BookItemType,
-      status: 'pending' as const
-    }
-  ];
+// Set user's plan
+export const setUserPlan = (plan: PlanKey): void => {
+  if (PLANS[plan]) {
+    localStorage.setItem('userPlan', plan);
+    toast.success(`Successfully switched to ${plan} plan`);
+  } else {
+    toast.error('Invalid plan selected');
+  }
+};
+
+// Check if user can create a new book
+export const canCreateBook = (currentBooks: BookData[]): boolean => {
+  const plan = getUserPlan();
+  const maxBooks = PLANS[plan].books;
   
-  for (let i = 1; i <= 5; i++) {
-    defaultPlanItems.push({
-      id: `item_${timestamp}_${i}`,
-      title: `Chapter ${i}: The Journey Continues`,
-      description: `Default content for Chapter ${i} of "${book.title}"`,
-      type: 'chapter' as BookItemType,
-      status: 'pending' as const
-    });
+  if (currentBooks.length >= maxBooks) {
+    toast.error(`Your ${plan} plan allows a maximum of ${maxBooks} books. Please upgrade to create more.`);
+    return false;
   }
   
-  defaultPlanItems.push({
-    id: `item_${timestamp}_credits`,
-    title: 'Credits Page',
-    type: 'credits' as BookItemType,
-    status: 'pending' as const
-  });
+  return true;
+};
+
+// Check if user can add a new chapter to a book
+export const canAddChapter = (book: BookData): boolean => {
+  const plan = getUserPlan();
+  const maxChapters = PLANS[plan].chapters;
   
-  return defaultPlanItems;
+  if ((book.chapters?.length || 0) >= maxChapters) {
+    toast.error(`Your ${plan} plan allows a maximum of ${maxChapters} chapters per book. Please upgrade to add more.`);
+    return false;
+  }
+  
+  return true;
+};
+
+// Check if user can export in a specific format
+export const canExportInFormat = (format: string): boolean => {
+  const plan = getUserPlan();
+  const allowedFormats = PLANS[plan].exportFormats;
+  
+  if (!allowedFormats.includes(format)) {
+    toast.error(`Your ${plan} plan doesn't allow exporting to ${format} format. Please upgrade for more export options.`);
+    return false;
+  }
+  
+  return true;
+};
+
+// Get allowed export formats
+export const getAllowedExportFormats = (): string[] => {
+  const plan = getUserPlan();
+  return PLANS[plan].exportFormats;
 };
