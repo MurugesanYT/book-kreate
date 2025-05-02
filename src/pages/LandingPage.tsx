@@ -1,5 +1,6 @@
 
 import React, { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import LandingHeader from '../components/LandingHeader';
 import HeroSection from '../components/HeroSection';
 import FeaturesSection from '../components/FeaturesSection';
@@ -13,10 +14,21 @@ import PricingSection from '../components/PricingSection';
 import ThreeDModel from '../components/ThreeDModel';
 
 const LandingPage = () => {
+  const location = useLocation();
+  
   // Scroll to top on page load
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+    if (location.pathname === '/pricing' || location.hash === '#pricing') {
+      // Scroll to pricing section
+      const pricingSection = document.getElementById('pricing');
+      if (pricingSection) {
+        pricingSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      // Default scroll to top
+      window.scrollTo(0, 0);
+    }
+  }, [location]);
 
   return (
     <div className="min-h-screen flex flex-col overflow-x-hidden bg-gradient-to-b from-white via-book-lightPurple/5 to-white">
