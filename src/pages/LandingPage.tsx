@@ -16,16 +16,16 @@ import ThreeDModel from '../components/ThreeDModel';
 const LandingPage = () => {
   const location = useLocation();
   
-  // Scroll to top on page load
+  // Handle scroll behavior based on route
   useEffect(() => {
     if (location.pathname === '/pricing' || location.hash === '#pricing') {
-      // Scroll to pricing section
+      // Scroll to pricing section when coming from pricing path
       const pricingSection = document.getElementById('pricing');
       if (pricingSection) {
         pricingSection.scrollIntoView({ behavior: 'smooth' });
       }
     } else {
-      // Default scroll to top
+      // Default scroll to top for other paths
       window.scrollTo(0, 0);
     }
   }, [location]);
