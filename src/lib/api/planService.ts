@@ -24,7 +24,7 @@ export const PLANS = {
   }
 };
 
-type PlanKey = keyof typeof PLANS;
+export type PlanKey = keyof typeof PLANS;
 
 // Get user's current plan
 export const getUserPlan = (): PlanKey => {
@@ -128,4 +128,3 @@ export const generateBookPlan = async (book: BookData): Promise<any[]> => {
     return [];
   }
 };
-

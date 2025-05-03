@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { getBook, updateBook } from '@/lib/api';
+import { canAddChapter } from '@/lib/api/planService';
 import { v4 as uuidv4 } from 'uuid';
 import { Task, markTaskAsComplete, deleteTask, updateBookWithTasks } from './taskUtils';
 import { saveBookContent } from './bookContentUtils';
@@ -91,6 +92,11 @@ export const useBookData = (bookId: string | undefined) => {
 
   // Add new chapter
   const handleAddChapter = (newChapter: Task) => {
+    // Check if user can add a chapter based on their plan
+    if (!book || !canAddChapter(book)) {
+      return;
+    }
+    
     const updatedTasks = [...tasks, newChapter];
     setTasks(updatedTasks);
     updateBookWithTasks(book, bookId, updatedTasks);

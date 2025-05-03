@@ -2,12 +2,28 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { ExportFormat, Book } from '@/lib/api/types';
+import { canExportInFormat, getAllowedExportFormats } from '@/lib/api/planService';
 
 export const useExport = () => {
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('pdf');
   const [isExporting, setIsExporting] = useState(false);
+  
+  // Get allowed formats based on user's plan
+  const allowedFormats = getAllowedExportFormats() as ExportFormat[];
+
+  // Set default format to the first allowed format
+  useState(() => {
+    if (allowedFormats.length > 0 && !allowedFormats.includes(selectedFormat)) {
+      setSelectedFormat(allowedFormats[0]);
+    }
+  });
 
   const handleExport = (book: Book) => {
+    // Check if the selected format is allowed for the user's plan
+    if (!canExportInFormat(selectedFormat)) {
+      return;
+    }
+    
     setIsExporting(true);
     toast.loading(`Creating your ${selectedFormat.toUpperCase()} file...`);
     
@@ -112,6 +128,7 @@ export const useExport = () => {
     selectedFormat,
     setSelectedFormat,
     isExporting,
-    handleExport
+    handleExport,
+    allowedFormats
   };
 };

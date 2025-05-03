@@ -15,6 +15,7 @@ import DashboardHome from "./pages/DashboardHome"; // Add our new dashboard home
 import BookCreationPage from "./pages/BookCreationPage";
 import BookPlanPage from "./pages/BookPlanPage";
 import NotFound from "./pages/NotFound";
+import PlanPage from "./pages/account/PlanPage";
 
 // Content Pages
 import AboutPage from "./pages/about/AboutPage";
@@ -73,6 +74,14 @@ const App = () => {
                 element={
                   <RequireAuth>
                     <BookPlanPage />
+                  </RequireAuth>
+                } 
+              />
+              <Route 
+                path="/account/plan" 
+                element={
+                  <RequireAuth>
+                    <PlanPage />
                   </RequireAuth>
                 } 
               />

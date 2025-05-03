@@ -2,7 +2,7 @@
 // Book service to handle book operations
 import { toast } from "sonner";
 import { BookData, PlanItem } from "./types";
-import { generateBookPlan } from "./planService";
+import { generateBookPlan, canCreateBook, canAddChapter } from "./planService";
 
 // Function to get a book by ID
 export const getBook = async (bookId: string): Promise<any> => {
@@ -67,6 +67,63 @@ export const listBooks = async (): Promise<any[]> => {
     console.error("Error listing books:", error);
     toast.error("Failed to load books");
     return [];
+  }
+};
+
+// Function to create a new book
+export const createBook = async (bookData: any): Promise<any> => {
+  try {
+    const existingBooks = JSON.parse(localStorage.getItem('bookKreateBooks') || '[]');
+    
+    // Check if user can create a new book based on their plan
+    if (!canCreateBook(existingBooks)) {
+      throw new Error("Book limit reached for your current plan");
+    }
+    
+    // Add the new book
+    const updatedBooks = [...existingBooks, bookData];
+    localStorage.setItem('bookKreateBooks', JSON.stringify(updatedBooks));
+    
+    return Promise.resolve(bookData);
+  } catch (error) {
+    console.error("Error creating book:", error);
+    toast.error("Failed to create book");
+    throw error;
+  }
+};
+
+// Function to add a chapter to a book
+export const addChapter = async (bookId: string, chapterData: any): Promise<any> => {
+  try {
+    const existingBooks = JSON.parse(localStorage.getItem('bookKreateBooks') || '[]');
+    const book = existingBooks.find((b: any) => b.id === bookId);
+    
+    if (!book) {
+      throw new Error("Book not found");
+    }
+    
+    // Ensure book has chapters array
+    if (!book.chapters) {
+      book.chapters = [];
+    }
+    
+    // Check if user can add a new chapter based on their plan
+    if (!canAddChapter(book)) {
+      throw new Error("Chapter limit reached for your current plan");
+    }
+    
+    // Add the new chapter
+    book.chapters.push(chapterData);
+    
+    // Update localStorage
+    const updatedBooks = existingBooks.map((b: any) => b.id === bookId ? book : b);
+    localStorage.setItem('bookKreateBooks', JSON.stringify(updatedBooks));
+    
+    return Promise.resolve(chapterData);
+  } catch (error) {
+    console.error("Error adding chapter:", error);
+    toast.error("Failed to add chapter");
+    throw error;
   }
 };
 

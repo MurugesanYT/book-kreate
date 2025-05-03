@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +10,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { BookData } from '@/lib/api/types';
 import { listBooks } from '@/lib/api/bookService';
+import { getUserPlan, PLANS, canCreateBook } from '@/lib/api/planService';
 
 const DashboardHome = () => {
   const [books, setBooks] = useState<BookData[]>([]);
@@ -19,18 +19,9 @@ const DashboardHome = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Get the user's plan from localStorage (default to Basic)
-  const userPlan = localStorage.getItem('userPlan') || 'Basic';
-  
-  // Define plan limits
-  const planLimits = {
-    'Basic': { books: 3, chapters: 5 },
-    'Pro': { books: 10, chapters: 12 },
-    'Ultimate': { books: Infinity, chapters: Infinity }
-  };
-  
-  // Get the current limits based on the user's plan
-  const currentLimits = planLimits[userPlan as keyof typeof planLimits];
+  // Get the user's plan
+  const userPlan = getUserPlan();
+  const currentPlanDetails = PLANS[userPlan];
   
   useEffect(() => {
     const fetchBooks = async () => {
@@ -60,17 +51,10 @@ const DashboardHome = () => {
   }, [toast]);
   
   const handleCreateBook = () => {
-    // Check if user has reached their book limit
-    if (books.length >= currentLimits.books) {
-      toast({
-        title: "Book limit reached",
-        description: `Your ${userPlan} plan allows a maximum of ${currentLimits.books} books. Please upgrade to create more.`,
-        variant: "destructive"
-      });
-      return;
+    // Check if user can create another book based on their plan
+    if (canCreateBook(books)) {
+      navigate('/book/create');
     }
-    
-    navigate('/book/create');
   };
   
   const formatDate = (dateString: string) => {
@@ -92,9 +76,12 @@ const DashboardHome = () => {
         </div>
         
         <div className="flex items-center gap-3">
-          <div className="bg-book-lightPurple/10 text-book-purple rounded-full px-4 py-1 text-sm font-medium">
+          <Link 
+            to="/account/plan" 
+            className="bg-book-lightPurple/10 text-book-purple rounded-full px-4 py-1 text-sm font-medium hover:bg-book-lightPurple/20 transition-colors"
+          >
             {userPlan} Plan
-          </div>
+          </Link>
           <Button variant="outline" onClick={() => navigate('/account/settings')}>
             <Settings className="h-4 w-4 mr-2" />
             Account
@@ -128,7 +115,7 @@ const DashboardHome = () => {
                   <div className="text-sm text-slate-500 flex items-center justify-between">
                     {userPlan} 
                     <Button variant="link" className="text-book-purple p-0 h-auto" asChild>
-                      <Link to="/pricing">Upgrade</Link>
+                      <Link to="/account/plan">Manage</Link>
                     </Button>
                   </div>
                 </div>
@@ -136,14 +123,14 @@ const DashboardHome = () => {
                 <div className="space-y-1">
                   <div className="text-sm font-medium leading-none">Books</div>
                   <div className="text-sm text-slate-500">
-                    {books.length} / {currentLimits.books === Infinity ? "∞" : currentLimits.books}
+                    {books.length} / {currentPlanDetails.books === Infinity ? "∞" : currentPlanDetails.books}
                   </div>
                 </div>
                 
                 <div className="space-y-1">
                   <div className="text-sm font-medium leading-none">Chapters per book</div>
                   <div className="text-sm text-slate-500">
-                    Up to {currentLimits.chapters === Infinity ? "∞" : currentLimits.chapters}
+                    Up to {currentPlanDetails.chapters === Infinity ? "∞" : currentPlanDetails.chapters}
                   </div>
                 </div>
               </div>
@@ -167,8 +154,8 @@ const DashboardHome = () => {
                 </Link>
               </Button>
               <Button variant="ghost" className="w-full justify-start" asChild>
-                <Link to="/account/settings">
-                  <Settings className="mr-2 h-4 w-4" /> Account Settings
+                <Link to="/account/plan">
+                  <Settings className="mr-2 h-4 w-4" /> Manage Plan
                 </Link>
               </Button>
             </CardContent>

@@ -1,7 +1,7 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { ExportFormat } from '@/lib/api/types';
+import { getAllowedExportFormats, getUserPlan } from '@/lib/api/planService';
 
 interface VisualPreviewEditorProps {
   format: ExportFormat;
@@ -24,10 +24,42 @@ const VisualPreviewEditor: React.FC<VisualPreviewEditorProps> = ({
 }) => {
   const [previewContent, setPreviewContent] = useState<string>('');
   const [previewWindow, setPreviewWindow] = useState<Window | null>(null);
+  const [isFormatAllowed, setIsFormatAllowed] = useState<boolean>(true);
+  
+  // Check if the format is allowed based on user's plan
+  useEffect(() => {
+    const allowedFormats = getAllowedExportFormats();
+    setIsFormatAllowed(allowedFormats.includes(format));
+  }, [format]);
 
   // Generate preview content based on format and options
   useEffect(() => {
     const generatePreview = () => {
+      if (!isFormatAllowed) {
+        const currentPlan = getUserPlan();
+        const upgradeBanner = `
+          <div style="padding: 20px; background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; text-align: center; margin-bottom: 20px;">
+            <h3 style="margin-bottom: 10px; color: #6c757d;">Format Not Available</h3>
+            <p style="margin-bottom: 15px; color: #6c757d;">
+              The ${format.toUpperCase()} format is not available in your ${currentPlan} plan. 
+              Please upgrade to unlock more export formats.
+            </p>
+            <a href="/account/plan" style="display: inline-block; padding: 8px 16px; background-color: #7c3aed; color: white; text-decoration: none; border-radius: 4px;">
+              Upgrade Plan
+            </a>
+          </div>
+        `;
+        
+        setPreviewContent(upgradeBanner);
+        
+        // Send content to preview window if it exists
+        if (previewInNewTab && previewWindow && !previewWindow.closed) {
+          previewWindow.postMessage(upgradeBanner, '*');
+        }
+        
+        return;
+      }
+      
       let preview = '';
       
       switch (format) {
@@ -86,7 +118,7 @@ const VisualPreviewEditor: React.FC<VisualPreviewEditorProps> = ({
     };
     
     generatePreview();
-  }, [format, book, options, previewInNewTab, previewWindow]);
+  }, [format, book, options, previewInNewTab, previewWindow, isFormatAllowed]);
   
   // Listen for messages from preview window
   useEffect(() => {
