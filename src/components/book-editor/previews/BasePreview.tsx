@@ -40,4 +40,15 @@ export const generateUpgradeBanner = (format: string, currentPlan: string) => {
   `;
 };
 
+// Create a BasePreview component that can be extended by other previews
+const BasePreview: React.FC<BasePreviewProps> = ({ book, options }) => {
+  return (
+    <div className="book-preview">
+      <h1>{book.title}</h1>
+      <p>By {book.author || 'Unknown'}</p>
+      <p>This is a base preview. Please use a specific format preview component.</p>
+    </div>
+  );
+};
+
 export default BasePreview;
