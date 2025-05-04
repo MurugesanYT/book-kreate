@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
-import { Wand, Book, Sparkles, BookOpen, AlertCircle } from 'lucide-react';
+import { Wand, Book, Sparkles, BookOpen, AlertCircle, Zap } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { canAddChapter, getUserPlan } from '@/lib/api/planService';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface AIChapterCreatorProps {
   book: any;
@@ -104,6 +105,50 @@ const AIChapterCreator: React.FC<AIChapterCreatorProps> = ({ book, onAddChapter 
     }
   };
   
+  // Function to generate a chapter instantly without user input
+  const handleQuickGenerateChapter = async () => {
+    if (!canAddChapter(book)) {
+      toast.error(`Your ${userPlan} plan limits the number of chapters. Please upgrade to add more.`);
+      return;
+    }
+    
+    try {
+      toast.loading('Generating chapter with AI...');
+      
+      // Simulate a delay for the generation process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Auto-generate chapter title based on the book context
+      let chapterTitle = '';
+      if (totalChapters === 0) {
+        chapterTitle = `Chapter 1: The Beginning`;
+      } else {
+        chapterTitle = `Chapter ${totalChapters + 1}: ${generateSimpleTitle()}`;
+      }
+      
+      // Auto-generated description
+      const chapterDescription = `AI-generated chapter that continues the story based on previous content.`;
+      
+      // Generate content
+      const generatedContent = generateSimpleContent();
+      
+      const newChapter = {
+        id: uuidv4(),
+        title: chapterTitle,
+        description: chapterDescription,
+        type: 'chapter',
+        status: 'completed',
+        content: generatedContent,
+      };
+      
+      onAddChapter(newChapter);
+      toast.success(`Chapter "${chapterTitle}" generated successfully!`);
+    } catch (error) {
+      console.error("Error generating quick chapter:", error);
+      toast.error("Failed to generate chapter. Please try again.");
+    }
+  };
+  
   // Simple title generation function for demo purposes
   const generateSimpleTitle = () => {
     const firstWords = ["Awakening", "Journey", "Discovery", "Mystery", "Secret", "Return", "Shadows", "Encounter", "Revelation", "Dark", "Light", "Beginning", "End"];
@@ -144,216 +189,239 @@ There was only one person they could think of, though reaching out would mean br
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2 mt-2">
-          <Wand className="h-4 w-4" />
-          Auto-Generate Chapter
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[550px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-purple-500" />
-            AI Chapter Generator
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-6 py-4">
-          {!canAddChapter(book) && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Chapter limit reached</AlertTitle>
-              <AlertDescription>
-                Your {userPlan} plan allows a maximum of {userPlan === 'Basic' ? '5' : '12'} chapters. 
-                Please upgrade to add more chapters.
-              </AlertDescription>
-            </Alert>
-          )}
+    <div className="flex gap-2">
+      {/* Quick generate button - no dialog needed */}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="outline" 
+              className="gap-2" 
+              onClick={handleQuickGenerateChapter}
+              disabled={!canAddChapter(book)}
+            >
+              <Zap className="h-4 w-4" />
+              Quick AI Chapter
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Instantly generate a new chapter with AI with one click</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      
+      {/* Original button with dialog for custom options */}
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline" className="gap-2">
+            <Wand className="h-4 w-4" />
+            Custom AI Chapter
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[550px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-purple-500" />
+              AI Chapter Generator
+            </DialogTitle>
+          </DialogHeader>
           
-          <div className="space-y-2">
-            <Label>Generation Mode</Label>
-            <div className="grid grid-cols-3 gap-2">
-              <Button 
-                type="button" 
-                variant={generationMode === "full-auto" ? "default" : "outline"}
-                className="w-full"
-                onClick={() => handleModeChange("full-auto")}
-              >
-                <BookOpen className="h-4 w-4 mr-2" />
-                Auto
-              </Button>
-              <Button 
-                type="button" 
-                variant={generationMode === "guided" ? "default" : "outline"}
-                className="w-full"
-                onClick={() => handleModeChange("guided")}
-                disabled={isPremiumFeature('guided')}
-              >
-                <Book className="h-4 w-4 mr-2" />
-                Guided
-                {isPremiumFeature('guided') && (
-                  <Badge variant="outline" className="ml-1 text-[0.6rem]">Pro</Badge>
-                )}
-              </Button>
-              <Button 
-                type="button" 
-                variant={generationMode === "from-prompt" ? "default" : "outline"}
-                className="w-full"
-                onClick={() => handleModeChange("from-prompt")}
-                disabled={isPremiumFeature('prompt')}
-              >
-                <Wand className="h-4 w-4 mr-2" />
-                Prompt
-                {isPremiumFeature('prompt') && (
-                  <Badge variant="outline" className="ml-1 text-[0.6rem]">Ultimate</Badge>
-                )}
-              </Button>
+          <div className="space-y-6 py-4">
+            {!canAddChapter(book) && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Chapter limit reached</AlertTitle>
+                <AlertDescription>
+                  Your {userPlan} plan allows a maximum of {userPlan === 'Basic' ? '5' : '12'} chapters. 
+                  Please upgrade to add more chapters.
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            <div className="space-y-2">
+              <Label>Generation Mode</Label>
+              <div className="grid grid-cols-3 gap-2">
+                <Button 
+                  type="button" 
+                  variant={generationMode === "full-auto" ? "default" : "outline"}
+                  className="w-full"
+                  onClick={() => handleModeChange("full-auto")}
+                >
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Auto
+                </Button>
+                <Button 
+                  type="button" 
+                  variant={generationMode === "guided" ? "default" : "outline"}
+                  className="w-full"
+                  onClick={() => handleModeChange("guided")}
+                  disabled={isPremiumFeature('guided')}
+                >
+                  <Book className="h-4 w-4 mr-2" />
+                  Guided
+                  {isPremiumFeature('guided') && (
+                    <Badge variant="outline" className="ml-1 text-[0.6rem]">Pro</Badge>
+                  )}
+                </Button>
+                <Button 
+                  type="button" 
+                  variant={generationMode === "from-prompt" ? "default" : "outline"}
+                  className="w-full"
+                  onClick={() => handleModeChange("from-prompt")}
+                  disabled={isPremiumFeature('prompt')}
+                >
+                  <Wand className="h-4 w-4 mr-2" />
+                  Prompt
+                  {isPremiumFeature('prompt') && (
+                    <Badge variant="outline" className="ml-1 text-[0.6rem]">Ultimate</Badge>
+                  )}
+                </Button>
+              </div>
             </div>
+            
+            {generationMode === 'full-auto' && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Auto Generation</CardTitle>
+                  <CardDescription>AI will automatically create a suitable next chapter</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="respectTone">Respect Book Tone</Label>
+                    <Switch 
+                      id="respectTone" 
+                      checked={options.respectTone}
+                      onCheckedChange={(checked) => handleOptionChange('respectTone', checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="respectStyle">Match Writing Style</Label>
+                    <Switch 
+                      id="respectStyle" 
+                      checked={options.respectStyle}
+                      onCheckedChange={(checked) => handleOptionChange('respectStyle', checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="useBookContext">Use Book Context</Label>
+                    <Switch 
+                      id="useBookContext" 
+                      checked={options.useBookContext}
+                      onCheckedChange={(checked) => handleOptionChange('useBookContext', checked)}
+                    />
+                  </div>
+                </CardContent>
+                <CardFooter className="bg-muted/50 pt-3">
+                  <p className="text-xs text-muted-foreground">
+                    AI will analyze your book's existing content and generate a coherent next chapter.
+                  </p>
+                </CardFooter>
+              </Card>
+            )}
+            
+            {generationMode === 'guided' && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Guided Generation</CardTitle>
+                  <CardDescription>Provide guidance on what you want in this chapter</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="chapterLength">Chapter Length</Label>
+                    <Select
+                      value={options.chapterLength}
+                      onValueChange={(value) => handleOptionChange('chapterLength', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select length" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="short">Short (~1,500 words)</SelectItem>
+                        <SelectItem value="medium">Medium (~3,000 words)</SelectItem>
+                        <SelectItem value="long">Long (~5,000 words)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    <Label htmlFor="chapterPurpose">Chapter Purpose</Label>
+                    <Select
+                      value={options.chapterPurpose}
+                      onValueChange={(value) => handleOptionChange('chapterPurpose', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select purpose" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="introduce-character">Introduce a Character</SelectItem>
+                        <SelectItem value="progress-story">Progress the Story</SelectItem>
+                        <SelectItem value="create-conflict">Create Conflict</SelectItem>
+                        <SelectItem value="resolve-conflict">Resolve Conflict</SelectItem>
+                        <SelectItem value="build-world">World Building</SelectItem>
+                        <SelectItem value="character-development">Character Development</SelectItem>
+                        <SelectItem value="plot-twist">Plot Twist</SelectItem>
+                        <SelectItem value="climax">Climactic Scene</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+                <CardFooter className="bg-muted/50 pt-3">
+                  <p className="text-xs text-muted-foreground">
+                    The AI will use your guidance along with the existing context to create a chapter that fits your needs.
+                  </p>
+                </CardFooter>
+              </Card>
+            )}
+            
+            {generationMode === 'from-prompt' && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Prompt-Based Generation</CardTitle>
+                  <CardDescription>Provide specific instructions for the AI</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="promptGuidance">Your Prompt</Label>
+                    <Textarea
+                      id="promptGuidance"
+                      placeholder="Write a chapter where the protagonist discovers a hidden truth about their past that changes everything..."
+                      value={options.promptGuidance}
+                      onChange={(e) => handleOptionChange('promptGuidance', e.target.value)}
+                      className="min-h-[120px]"
+                    />
+                  </div>
+                </CardContent>
+                <CardFooter className="bg-muted/50 pt-3">
+                  <p className="text-xs text-muted-foreground">
+                    Complete creative control with your own prompt. The AI will generate content based on your specific instructions.
+                  </p>
+                </CardFooter>
+              </Card>
+            )}
           </div>
           
-          {generationMode === 'full-auto' && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Auto Generation</CardTitle>
-                <CardDescription>AI will automatically create a suitable next chapter</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="respectTone">Respect Book Tone</Label>
-                  <Switch 
-                    id="respectTone" 
-                    checked={options.respectTone}
-                    onCheckedChange={(checked) => handleOptionChange('respectTone', checked)}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="respectStyle">Match Writing Style</Label>
-                  <Switch 
-                    id="respectStyle" 
-                    checked={options.respectStyle}
-                    onCheckedChange={(checked) => handleOptionChange('respectStyle', checked)}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="useBookContext">Use Book Context</Label>
-                  <Switch 
-                    id="useBookContext" 
-                    checked={options.useBookContext}
-                    onCheckedChange={(checked) => handleOptionChange('useBookContext', checked)}
-                  />
-                </div>
-              </CardContent>
-              <CardFooter className="bg-muted/50 pt-3">
-                <p className="text-xs text-muted-foreground">
-                  AI will analyze your book's existing content and generate a coherent next chapter.
-                </p>
-              </CardFooter>
-            </Card>
-          )}
-          
-          {generationMode === 'guided' && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Guided Generation</CardTitle>
-                <CardDescription>Provide guidance on what you want in this chapter</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="chapterLength">Chapter Length</Label>
-                  <Select
-                    value={options.chapterLength}
-                    onValueChange={(value) => handleOptionChange('chapterLength', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select length" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="short">Short (~1,500 words)</SelectItem>
-                      <SelectItem value="medium">Medium (~3,000 words)</SelectItem>
-                      <SelectItem value="long">Long (~5,000 words)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-1.5">
-                  <Label htmlFor="chapterPurpose">Chapter Purpose</Label>
-                  <Select
-                    value={options.chapterPurpose}
-                    onValueChange={(value) => handleOptionChange('chapterPurpose', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select purpose" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="introduce-character">Introduce a Character</SelectItem>
-                      <SelectItem value="progress-story">Progress the Story</SelectItem>
-                      <SelectItem value="create-conflict">Create Conflict</SelectItem>
-                      <SelectItem value="resolve-conflict">Resolve Conflict</SelectItem>
-                      <SelectItem value="build-world">World Building</SelectItem>
-                      <SelectItem value="character-development">Character Development</SelectItem>
-                      <SelectItem value="plot-twist">Plot Twist</SelectItem>
-                      <SelectItem value="climax">Climactic Scene</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-              <CardFooter className="bg-muted/50 pt-3">
-                <p className="text-xs text-muted-foreground">
-                  The AI will use your guidance along with the existing context to create a chapter that fits your needs.
-                </p>
-              </CardFooter>
-            </Card>
-          )}
-          
-          {generationMode === 'from-prompt' && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Prompt-Based Generation</CardTitle>
-                <CardDescription>Provide specific instructions for the AI</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-1.5">
-                  <Label htmlFor="promptGuidance">Your Prompt</Label>
-                  <Textarea
-                    id="promptGuidance"
-                    placeholder="Write a chapter where the protagonist discovers a hidden truth about their past that changes everything..."
-                    value={options.promptGuidance}
-                    onChange={(e) => handleOptionChange('promptGuidance', e.target.value)}
-                    className="min-h-[120px]"
-                  />
-                </div>
-              </CardContent>
-              <CardFooter className="bg-muted/50 pt-3">
-                <p className="text-xs text-muted-foreground">
-                  Complete creative control with your own prompt. The AI will generate content based on your specific instructions.
-                </p>
-              </CardFooter>
-            </Card>
-          )}
-        </div>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
-          <Button 
-            onClick={handleGenerateChapter} 
-            disabled={isGenerating || (generationMode === 'from-prompt' && !options.promptGuidance.trim()) || !canAddChapter(book)}
-          >
-            {isGenerating ? (
-              <>
-                <Wand className="h-4 w-4 mr-2 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4 mr-2" />
-                Generate Chapter
-              </>
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={handleGenerateChapter} 
+              disabled={isGenerating || (generationMode === 'from-prompt' && !options.promptGuidance.trim()) || !canAddChapter(book)}
+            >
+              {isGenerating ? (
+                <>
+                  <Wand className="h-4 w-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Generate Chapter
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 

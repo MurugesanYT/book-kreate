@@ -49,7 +49,7 @@ const TasksSection: React.FC<TasksSectionProps> = ({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Book Tasks</CardTitle>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             <CharacterListDialog book={book} onSave={onSave} />
             {showAddChapterButton ? (
               <>
