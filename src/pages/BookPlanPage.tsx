@@ -93,7 +93,11 @@ const BookPlanPage = () => {
       <BookPlanHeader book={processedBook} onSave={handleSaveBookContent} />
 
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <BookDescription book={processedBook} onSave={handleSaveBookContent} />
+        <BookDescription 
+          book={processedBook} 
+          description={processedBook.description || 'No description available'} 
+          onSave={handleSaveBookContent} 
+        />
 
         <div className="mt-8">
           <Tabs defaultValue="plan" className="w-full">
