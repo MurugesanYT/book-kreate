@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { generateBookChapterWithContext } from '@/lib/api/extendedContentService';
@@ -230,7 +231,7 @@ Consider the character development and plot progression that has happened so far
         else if (promptType === 'custom') {
           // For custom prompts, modify based on keywords in the prompt
           if (customPrompt.includes('dialogue')) {
-            content = originalLines.join('\n') + '\n\n"What do you think will happen now?" she asked, breaking the silence.\n\n"I wish I knew," he replied, his voice barely above a whisper. "But whatever comes next, we'll face it together."\n\n"Promise?"\n\n"Promise."';
+            content = originalLines.join('\n') + "\n\n\"What do you think will happen now?\" she asked, breaking the silence.\n\n\"I wish I knew,\" he replied, his voice barely above a whisper. \"But whatever comes next, we'll face it together.\"\n\n\"Promise?\"\n\n\"Promise.\"";
           } else if (customPrompt.includes('setting')) {
             content = 'The landscape stretched before them, a tapestry of colors and textures that seemed to breathe with a life of its own. Mountains rose in the distance, their peaks lost in a crown of clouds, while closer at hand, the valley spread out like a lush green carpet dotted with wildflowers.\n\n' + originalLines.join('\n');
           } else {
