@@ -40,6 +40,7 @@ const AIChapterEditor: React.FC<AIChapterEditorProps> = ({
     isGenerating,
     generatedContent,
     setGeneratedContent,
+    contentAnalysis,
     handleGenerateContent
   } = useAIChapterEdit({ chapter, allChapters, book });
   
@@ -74,6 +75,7 @@ const AIChapterEditor: React.FC<AIChapterEditorProps> = ({
           setGeneratedContent={setGeneratedContent}
           handleGenerateContent={handleGenerateContent}
           handleSaveContent={handleSaveContent}
+          contentAnalysis={contentAnalysis}
         />
       </DialogContent>
     </Dialog>

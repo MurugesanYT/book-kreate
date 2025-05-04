@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useBookData } from '@/hooks/useBookData';
 import BookPlanHeader from '@/components/book-plan/BookPlanHeader';
@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const BookPlanPage = () => {
   const { bookId } = useParams<{ bookId: string }>();
+  const [activeTab, setActiveTab] = useState('plan');
   const {
     book,
     tasks,
@@ -41,6 +42,10 @@ const BookPlanPage = () => {
       return 'Invalid date';
     }
   };
+  
+  const handleTabChange = useCallback((value: string) => {
+    setActiveTab(value);
+  }, []);
 
   if (loading) {
     return (
@@ -100,7 +105,7 @@ const BookPlanPage = () => {
         />
 
         <div className="mt-8">
-          <Tabs defaultValue="plan" className="w-full">
+          <Tabs defaultValue={activeTab} value={activeTab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="mb-8">
               <TabsTrigger value="plan" className="px-6">Plan</TabsTrigger>
               <TabsTrigger value="write" className="px-6">Write</TabsTrigger>
