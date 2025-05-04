@@ -445,7 +445,7 @@ const VisualPreviewEditor: React.FC<VisualPreviewEditorProps> = ({
             </div>
           </div>
 
-          {format === 'pdf' || format === 'epub' || format === 'docx' && (
+          {(format === 'pdf' || format === 'epub' || format === 'docx') && (
             <>
               <Separator className="my-3" />
               
@@ -577,7 +577,8 @@ const VisualPreviewEditor: React.FC<VisualPreviewEditorProps> = ({
         </div>
       </CardFooter>
 
-      <style jsx global>{`
+      <style>
+        {`
         .preview-container.dark-preview {
           background-color: #121212;
           color: #e0e0e0;
@@ -587,7 +588,8 @@ const VisualPreviewEditor: React.FC<VisualPreviewEditorProps> = ({
         .preview-container.dark-preview h3 {
           color: #ffffff;
         }
-      `}</style>
+        `}
+      </style>
     </Card>
   );
 };

@@ -13,10 +13,11 @@ interface Task {
 
 interface CompletedTaskListProps {
   tasks: Task[];
-  onDelete: (taskId: string) => void;
+  onDelete?: (taskId: string) => void;
+  onMarkAsComplete: (taskId: string) => void;
 }
 
-const CompletedTaskList: React.FC<CompletedTaskListProps> = ({ tasks, onDelete }) => {
+const CompletedTaskList: React.FC<CompletedTaskListProps> = ({ tasks, onDelete, onMarkAsComplete }) => {
   if (tasks.length === 0) {
     return (
       <Card>
@@ -44,7 +45,8 @@ const CompletedTaskList: React.FC<CompletedTaskListProps> = ({ tasks, onDelete }
               key={task.id}
               task={task}
               isGenerating={false}
-              onDelete={() => onDelete(task.id)}
+              onDelete={() => onDelete && onDelete(task.id)}
+              onMarkComplete={() => onMarkAsComplete(task.id)}
             />
           ))}
         </ul>

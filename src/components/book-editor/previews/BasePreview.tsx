@@ -6,6 +6,7 @@ export interface BasePreviewProps {
   options?: any;
   previewWindow?: Window | null;
   previewInNewTab?: boolean;
+  darkMode?: boolean;
 }
 
 export const sendPreviewToWindow = (previewWindow: Window | null, content: string) => {

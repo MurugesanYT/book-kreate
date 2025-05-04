@@ -26,10 +26,11 @@ export interface PreviewGenerationProps {
   options?: any;
   previewWindow: Window | null;
   previewInNewTab?: boolean;
+  darkMode?: boolean;
 }
 
 export const generatePreviewContent = (props: PreviewGenerationProps): string => {
-  const { format, isFormatAllowed, book, options, previewWindow, previewInNewTab } = props;
+  const { format, isFormatAllowed, book, options, previewWindow, previewInNewTab, darkMode } = props;
   
   if (!isFormatAllowed) {
     const currentPlan = getUserPlan();
@@ -43,7 +44,7 @@ export const generatePreviewContent = (props: PreviewGenerationProps): string =>
     return upgradeBanner;
   }
   
-  const baseProps: BasePreviewProps = { book, options, previewWindow };
+  const baseProps: BasePreviewProps = { book, options, previewWindow, darkMode };
   let preview = '';
   
   switch (format) {

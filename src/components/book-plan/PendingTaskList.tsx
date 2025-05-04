@@ -14,9 +14,10 @@ interface Task {
 interface PendingTaskListProps {
   tasks: Task[];
   generatingTaskId: string | null;
-  onGenerate: (taskId: string) => void;
-  onMarkAsComplete: (taskId: string) => void;
-  onDelete: (taskId: string) => void;
+  onGenerate?: (taskId: string) => void;
+  onMarkAsComplete?: (taskId: string) => void;
+  onDeleteTask: (taskId: string) => void;
+  onGenerateContent: (taskId: string) => void;
 }
 
 const PendingTaskList: React.FC<PendingTaskListProps> = ({
@@ -24,7 +25,8 @@ const PendingTaskList: React.FC<PendingTaskListProps> = ({
   generatingTaskId,
   onGenerate,
   onMarkAsComplete,
-  onDelete,
+  onDeleteTask,
+  onGenerateContent,
 }) => {
   if (tasks.length === 0) {
     return (
@@ -53,9 +55,9 @@ const PendingTaskList: React.FC<PendingTaskListProps> = ({
               key={task.id}
               task={task}
               isGenerating={generatingTaskId === task.id}
-              onGenerate={() => onGenerate(task.id)}
-              onMarkComplete={() => onMarkAsComplete(task.id)}
-              onDelete={() => onDelete(task.id)}
+              onGenerate={() => onGenerateContent ? onGenerateContent(task.id) : onGenerate && onGenerate(task.id)}
+              onMarkComplete={() => onMarkAsComplete && onMarkAsComplete(task.id)}
+              onDelete={() => onDeleteTask(task.id)}
             />
           ))}
         </ul>
