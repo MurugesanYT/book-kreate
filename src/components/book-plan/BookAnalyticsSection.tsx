@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LineChart, PieChart } from '@/components/ui/chart';
+import { LineChart, PieChart, BarChart } from '@/components/ui/charts';
 import { Badge } from '@/components/ui/badge';
 import { ChartBar, BookOpen, Clock, FileText } from 'lucide-react';
 import CharacterMentionsCard from './CharacterMentionsCard';

@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { extractCharacters } from '@/hooks/useAIChapterEdit';
 import { Badge } from '@/components/ui/badge';
 import { UserRound, Users } from 'lucide-react';
-import { BarChart } from '@/components/ui/chart';
+import { BarChart } from '@/components/ui/charts';
 
 interface CharacterMentionsCardProps {
   book: any;

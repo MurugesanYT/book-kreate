@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileExport, Download, CheckCircle } from 'lucide-react';
+import { FileText, Download, CheckCircle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 interface ExportReportCardProps {
@@ -50,7 +49,7 @@ const ExportReportCard: React.FC<ExportReportCardProps> = ({ book }) => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <FileExport className="h-5 w-5" />
+          <FileText className="h-5 w-5" />
           Export Report
         </CardTitle>
         <CardDescription>
