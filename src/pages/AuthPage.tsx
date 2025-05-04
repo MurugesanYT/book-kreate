@@ -13,6 +13,7 @@ const AuthPage = () => {
   const { currentUser, signIn, loading } = useAuth();
   const navigate = useNavigate();
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const currentDomain = window.location.origin;
 
   const handleSignIn = async () => {
     setIsSigningIn(true);
@@ -51,8 +52,8 @@ const AuthPage = () => {
               <Alert className="mb-4 bg-amber-50">
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  If you're running in development mode, make sure <code>localhost</code> is added 
-                  to your Firebase authorized domains.
+                  <p>Current domain: <code className="bg-gray-100 px-1 rounded">{currentDomain}</code></p>
+                  <p className="mt-1">Make sure this domain is added to your Firebase authorized domains.</p>
                 </AlertDescription>
               </Alert>
             )}

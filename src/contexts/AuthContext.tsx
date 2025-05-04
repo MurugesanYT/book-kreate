@@ -47,10 +47,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error("Sign in error:", error);
       
+      // Get current domain
+      const currentDomain = window.location.origin;
+      
       // Check for specific unauthorized domain error
       if (error.message && error.message.includes('Authentication domain not authorized')) {
         setAuthError(
-          "This app is running on a domain not authorized in Firebase. Please add this domain to your Firebase project's authorized domains list."
+          `This app is running on a domain not authorized in Firebase. Please add "${currentDomain}" to your Firebase project's authorized domains list.`
         );
       } else {
         toast.error("Failed to sign in. Please try again.");
@@ -86,9 +89,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             <AlertDialogTitle>Authentication Error</AlertDialogTitle>
             <AlertDialogDescription>
               {authError}
-              <p className="mt-2">
-                To fix this issue, go to your Firebase Console {'>'} Authentication {'>'} Settings {'>'} Authorized domains and add the domain you're using.
-              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
