@@ -28,15 +28,45 @@ export const useBookData = (bookId: string | undefined) => {
     setLoading(true);
     try {
       const bookData = await getBook(id);
+      
+      // Sanitize dates if they exist
+      if (bookData && bookData.createdAt && typeof bookData.createdAt === 'string') {
+        const date = new Date(bookData.createdAt);
+        if (isNaN(date.getTime())) {
+          // If date is invalid, use current date instead
+          bookData.createdAt = new Date().toISOString();
+        }
+      }
+      
+      if (bookData && bookData.updatedAt && typeof bookData.updatedAt === 'string') {
+        const date = new Date(bookData.updatedAt);
+        if (isNaN(date.getTime())) {
+          // If date is invalid, use current date instead
+          bookData.updatedAt = new Date().toISOString();
+        }
+      }
+      
       setBook(bookData);
       
       // Ensure the tasks from the API match our Task interface
       if (bookData.tasks) {
-        const typedTasks = bookData.tasks.map((task: any) => ({
-          ...task,
-          status: task.status as 'pending' | 'inProgress' | 'completed'
-        }));
+        const typedTasks = (Array.isArray(bookData.tasks) ? bookData.tasks : []).map((task: any) => {
+          // Sanitize task dates if they exist
+          if (task.createdAt && typeof task.createdAt === 'string') {
+            const date = new Date(task.createdAt);
+            if (isNaN(date.getTime())) {
+              task.createdAt = new Date().toISOString();
+            }
+          }
+          
+          return {
+            ...task,
+            status: task.status as 'pending' | 'inProgress' | 'completed'
+          };
+        });
         setTasks(typedTasks);
+      } else {
+        setTasks([]);
       }
       setError(null);
     } catch (err: any) {

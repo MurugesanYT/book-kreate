@@ -38,9 +38,12 @@ const TasksSection: React.FC<TasksSectionProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<string>('pending');
   
-  const pendingTasks = tasks.filter(task => task.status === 'pending');
-  const inProgressTasks = tasks.filter(task => task.status === 'inProgress');
-  const completedTasks = tasks.filter(task => task.status === 'completed');
+  // Ensure tasks is an array before filtering
+  const safeTasksArray = Array.isArray(tasks) ? tasks : [];
+  
+  const pendingTasks = safeTasksArray.filter(task => task.status === 'pending');
+  const inProgressTasks = safeTasksArray.filter(task => task.status === 'inProgress');
+  const completedTasks = safeTasksArray.filter(task => task.status === 'completed');
   
   const showAddChapterButton = canAddChapter(book);
 
@@ -141,7 +144,7 @@ const TasksSection: React.FC<TasksSectionProps> = ({
         <Separator className="my-4" />
         
         <div className="flex justify-between text-xs text-muted-foreground">
-          <div>Total Tasks: {tasks.length}</div>
+          <div>Total Tasks: {safeTasksArray.length}</div>
           <div className="flex gap-3">
             <div>Pending: {pendingTasks.length}</div>
             <div>In Progress: {inProgressTasks.length}</div>
