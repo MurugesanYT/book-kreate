@@ -30,9 +30,14 @@ const DashboardHome = () => {
         setBooks(bookList);
         
         // Get the 3 most recently updated books
-        const sorted = [...bookList].sort((a, b) => 
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-        );
+        const sorted = [...bookList].sort((a, b) => {
+          // Safely handle possibly invalid dates
+          const dateA = new Date(a.updatedAt || 0).getTime();
+          const dateB = new Date(b.updatedAt || 0).getTime();
+          
+          // If either date is invalid (NaN), use 0 as fallback
+          return (isNaN(dateB) ? 0 : dateB) - (isNaN(dateA) ? 0 : dateA);
+        });
         setRecentBooks(sorted.slice(0, 3));
         
         setLoading(false);
@@ -58,12 +63,23 @@ const DashboardHome = () => {
   };
   
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    }).format(date);
+    try {
+      const date = new Date(dateString);
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return "Invalid date";
+      }
+      
+      return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      }).format(date);
+    } catch (error) {
+      console.error("Date formatting error:", error);
+      return "Invalid date";
+    }
   };
   
   return (
