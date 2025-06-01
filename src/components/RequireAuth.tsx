@@ -8,7 +8,7 @@ interface RequireAuthProps {
 }
 
 const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
-  const { currentUser, loading } = useAuth();
+  const { currentUser, loading, termsAccepted } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -22,6 +22,11 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
   if (!currentUser) {
     // Redirect to auth page, but save the location they were trying to access
     return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
+  if (!termsAccepted) {
+    // Redirect to auth page to show terms dialog
+    return <Navigate to="/auth" replace />;
   }
 
   return <>{children}</>;

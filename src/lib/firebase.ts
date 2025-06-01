@@ -4,6 +4,8 @@ import { getAnalytics } from "firebase/analytics";
 import { 
   getAuth, 
   GoogleAuthProvider, 
+  TwitterAuthProvider,
+  GithubAuthProvider,
   signInWithPopup, 
   signOut as firebaseSignOut,
   onAuthStateChanged,
@@ -28,7 +30,11 @@ const app = initializeApp(firebaseConfig);
 const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 const auth = getAuth(app);
 const database = getDatabase(app);
+
+// Initialize providers
 const googleProvider = new GoogleAuthProvider();
+const twitterProvider = new TwitterAuthProvider();
+const githubProvider = new GithubAuthProvider();
 
 // Sign in with Google
 export const signInWithGoogle = async () => {
@@ -39,6 +45,44 @@ export const signInWithGoogle = async () => {
     console.error("Error signing in with Google:", error);
     
     // Specific handling for unauthorized domain error
+    if (error.code === 'auth/unauthorized-domain') {
+      const currentDomain = window.location.origin;
+      throw new Error(
+        `Authentication domain not authorized. Your current domain "${currentDomain}" needs to be added to your Firebase project's authorized domains.`
+      );
+    }
+    
+    throw error;
+  }
+};
+
+// Sign in with Twitter
+export const signInWithTwitter = async () => {
+  try {
+    const result = await signInWithPopup(auth, twitterProvider);
+    return result.user;
+  } catch (error) {
+    console.error("Error signing in with Twitter:", error);
+    
+    if (error.code === 'auth/unauthorized-domain') {
+      const currentDomain = window.location.origin;
+      throw new Error(
+        `Authentication domain not authorized. Your current domain "${currentDomain}" needs to be added to your Firebase project's authorized domains.`
+      );
+    }
+    
+    throw error;
+  }
+};
+
+// Sign in with GitHub
+export const signInWithGitHub = async () => {
+  try {
+    const result = await signInWithPopup(auth, githubProvider);
+    return result.user;
+  } catch (error) {
+    console.error("Error signing in with GitHub:", error);
+    
     if (error.code === 'auth/unauthorized-domain') {
       const currentDomain = window.location.origin;
       throw new Error(
