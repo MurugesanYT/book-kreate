@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -6,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { TextShimmerWave } from "@/components/ui/text-shimmer-wave";
 import {
   Select,
   SelectContent,
@@ -247,6 +247,27 @@ const BookDetailsForm = () => {
           <span>Start from Template</span>
         </TabsTrigger>
       </TabsList>
+      
+      {/* Show shimmer text during submission */}
+      {isSubmitting && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 text-center max-w-md mx-4">
+            <TextShimmerWave
+              className="[--base-color:#8B5CF6] [--base-gradient-color:#A855F7] text-2xl font-bold mb-4"
+              duration={1.5}
+              spread={0.8}
+              zDistance={15}
+              scaleDistance={1.2}
+              rotateYDistance={25}
+            >
+              Creating your book plan...
+            </TextShimmerWave>
+            <p className="text-slate-600 mt-4">
+              Our AI is preparing your personalized book structure
+            </p>
+          </div>
+        </div>
+      )}
       
       <TabsContent value="template" className="space-y-6">
         <div className="mb-4">

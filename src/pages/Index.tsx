@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { TextShimmerWave } from '@/components/ui/text-shimmer-wave';
 import { ArrowRight, BookOpen, Sparkles, Check, Star, Github, Heart, Scroll, Code, Coffee } from 'lucide-react';
 
 const Index = () => {
@@ -13,8 +13,17 @@ const Index = () => {
           <span>AI-Powered Book Creation</span>
         </div>
         
-        <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-book-purple via-book-lightPurple to-book-orange bg-clip-text text-transparent leading-tight">
-          Welcome to Book-Kreate
+        <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+          <TextShimmerWave
+            className="[--base-color:#8B5CF6] [--base-gradient-color:#F97316]"
+            duration={2}
+            spread={0.5}
+            zDistance={20}
+            scaleDistance={1.15}
+            rotateYDistance={30}
+          >
+            Welcome to Book-Kreate
+          </TextShimmerWave>
         </h1>
         
         <p className="text-xl text-slate-700 mb-8">
