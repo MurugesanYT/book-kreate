@@ -1,117 +1,87 @@
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { AuthProvider } from '@/contexts/AuthContext';
+import Index from '@/pages/Index';
+import AuthPage from '@/pages/AuthPage';
+import PricingSection from '@/pages/PricingSection';
+import FeaturesPage from '@/pages/FeaturesPage';
+import AboutPage from '@/pages/AboutPage';
+import BlogPage from '@/pages/BlogPage';
+import HelpCenterPage from '@/pages/HelpCenterPage';
+import ContactPage from '@/pages/ContactPage';
+import FAQPage from '@/pages/FAQPage';
+import StatusPage from '@/pages/StatusPage';
+import TermsPage from '@/pages/TermsPage';
+import PrivacyPage from '@/pages/PrivacyPage';
+import CookiePage from '@/pages/CookiePage';
+import LicensesPage from '@/pages/LicensesPage';
+import DashboardPage from '@/pages/DashboardHome';
+import BookCreationPage from '@/pages/BookCreationPage';
+import BookPlanPage from '@/pages/BookPlanPage';
+import PlanPage from '@/pages/account/PlanPage';
+import NotFound from '@/pages/NotFound';
+import RequireAuth from '@/components/RequireAuth';
+import { Toaster } from 'sonner';
+import { QueryClient } from 'react-query';
+import AccountSettingsPage from './pages/account/AccountSettingsPage';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
-import RequireAuth from "./components/RequireAuth";
-
-// Pages
-import LandingPage from "./pages/LandingPage";
-import AuthPage from "./pages/AuthPage";
-import DashboardPage from "./pages/DashboardPage";
-import DashboardHome from "./pages/DashboardHome"; // Add our new dashboard home
-import BookCreationPage from "./pages/BookCreationPage";
-import BookPlanPage from "./pages/BookPlanPage";
-import NotFound from "./pages/NotFound";
-import PlanPage from "./pages/account/PlanPage";
-
-// Content Pages
-import AboutPage from "./pages/about/AboutPage";
-import FeaturesPage from "./pages/features/FeaturesPage";
-import BlogPage from "./pages/blog/BlogPage";
-import HelpCenterPage from "./pages/support/HelpCenterPage";
-import FAQPage from "./pages/support/FAQPage";
-import ContactPage from "./pages/support/ContactPage";
-import StatusPage from "./pages/support/StatusPage";
-import TermsPage from "./pages/legal/TermsPage";
-import PrivacyPage from "./pages/legal/PrivacyPage";
-import CookiePage from "./pages/legal/CookiePage";
-import LicensesPage from "./pages/legal/LicensesPage";
-
-const App = () => {
-  // Move the QueryClient instantiation inside the component
-  const queryClient = new QueryClient();
-  
+function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <QueryClient>
       <AuthProvider>
-        <TooltipProvider>
-          <BrowserRouter>
-            <Toaster />
-            <Sonner />
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/landing" element={<LandingPage />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route 
-                path="/dashboard" 
-                element={
-                  <RequireAuth>
-                    <DashboardHome />
-                  </RequireAuth>
-                } 
-              />
-              <Route 
-                path="/dashboard/editor" 
-                element={
-                  <RequireAuth>
-                    <DashboardPage />
-                  </RequireAuth>
-                } 
-              />
-              <Route 
-                path="/book/create" 
-                element={
-                  <RequireAuth>
-                    <BookCreationPage />
-                  </RequireAuth>
-                } 
-              />
-              <Route 
-                path="/book/plan/:bookId" 
-                element={
-                  <RequireAuth>
-                    <BookPlanPage />
-                  </RequireAuth>
-                } 
-              />
-              <Route 
-                path="/account/plan" 
-                element={
-                  <RequireAuth>
-                    <PlanPage />
-                  </RequireAuth>
-                } 
-              />
-              
-              {/* Content Pages */}
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/features" element={<FeaturesPage />} />
-              <Route path="/blog" element={<BlogPage />} />
-              <Route path="/pricing" element={<LandingPage />} /> {/* Updated to use LandingPage */}
-              
-              {/* Support Pages */}
-              <Route path="/help" element={<HelpCenterPage />} />
-              <Route path="/faq" element={<FAQPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/status" element={<StatusPage />} />
-              
-              {/* Legal Pages */}
-              <Route path="/terms" element={<TermsPage />} />
-              <Route path="/privacy" element={<PrivacyPage />} />
-              <Route path="/cookies" element={<CookiePage />} />
-              <Route path="/licenses" element={<LicensesPage />} />
-              
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+        <Router>
+          <Toaster />
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/pricing" element={<PricingSection />} />
+            <Route path="/features" element={<FeaturesPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/blog" element={<BlogPage />} />
+            <Route path="/help" element={<HelpCenterPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/faq" element={<FAQPage />} />
+            <Route path="/status" element={<StatusPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/cookies" element={<CookiePage />} />
+            <Route path="/licenses" element={<LicensesPage />} />
+
+            {/* Protected routes */}
+            <Route path="/dashboard" element={
+              <RequireAuth>
+                <DashboardPage />
+              </RequireAuth>
+            } />
+            <Route path="/create-book" element={
+              <RequireAuth>
+                <BookCreationPage />
+              </RequireAuth>
+            } />
+            <Route path="/book/:id" element={
+              <RequireAuth>
+                <BookPlanPage />
+              </RequireAuth>
+            } />
+            <Route path="/account/plan" element={
+              <RequireAuth>
+                <PlanPage />
+              </RequireAuth>
+            } />
+            <Route path="/account/settings" element={
+              <RequireAuth>
+                <AccountSettingsPage />
+              </RequireAuth>
+            } />
+
+            {/* 404 route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Router>
       </AuthProvider>
-    </QueryClientProvider>
+    </QueryClient>
   );
-};
+}
 
 export default App;

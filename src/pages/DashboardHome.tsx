@@ -1,303 +1,182 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { BookOpen, Plus, ChevronRight, Book, Settings, Pencil } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/components/ui/use-toast';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { BookData } from '@/lib/api/types';
-import { listBooks } from '@/lib/api/bookService';
-import { getUserPlan, PLANS, canCreateBook } from '@/lib/api/planService';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BookOpen, Plus, Clock, CheckCircle, FileText, Crown, Settings } from 'lucide-react';
+import { Book } from '@/lib/api/types';
+import { getBooks } from '@/lib/api/bookService';
+import { toast } from 'sonner';
 
 const DashboardHome = () => {
-  const [books, setBooks] = useState<BookData[]>([]);
-  const [recentBooks, setRecentBooks] = useState<BookData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  
-  // Get the user's plan
-  const userPlan = getUserPlan();
-  const currentPlanDetails = PLANS[userPlan];
-  
+  const { currentUser } = useAuth();
+  const [books, setBooks] = useState<Book[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     const fetchBooks = async () => {
+      setIsLoading(true);
       try {
-        const bookList = await listBooks();
-        setBooks(bookList);
-        
-        // Get the 3 most recently updated books
-        const sorted = [...bookList].sort((a, b) => {
-          // Safely handle possibly invalid dates
-          const dateA = new Date(a.updatedAt || 0).getTime();
-          const dateB = new Date(b.updatedAt || 0).getTime();
-          
-          // If either date is invalid (NaN), use 0 as fallback
-          return (isNaN(dateB) ? 0 : dateB) - (isNaN(dateA) ? 0 : dateA);
-        });
-        setRecentBooks(sorted.slice(0, 3));
-        
-        setLoading(false);
+        const fetchedBooks = await getBooks();
+        setBooks(fetchedBooks);
       } catch (error) {
         console.error("Failed to fetch books:", error);
-        toast({
-          title: "Error loading books",
-          description: "Please try again later",
-          variant: "destructive"
-        });
-        setLoading(false);
+        toast.error("Failed to load books. Please try again.");
+      } finally {
+        setIsLoading(false);
       }
     };
-    
+
     fetchBooks();
-  }, [toast]);
-  
-  const handleCreateBook = () => {
-    // Check if user can create another book based on their plan
-    if (canCreateBook(books)) {
-      navigate('/book/create');
-    }
-  };
-  
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      
-      // Check if date is valid
-      if (isNaN(date.getTime())) {
-        return "Invalid date";
-      }
-      
-      return new Intl.DateTimeFormat('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-      }).format(date);
-    } catch (error) {
-      console.error("Date formatting error:", error);
-      return "Invalid date";
-    }
-  };
-  
+  }, []);
+
   return (
-    <div className="container max-w-7xl mx-auto py-8 px-4 md:px-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+    <div className="space-y-6 sm:space-y-8">
+      {/* Welcome Section */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-book-darkText">Dashboard</h1>
-          <p className="text-slate-500">Manage your book projects</p>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-book-darkText">
+            Welcome back, {currentUser?.displayName?.split(' ')[0] || 'Creator'}!
+          </h1>
+          <p className="text-gray-600 mt-2 text-sm sm:text-base">
+            Ready to create your next masterpiece?
+          </p>
         </div>
-        
-        <div className="flex items-center gap-3">
-          <Link 
-            to="/account/plan" 
-            className="bg-book-lightPurple/10 text-book-purple rounded-full px-4 py-1 text-sm font-medium hover:bg-book-lightPurple/20 transition-colors"
-          >
-            {userPlan} Plan
-          </Link>
-          <Button variant="outline" onClick={() => navigate('/account/settings')}>
-            <Settings className="h-4 w-4 mr-2" />
-            Account
+        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+          <Button asChild className="w-full sm:w-auto">
+            <Link to="/create-book">
+              <Plus className="mr-2 h-4 w-4" />
+              New Book
+            </Link>
           </Button>
-          <Button onClick={handleCreateBook}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Book
+          <Button variant="outline" asChild className="w-full sm:w-auto">
+            <Link to="/account/settings">
+              <Settings className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Account Settings</span>
+              <span className="sm:hidden">Settings</span>
+            </Link>
           </Button>
         </div>
       </div>
-      
-      {/* Main content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left column - Stats and quick access */}
-        <div className="space-y-6">
-          {/* User card */}
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-center">
-                <CardTitle>My Account</CardTitle>
-                <Avatar>
-                  <AvatarImage src="https://api.dicebear.com/7.x/notionists/svg?seed=user" />
-                  <AvatarFallback>U</AvatarFallback>
-                </Avatar>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center">
+              <BookOpen className="h-8 w-8 text-book-purple" />
+              <div className="ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Books</p>
+                <p className="text-xl sm:text-2xl font-bold">{books.length}</p>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <div className="text-sm font-medium leading-none">Plan</div>
-                  <div className="text-sm text-slate-500 flex items-center justify-between">
-                    {userPlan} 
-                    <Button variant="link" className="text-book-purple p-0 h-auto" asChild>
-                      <Link to="/account/plan">Manage</Link>
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="space-y-1">
-                  <div className="text-sm font-medium leading-none">Books</div>
-                  <div className="text-sm text-slate-500">
-                    {books.length} / {currentPlanDetails.books === Infinity ? "∞" : currentPlanDetails.books}
-                  </div>
-                </div>
-                
-                <div className="space-y-1">
-                  <div className="text-sm font-medium leading-none">Chapters per book</div>
-                  <div className="text-sm text-slate-500">
-                    Up to {currentPlanDetails.chapters === Infinity ? "∞" : currentPlanDetails.chapters}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Quick links */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Links</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button variant="ghost" className="w-full justify-start" asChild>
-                <Link to="/book/create">
-                  <Plus className="mr-2 h-4 w-4" /> Create New Book
-                </Link>
-              </Button>
-              <Button variant="ghost" className="w-full justify-start" asChild>
-                <Link to="/templates">
-                  <Book className="mr-2 h-4 w-4" /> Browse Templates
-                </Link>
-              </Button>
-              <Button variant="ghost" className="w-full justify-start" asChild>
-                <Link to="/account/plan">
-                  <Settings className="mr-2 h-4 w-4" /> Manage Plan
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
         
-        {/* Main column - Book tabs */}
-        <div className="lg:col-span-2">
-          <Tabs defaultValue="all" className="w-full">
-            <TabsList className="w-full mb-4">
-              <TabsTrigger value="all" className="flex-1">All Books ({books.length})</TabsTrigger>
-              <TabsTrigger value="recent" className="flex-1">Recent</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="all" className="mt-0">
-              {loading ? (
-                <div className="text-center py-12">Loading books...</div>
-              ) : books.length === 0 ? (
-                <Card className="border-dashed">
-                  <CardContent className="flex flex-col items-center justify-center py-12">
-                    <BookOpen className="h-16 w-16 text-book-purple/30 mb-4" />
-                    <h3 className="text-xl font-medium text-book-darkText mb-2">No books yet</h3>
-                    <p className="text-slate-500 text-center max-w-md mb-6">
-                      Create your first book to get started with Book-Kreate
-                    </p>
-                    <Button onClick={handleCreateBook}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create New Book
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {books.map((book) => (
-                    <Card key={book.id} className="group hover:shadow-md transition-shadow">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="line-clamp-1">{book.title}</CardTitle>
-                        <CardDescription className="flex justify-between">
-                          <span>Updated: {formatDate(book.updatedAt)}</span>
-                          <span>{book.chapters?.length || 0} chapters</span>
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="h-32 relative mb-3">
-                          <AspectRatio ratio={16/9}>
-                            <div className="bg-slate-100 rounded-md flex items-center justify-center h-full overflow-hidden">
-                              {book.coverImage ? (
-                                <img 
-                                  src={book.coverImage} 
-                                  alt={book.title} 
-                                  className="object-cover w-full h-full" 
-                                />
-                              ) : (
-                                <BookOpen className="h-10 w-10 text-slate-300" />
-                              )}
-                            </div>
-                          </AspectRatio>
-                        </div>
-                        <p className="text-sm text-slate-500 line-clamp-2">
-                          {book.description || "No description available"}
-                        </p>
-                      </CardContent>
-                      <CardFooter>
-                        <Button variant="outline" className="w-full group-hover:bg-book-purple/5" asChild>
-                          <Link to={`/book/plan/${book.id}`}>
-                            Continue <ChevronRight className="h-4 w-4 ml-1" />
-                          </Link>
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="recent" className="mt-0">
-              {loading ? (
-                <div className="text-center py-12">Loading recent books...</div>
-              ) : recentBooks.length === 0 ? (
-                <Card className="border-dashed">
-                  <CardContent className="flex flex-col items-center justify-center py-12">
-                    <p className="text-slate-500">No recent books</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="space-y-4">
-                  {recentBooks.map((book) => (
-                    <Card key={book.id} className="overflow-hidden">
-                      <div className="flex flex-col md:flex-row">
-                        <div className="w-full md:w-1/3 bg-slate-100 flex items-center justify-center p-4">
-                          {book.coverImage ? (
-                            <img 
-                              src={book.coverImage} 
-                              alt={book.title} 
-                              className="object-cover h-32 md:h-full" 
-                            />
-                          ) : (
-                            <BookOpen className="h-10 w-10 text-slate-300" />
-                          )}
-                        </div>
-                        <div className="flex-1 p-4">
-                          <h3 className="font-medium text-lg mb-2">{book.title}</h3>
-                          <p className="text-sm text-slate-500 mb-3 line-clamp-2">
-                            {book.description || "No description available"}
-                          </p>
-                          <div className="flex justify-between items-center">
-                            <div className="text-xs text-slate-400">
-                              Updated {formatDate(book.updatedAt)}
-                            </div>
-                            <Button size="sm" asChild>
-                              <Link to={`/book/plan/${book.id}`}>
-                                <Pencil className="h-3 w-3 mr-1" />
-                                Continue Editing
-                              </Link>
-                            </Button>
-                          </div>
-                        </div>
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center">
+              <FileText className="h-8 w-8 text-book-orange" />
+              <div className="ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Chapters</p>
+                <p className="text-xl sm:text-2xl font-bold">
+                  {books.reduce((acc, book) => acc + (book.chapters?.length || 0), 0)}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center">
+              <Clock className="h-8 w-8 text-green-600" />
+              <div className="ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">In Progress</p>
+                <p className="text-xl sm:text-2xl font-bold">
+                  {books.filter(book => book.status === 'draft').length}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center">
+              <CheckCircle className="h-8 w-8 text-blue-600" />
+              <div className="ml-4">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Completed</p>
+                <p className="text-xl sm:text-2xl font-bold">
+                  {books.filter(book => book.status === 'published').length}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Books */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <CardTitle className="text-lg sm:text-xl">Your Books</CardTitle>
+            <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
+              <Link to="/account/plan">
+                <Crown className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Manage Plan</span>
+                <span className="sm:hidden">Plan</span>
+              </Link>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-book-purple mx-auto"></div>
+              <p className="text-gray-500 mt-2 text-sm">Loading your books...</p>
+            </div>
+          ) : books.length === 0 ? (
+            <div className="text-center py-8 sm:py-12">
+              <BookOpen className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-4 text-lg font-medium text-gray-900">No books yet</h3>
+              <p className="mt-2 text-sm text-gray-500 max-w-md mx-auto">
+                Get started by creating your first book. Our AI will help you bring your ideas to life.
+              </p>
+              <Button asChild className="mt-6 w-full sm:w-auto">
+                <Link to="/create-book">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Your First Book
+                </Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {books.map((book) => (
+                <Card key={book.id} className="hover:shadow-lg transition-shadow cursor-pointer group">
+                  <Link to={`/book/${book.id}`}>
+                    <CardContent className="p-4 sm:p-6">
+                      <div className="aspect-[3/4] bg-gradient-to-br from-book-lightPurple to-book-orange rounded-lg mb-4 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <BookOpen className="h-8 w-8 sm:h-12 sm:w-12 text-white" />
                       </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
+                      <h3 className="font-semibold text-base sm:text-lg mb-2 line-clamp-2 group-hover:text-book-purple transition-colors">
+                        {book.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2">
+                        {book.description}
+                      </p>
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span className="capitalize">{book.status}</span>
+                        <span>{book.chapters?.length || 0} chapters</span>
+                      </div>
+                    </CardContent>
+                  </Link>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
