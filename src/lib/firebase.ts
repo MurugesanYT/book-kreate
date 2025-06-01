@@ -9,11 +9,13 @@ import {
   onAuthStateChanged,
   User as FirebaseUser
 } from "firebase/auth";
+import { getDatabase } from "firebase/database";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDY0MqFKd-byDk880Ane3R4vc-2FQOsHEc",
   authDomain: "book-kreate.firebaseapp.com",
+  databaseURL: "https://book-kreate-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "book-kreate",
   storageBucket: "book-kreate.firebasestorage.app",
   messagingSenderId: "629855600496",
@@ -25,6 +27,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 const auth = getAuth(app);
+const database = getDatabase(app);
 const googleProvider = new GoogleAuthProvider();
 
 // Sign in with Google
@@ -62,4 +65,4 @@ export const subscribeToAuthChanges = (callback: (user: FirebaseUser | null) => 
   return onAuthStateChanged(auth, callback);
 };
 
-export { app, auth, analytics };
+export { app, auth, analytics, database };

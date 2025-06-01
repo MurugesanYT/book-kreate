@@ -1,19 +1,29 @@
 
-// Book service to handle book operations
+// Book service to handle book operations with Firebase Realtime Database
 import { toast } from "sonner";
+import { database } from "@/lib/firebase";
+import { ref, push, get, set, remove, child, query, orderByChild, equalTo } from "firebase/database";
 import { BookData, PlanItem } from "./types";
 import { generateBookPlan, canCreateBook, canAddChapter } from "./planService";
+
+// Get current user ID (you may need to adjust this based on your auth implementation)
+const getCurrentUserId = () => {
+  // For now, we'll use a default user ID. You should replace this with actual user authentication
+  return "user_default"; // Replace with actual user ID from auth context
+};
 
 // Function to get a book by ID
 export const getBook = async (bookId: string): Promise<any> => {
   try {
-    // In a real application, this would be a database call
-    const existingBooks = JSON.parse(localStorage.getItem('bookKreateBooks') || '[]');
-    const book = existingBooks.find((b: any) => b.id === bookId);
+    const userId = getCurrentUserId();
+    const bookRef = ref(database, `users/${userId}/books/${bookId}`);
+    const snapshot = await get(bookRef);
     
-    if (!book) {
+    if (!snapshot.exists()) {
       throw new Error("Book not found");
     }
+    
+    const book = snapshot.val();
     
     // Ensure book structure is complete
     if (!book.chapters) {
@@ -26,14 +36,11 @@ export const getBook = async (bookId: string): Promise<any> => {
       const plan = await generateBookPlan(book);
       book.tasks = plan;
       
-      // Update localStorage
-      const updatedBooks = existingBooks.map((b: any) => 
-        b.id === bookId ? { ...b, tasks: plan } : b
-      );
-      localStorage.setItem('bookKreateBooks', JSON.stringify(updatedBooks));
+      // Update the book in Firebase with the generated tasks
+      await set(ref(database, `users/${userId}/books/${bookId}/tasks`), plan);
     }
     
-    return book;
+    return { ...book, id: bookId };
   } catch (error) {
     console.error("Error fetching book:", error);
     toast.error("Failed to load book");
@@ -44,12 +51,13 @@ export const getBook = async (bookId: string): Promise<any> => {
 // Function to update a book
 export const updateBook = async (book: any): Promise<void> => {
   try {
-    const existingBooks = JSON.parse(localStorage.getItem('bookKreateBooks') || '[]');
-    const updatedBooks = existingBooks.map((b: any) => 
-      b.id === book.id ? { ...b, ...book } : b
-    );
+    const userId = getCurrentUserId();
+    const { id, ...bookData } = book;
     
-    localStorage.setItem('bookKreateBooks', JSON.stringify(updatedBooks));
+    // Add timestamp
+    bookData.updatedAt = new Date().toISOString();
+    
+    await set(ref(database, `users/${userId}/books/${id}`), bookData);
     return Promise.resolve();
   } catch (error) {
     console.error("Error updating book:", error);
@@ -61,7 +69,20 @@ export const updateBook = async (book: any): Promise<void> => {
 // Function to list all books
 export const listBooks = async (): Promise<any[]> => {
   try {
-    const books = JSON.parse(localStorage.getItem('bookKreateBooks') || '[]');
+    const userId = getCurrentUserId();
+    const booksRef = ref(database, `users/${userId}/books`);
+    const snapshot = await get(booksRef);
+    
+    if (!snapshot.exists()) {
+      return [];
+    }
+    
+    const booksData = snapshot.val();
+    const books = Object.keys(booksData).map(id => ({
+      id,
+      ...booksData[id]
+    }));
+    
     return books;
   } catch (error) {
     console.error("Error listing books:", error);
@@ -73,18 +94,30 @@ export const listBooks = async (): Promise<any[]> => {
 // Function to create a new book
 export const createBook = async (bookData: any): Promise<any> => {
   try {
-    const existingBooks = JSON.parse(localStorage.getItem('bookKreateBooks') || '[]');
+    const userId = getCurrentUserId();
+    
+    // Get existing books to check limits
+    const existingBooks = await listBooks();
     
     // Check if user can create a new book based on their plan
     if (!canCreateBook(existingBooks)) {
       throw new Error("Book limit reached for your current plan");
     }
     
-    // Add the new book
-    const updatedBooks = [...existingBooks, bookData];
-    localStorage.setItem('bookKreateBooks', JSON.stringify(updatedBooks));
+    // Add timestamps
+    const timestamp = new Date().toISOString();
+    const bookWithTimestamps = {
+      ...bookData,
+      createdAt: timestamp,
+      updatedAt: timestamp
+    };
     
-    return Promise.resolve(bookData);
+    // Push to Firebase and get the generated key
+    const booksRef = ref(database, `users/${userId}/books`);
+    const newBookRef = push(booksRef);
+    await set(newBookRef, bookWithTimestamps);
+    
+    return Promise.resolve({ ...bookWithTimestamps, id: newBookRef.key });
   } catch (error) {
     console.error("Error creating book:", error);
     toast.error("Failed to create book");
@@ -95,8 +128,8 @@ export const createBook = async (bookData: any): Promise<any> => {
 // Function to add a chapter to a book
 export const addChapter = async (bookId: string, chapterData: any): Promise<any> => {
   try {
-    const existingBooks = JSON.parse(localStorage.getItem('bookKreateBooks') || '[]');
-    const book = existingBooks.find((b: any) => b.id === bookId);
+    const userId = getCurrentUserId();
+    const book = await getBook(bookId);
     
     if (!book) {
       throw new Error("Book not found");
@@ -114,10 +147,10 @@ export const addChapter = async (bookId: string, chapterData: any): Promise<any>
     
     // Add the new chapter
     book.chapters.push(chapterData);
+    book.updatedAt = new Date().toISOString();
     
-    // Update localStorage
-    const updatedBooks = existingBooks.map((b: any) => b.id === bookId ? book : b);
-    localStorage.setItem('bookKreateBooks', JSON.stringify(updatedBooks));
+    // Update the book in Firebase
+    await set(ref(database, `users/${userId}/books/${bookId}`), book);
     
     return Promise.resolve(chapterData);
   } catch (error) {
@@ -130,10 +163,8 @@ export const addChapter = async (bookId: string, chapterData: any): Promise<any>
 // Function to delete a book
 export const deleteBook = async (bookId: string): Promise<void> => {
   try {
-    const existingBooks = JSON.parse(localStorage.getItem('bookKreateBooks') || '[]');
-    const updatedBooks = existingBooks.filter((b: any) => b.id !== bookId);
-    
-    localStorage.setItem('bookKreateBooks', JSON.stringify(updatedBooks));
+    const userId = getCurrentUserId();
+    await remove(ref(database, `users/${userId}/books/${bookId}`));
     toast.success("Book deleted successfully");
     return Promise.resolve();
   } catch (error) {
