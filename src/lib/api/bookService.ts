@@ -29,6 +29,11 @@ export const getBook = async (bookId: string): Promise<Book> => {
     if (!book.chapters) {
       book.chapters = [];
     }
+
+    // Ensure status is set
+    if (!book.status) {
+      book.status = "draft";
+    }
     
     // Generate a plan if no tasks exist
     if (!book.tasks) {
@@ -66,7 +71,7 @@ export const updateBook = async (bookData: Partial<Book> & { id: string }): Prom
   }
 };
 
-// Function to list all books
+// Function to list all books (alias for getBooks)
 export const listBooks = async (): Promise<Book[]> => {
   try {
     const userId = getCurrentUserId();
@@ -80,6 +85,7 @@ export const listBooks = async (): Promise<Book[]> => {
     const booksData = snapshot.val();
     const books = Object.keys(booksData).map(id => ({
       id,
+      status: "draft" as const, // Set default status
       ...booksData[id]
     }));
     
@@ -89,6 +95,11 @@ export const listBooks = async (): Promise<Book[]> => {
     toast.error("Failed to load books");
     return [];
   }
+};
+
+// Function to get all books (main export for dashboard)
+export const getBooks = async (): Promise<Book[]> => {
+  return await listBooks();
 };
 
 // Function to create a new book
@@ -104,12 +115,13 @@ export const createBook = async (bookData: Partial<Book>): Promise<Book> => {
       throw new Error("Book limit reached for your current plan");
     }
     
-    // Add timestamps
+    // Add timestamps and default status
     const timestamp = new Date().toISOString();
     const bookWithTimestamps = {
       ...bookData,
       createdAt: timestamp,
       updatedAt: timestamp,
+      status: "draft" as const,
       chapters: [],
       tasks: []
     };

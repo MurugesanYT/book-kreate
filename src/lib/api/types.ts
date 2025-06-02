@@ -1,4 +1,3 @@
-
 // Common types used across API services
 
 export type BookItemType = 'cover' | 'chapter' | 'credits' | 'coverPage' | 'tableOfContents' | 'characterList' | 'creditsPage';
@@ -40,6 +39,7 @@ export interface Book {
   template?: string;
   credits?: Credit[];
   tasks?: any[];
+  status: "draft" | "published";
 }
 
 export interface Chapter {
@@ -63,10 +63,8 @@ export interface BaseExporterOptions {
   fontSize?: number;
 }
 
-// BookData interface that matches the current usage
-export interface BookData extends Book {
-  status: "draft" | "published";
-}
+// BookData interface that extends Book (keeping for backward compatibility)
+export interface BookData extends Book {}
 
 export interface ChapterItem {
   title: string;

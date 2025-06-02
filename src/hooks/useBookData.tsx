@@ -80,7 +80,7 @@ export const useBookData = (bookId: string | undefined) => {
 
   // Update book mutation
   const updateBookMutation = useMutation({
-    mutationFn: (bookData: Partial<Book> & { id: string }) => updateBook(bookData),
+    mutationFn: (variables: { bookData: Partial<Book> & { id: string } }) => updateBook(variables.bookData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['book', bookId] });
       toast.success('Book updated successfully!');
@@ -102,7 +102,7 @@ export const useBookData = (bookId: string | undefined) => {
       },
       (updatedBook) => {
         setBook(updatedBook);
-        updateBookMutation.mutate({ ...updatedBook, id: bookId!, tasks });
+        updateBookMutation.mutate({ bookData: { ...updatedBook, id: bookId!, tasks } });
       }
     );
   };
@@ -138,7 +138,7 @@ export const useBookData = (bookId: string | undefined) => {
     setBook(updatedBook);
     // Update the backend with the book changes
     if (bookId) {
-      updateBookMutation.mutate({ ...updatedBook, id: bookId, tasks });
+      updateBookMutation.mutate({ bookData: { ...updatedBook, id: bookId, tasks } });
     }
   };
 
