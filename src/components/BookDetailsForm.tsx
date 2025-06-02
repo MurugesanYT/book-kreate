@@ -182,12 +182,13 @@ const BookDetailsForm = () => {
       let bookTitle = title;
       if (!title) {
         try {
-          console.log("Calling generateBookTitle on submit with:", { description, bookType, bookCategory });
+          console.log("Generating title for book creation");
           bookTitle = await generateBookTitle(description, bookType, bookCategory);
-          console.log("Generated title on submit:", bookTitle);
+          console.log("Generated title:", bookTitle);
         } catch (error) {
-          console.error("Failed to generate title on submit, using fallback:", error);
+          console.error("Failed to generate title, using fallback:", error);
           bookTitle = `My ${bookType} Story`; // Simple fallback
+          toast.warning("Could not generate AI title, using fallback title. You can edit it later.");
         }
       }
       
@@ -210,19 +211,27 @@ const BookDetailsForm = () => {
         content: []
       };
       
-      // Create the book using the API
       console.log('Creating book with data:', bookData);
+      
+      // Create the book using the API
       const createdBook = await createBook(bookData);
       console.log('Book created successfully:', createdBook);
       
+      if (!createdBook || !createdBook.id) {
+        throw new Error("Book was created but no ID was returned");
+      }
+      
       toast.success("Book created successfully!");
       
-      // Navigate to the book planning page
-      navigate(`/book/${createdBook.id}`);
+      // Add a small delay to ensure the book is saved in the database
+      setTimeout(() => {
+        console.log('Navigating to book plan page with ID:', createdBook.id);
+        navigate(`/book/${createdBook.id}`);
+      }, 500);
+      
     } catch (error: any) {
       console.error("Error creating book:", error);
       toast.error(error.message || "Failed to create book. Please try again.");
-    } finally {
       setIsSubmitting(false);
     }
   };

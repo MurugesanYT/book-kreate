@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useBookData } from '@/hooks/useBookData';
 import BookPlanHeader from '@/components/book-plan/BookPlanHeader';
@@ -13,6 +13,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 const BookPlanPage = () => {
   const { bookId } = useParams<{ bookId: string }>();
   const [activeTab, setActiveTab] = useState('plan');
+  
+  console.log('BookPlanPage - bookId from params:', bookId);
+  
   const {
     book,
     tasks,
@@ -47,12 +50,22 @@ const BookPlanPage = () => {
     setActiveTab(value);
   }, []);
 
+  useEffect(() => {
+    console.log('BookPlanPage - book data:', book);
+    console.log('BookPlanPage - loading:', loading);
+    console.log('BookPlanPage - error:', error);
+    console.log('BookPlanPage - tasks:', tasks);
+  }, [book, loading, error, tasks]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin w-12 h-12 border-t-4 border-book-purple rounded-full mx-auto mb-4"></div>
           <p className="text-slate-600">Loading book plan...</p>
+          {bookId && (
+            <p className="text-sm text-slate-400 mt-2">Book ID: {bookId}</p>
+          )}
         </div>
       </div>
     );
@@ -62,13 +75,22 @@ const BookPlanPage = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center max-w-md">
-          <h2 className="text-xl font-bold text-red-600 mb-2">Error</h2>
+          <h2 className="text-xl font-bold text-red-600 mb-2">Error Loading Book</h2>
           <p className="text-slate-600 mb-4">{error}</p>
+          {bookId && (
+            <p className="text-sm text-slate-400 mb-4">Book ID: {bookId}</p>
+          )}
           <button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-book-purple text-white rounded-md hover:bg-purple-700 transition-colors"
+            className="px-4 py-2 bg-book-purple text-white rounded-md hover:bg-purple-700 transition-colors mr-2"
           >
             Try Again
+          </button>
+          <button
+            onClick={() => window.history.back()}
+            className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+          >
+            Go Back
           </button>
         </div>
       </div>
@@ -80,7 +102,16 @@ const BookPlanPage = () => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <h2 className="text-xl font-bold text-slate-800 mb-2">Book Not Found</h2>
-          <p className="text-slate-600">The book you're looking for doesn't exist or you don't have permission to view it.</p>
+          <p className="text-slate-600 mb-4">The book you're looking for doesn't exist or you don't have permission to view it.</p>
+          {bookId && (
+            <p className="text-sm text-slate-400 mb-4">Searched for Book ID: {bookId}</p>
+          )}
+          <button
+            onClick={() => window.history.back()}
+            className="px-4 py-2 bg-book-purple text-white rounded-md hover:bg-purple-700 transition-colors"
+          >
+            Go Back
+          </button>
         </div>
       </div>
     );

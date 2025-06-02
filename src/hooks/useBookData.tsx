@@ -20,15 +20,27 @@ export const useBookData = (bookId: string | undefined) => {
 
   // Fetch book data
   useEffect(() => {
+    console.log('useBookData - bookId changed:', bookId);
     if (bookId) {
       fetchBookData(bookId);
+    } else {
+      setLoading(false);
+      setError('No book ID provided');
     }
   }, [bookId]);
 
   const fetchBookData = async (id: string) => {
+    console.log('useBookData - fetching book data for ID:', id);
     setLoading(true);
+    setError(null);
+    
     try {
       const bookData = await getBook(id);
+      console.log('useBookData - received book data:', bookData);
+      
+      if (!bookData) {
+        throw new Error('Book not found');
+      }
       
       // Sanitize dates if they exist
       if (bookData && bookData.createdAt && typeof bookData.createdAt === 'string') {
@@ -65,14 +77,18 @@ export const useBookData = (bookId: string | undefined) => {
             status: task.status as 'pending' | 'inProgress' | 'completed'
           };
         });
+        console.log('useBookData - processed tasks:', typedTasks);
         setTasks(typedTasks);
       } else {
+        console.log('useBookData - no tasks found, setting empty array');
         setTasks([]);
       }
       setError(null);
     } catch (err: any) {
-      setError(err.message || 'Failed to load book');
-      toast.error(err.message || 'Failed to load book');
+      console.error('useBookData - error fetching book:', err);
+      const errorMessage = err.message || 'Failed to load book';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
