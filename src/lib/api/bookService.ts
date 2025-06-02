@@ -1,168 +1,175 @@
 
-import { ref, get, set, push, remove, update } from 'firebase/database';
-import { database } from '../firebase';
-import { Book, Chapter } from './types';
-import { v4 as uuidv4 } from 'uuid';
+// Book service to handle book operations with Firebase Realtime Database
+import { toast } from "sonner";
+import { database } from "@/lib/firebase";
+import { ref, push, get, set, remove, child, query, orderByChild, equalTo } from "firebase/database";
+import { BookData, PlanItem } from "./types";
+import { generateBookPlan, canCreateBook, canAddChapter } from "./planService";
 
-export const getAllBooks = async (): Promise<Book[]> => {
+// Get current user ID (you may need to adjust this based on your auth implementation)
+const getCurrentUserId = () => {
+  // For now, we'll use a default user ID. You should replace this with actual user authentication
+  return "user_default"; // Replace with actual user ID from auth context
+};
+
+// Function to get a book by ID
+export const getBook = async (bookId: string): Promise<any> => {
   try {
-    const snapshot = await get(ref(database, 'books'));
-    if (snapshot.exists()) {
-      const books = snapshot.val();
-      return Object.entries(books).map(([id, book]: [string, any]) => ({
-        ...book,
-        id,
-      }));
+    const userId = getCurrentUserId();
+    const bookRef = ref(database, `users/${userId}/books/${bookId}`);
+    const snapshot = await get(bookRef);
+    
+    if (!snapshot.exists()) {
+      throw new Error("Book not found");
     }
+    
+    const book = snapshot.val();
+    
+    // Ensure book structure is complete
+    if (!book.chapters) {
+      book.chapters = [];
+    }
+    
+    // Generate a plan if no tasks exist
+    if (!book.tasks) {
+      console.log("No tasks found, generating plan for book:", book.title);
+      const plan = await generateBookPlan(book);
+      book.tasks = plan;
+      
+      // Update the book in Firebase with the generated tasks
+      await set(ref(database, `users/${userId}/books/${bookId}/tasks`), plan);
+    }
+    
+    return { ...book, id: bookId };
+  } catch (error) {
+    console.error("Error fetching book:", error);
+    toast.error("Failed to load book");
+    throw error;
+  }
+};
+
+// Function to update a book
+export const updateBook = async (book: any): Promise<void> => {
+  try {
+    const userId = getCurrentUserId();
+    const { id, ...bookData } = book;
+    
+    // Add timestamp
+    bookData.updatedAt = new Date().toISOString();
+    
+    await set(ref(database, `users/${userId}/books/${id}`), bookData);
+    return Promise.resolve();
+  } catch (error) {
+    console.error("Error updating book:", error);
+    toast.error("Failed to update book");
+    throw error;
+  }
+};
+
+// Function to list all books
+export const listBooks = async (): Promise<any[]> => {
+  try {
+    const userId = getCurrentUserId();
+    const booksRef = ref(database, `users/${userId}/books`);
+    const snapshot = await get(booksRef);
+    
+    if (!snapshot.exists()) {
+      return [];
+    }
+    
+    const booksData = snapshot.val();
+    const books = Object.keys(booksData).map(id => ({
+      id,
+      ...booksData[id]
+    }));
+    
+    return books;
+  } catch (error) {
+    console.error("Error listing books:", error);
+    toast.error("Failed to load books");
     return [];
-  } catch (error) {
-    console.error('Error fetching all books:', error);
-    throw error;
   }
 };
 
-// Keep the existing getBooks function as well for compatibility
-export const getBooks = getAllBooks;
-
-export const getBook = async (id: string): Promise<Book | null> => {
+// Function to create a new book
+export const createBook = async (bookData: any): Promise<any> => {
   try {
-    const snapshot = await get(ref(database, `books/${id}`));
-    if (snapshot.exists()) {
-      return { ...snapshot.val(), id };
-    }
-    return null;
-  } catch (error) {
-    console.error(`Error fetching book with id ${id}:`, error);
-    throw error;
-  }
-};
-
-export const createBook = async (book: Omit<Book, 'id'>): Promise<Book> => {
-  try {
-    const newBookRef = push(ref(database, 'books'));
-    const newBook = { ...book, id: newBookRef.key };
-    await set(newBookRef, book);
-    return newBook as Book;
-  } catch (error) {
-    console.error('Error creating book:', error);
-    throw error;
-  }
-};
-
-export const updateBook = async (id: string, bookData: Partial<Book>): Promise<void> => {
-  try {
-    await update(ref(database, `books/${id}`), bookData);
-  } catch (error) {
-    console.error(`Error updating book with id ${id}:`, error);
-    throw error;
-  }
-};
-
-export const deleteBook = async (id: string): Promise<void> => {
-  try {
-    await remove(ref(database, `books/${id}`));
-  } catch (error) {
-    console.error(`Error deleting book with id ${id}:`, error);
-    throw error;
-  }
-};
-
-export const addChapter = async (bookId: string, chapter: Omit<Chapter, 'id'>): Promise<Chapter> => {
-  try {
-    const chapterId = uuidv4();
-    const newChapter = { ...chapter, id: chapterId };
+    const userId = getCurrentUserId();
     
-    const bookSnapshot = await get(ref(database, `books/${bookId}`));
-    if (!bookSnapshot.exists()) {
-      throw new Error(`Book with id ${bookId} does not exist`);
+    // Get existing books to check limits
+    const existingBooks = await listBooks();
+    
+    // Check if user can create a new book based on their plan
+    if (!canCreateBook(existingBooks)) {
+      throw new Error("Book limit reached for your current plan");
     }
     
-    const book = bookSnapshot.val();
-    const chapters = book.chapters || [];
-    chapters.push(newChapter);
+    // Add timestamps
+    const timestamp = new Date().toISOString();
+    const bookWithTimestamps = {
+      ...bookData,
+      createdAt: timestamp,
+      updatedAt: timestamp
+    };
     
-    await update(ref(database, `books/${bookId}`), { chapters });
-    return newChapter;
+    // Push to Firebase and get the generated key
+    const booksRef = ref(database, `users/${userId}/books`);
+    const newBookRef = push(booksRef);
+    await set(newBookRef, bookWithTimestamps);
+    
+    return Promise.resolve({ ...bookWithTimestamps, id: newBookRef.key });
   } catch (error) {
-    console.error(`Error adding chapter to book with id ${bookId}:`, error);
+    console.error("Error creating book:", error);
+    toast.error("Failed to create book");
     throw error;
   }
 };
 
-export const updateChapter = async (bookId: string, chapterId: string, chapter: Partial<Chapter>): Promise<void> => {
+// Function to add a chapter to a book
+export const addChapter = async (bookId: string, chapterData: any): Promise<any> => {
   try {
-    const bookSnapshot = await get(ref(database, `books/${bookId}`));
-    if (!bookSnapshot.exists()) {
-      throw new Error(`Book with id ${bookId} does not exist`);
+    const userId = getCurrentUserId();
+    const book = await getBook(bookId);
+    
+    if (!book) {
+      throw new Error("Book not found");
     }
     
-    const book = bookSnapshot.val();
-    const chapters = book.chapters || [];
-    const chapterIndex = chapters.findIndex((c: Chapter) => c.id === chapterId);
-    
-    if (chapterIndex === -1) {
-      throw new Error(`Chapter with id ${chapterId} does not exist in book with id ${bookId}`);
+    // Ensure book has chapters array
+    if (!book.chapters) {
+      book.chapters = [];
     }
     
-    chapters[chapterIndex] = { ...chapters[chapterIndex], ...chapter };
-    await update(ref(database, `books/${bookId}`), { chapters });
+    // Check if user can add a new chapter based on their plan
+    if (!canAddChapter(book)) {
+      throw new Error("Chapter limit reached for your current plan");
+    }
+    
+    // Add the new chapter
+    book.chapters.push(chapterData);
+    book.updatedAt = new Date().toISOString();
+    
+    // Update the book in Firebase
+    await set(ref(database, `users/${userId}/books/${bookId}`), book);
+    
+    return Promise.resolve(chapterData);
   } catch (error) {
-    console.error(`Error updating chapter with id ${chapterId} in book with id ${bookId}:`, error);
+    console.error("Error adding chapter:", error);
+    toast.error("Failed to add chapter");
     throw error;
   }
 };
 
-export const deleteChapter = async (bookId: string, chapterId: string): Promise<void> => {
+// Function to delete a book
+export const deleteBook = async (bookId: string): Promise<void> => {
   try {
-    const bookSnapshot = await get(ref(database, `books/${bookId}`));
-    if (!bookSnapshot.exists()) {
-      throw new Error(`Book with id ${bookId} does not exist`);
-    }
-    
-    const book = bookSnapshot.val();
-    const chapters = book.chapters || [];
-    const updatedChapters = chapters.filter((c: Chapter) => c.id !== chapterId);
-    
-    await update(ref(database, `books/${bookId}`), { chapters: updatedChapters });
+    const userId = getCurrentUserId();
+    await remove(ref(database, `users/${userId}/books/${bookId}`));
+    toast.success("Book deleted successfully");
+    return Promise.resolve();
   } catch (error) {
-    console.error(`Error deleting chapter with id ${chapterId} from book with id ${bookId}:`, error);
-    throw error;
-  }
-};
-
-// Add new function for bulk chapter generation
-export const generateMultipleChapters = async (bookId: string, numberOfChapters: number): Promise<Chapter[]> => {
-  try {
-    const bookSnapshot = await get(ref(database, `books/${bookId}`));
-    if (!bookSnapshot.exists()) {
-      throw new Error(`Book with id ${bookId} does not exist`);
-    }
-    
-    const book = bookSnapshot.val();
-    const existingChapters = book.chapters || [];
-    const newChapters: Chapter[] = [];
-    
-    for (let i = 1; i <= numberOfChapters; i++) {
-      const chapterNumber = existingChapters.length + i;
-      const chapterId = uuidv4();
-      const newChapter: Chapter = {
-        id: chapterId,
-        title: `Chapter ${chapterNumber}`,
-        content: `This is the content for Chapter ${chapterNumber}. It will be generated by AI based on the book's context.`,
-        bookId,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        order: chapterNumber
-      };
-      newChapters.push(newChapter);
-    }
-    
-    const updatedChapters = [...existingChapters, ...newChapters];
-    await update(ref(database, `books/${bookId}`), { chapters: updatedChapters });
-    
-    return newChapters;
-  } catch (error) {
-    console.error(`Error generating multiple chapters for book with id ${bookId}:`, error);
+    console.error("Error deleting book:", error);
+    toast.error("Failed to delete book");
     throw error;
   }
 };

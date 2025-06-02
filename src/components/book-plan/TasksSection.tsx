@@ -5,26 +5,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Plus, Book, Star } from 'lucide-react';
 import { Task } from '@/hooks/taskUtils';
-import { Book as BookType } from '@/lib/api/types';
+import { BookData } from '@/lib/api/types';
 import PendingTaskList from './PendingTaskList';
 import InProgressTaskList from './InProgressTaskList';
 import CompletedTaskList from './CompletedTaskList';
 import AddChapterDialog from './AddChapterDialog';
 import AIChapterCreator from './AIChapterCreator';
 import CharacterListDialog from './CharacterListDialog';
-import MultipleChapterGenerator from './MultipleChapterGenerator';
 import { Separator } from '@/components/ui/separator';
 import { canAddChapter } from '@/lib/api/planService';
 
 interface TasksSectionProps {
   tasks: Task[];
-  book: BookType;
+  book: BookData;
   generatingTaskId: string | null;
   onGenerateContent: (taskId: string) => void;
   onMarkAsComplete: (taskId: string) => void;
   onDeleteTask: (taskId: string) => void;
   onAddChapter: (newChapter: Task) => void;
-  onSave: (updatedBook: BookType) => void;
+  onSave: (updatedBook: BookData) => void;
 }
 
 const TasksSection: React.FC<TasksSectionProps> = ({
@@ -48,15 +47,6 @@ const TasksSection: React.FC<TasksSectionProps> = ({
   
   const showAddChapterButton = canAddChapter(book);
 
-  const handleChaptersGenerated = (newChapters: any[]) => {
-    // Update the book with new chapters
-    const updatedBook = {
-      ...book,
-      chapters: [...(book.chapters || []), ...newChapters]
-    };
-    onSave(updatedBook);
-  };
-
   return (
     <Card className="mt-6">
       <CardHeader>
@@ -68,7 +58,6 @@ const TasksSection: React.FC<TasksSectionProps> = ({
               <>
                 <AddChapterDialog book={book} onAddChapter={onAddChapter} />
                 <AIChapterCreator book={book} onAddChapter={onAddChapter} />
-                <MultipleChapterGenerator book={book} onChaptersGenerated={handleChaptersGenerated} />
               </>
             ) : (
               <Button variant="outline" className="gap-2" disabled>

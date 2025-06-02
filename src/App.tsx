@@ -1,22 +1,20 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts/AuthContext';
 import Index from '@/pages/Index';
 import AuthPage from '@/pages/AuthPage';
-import PricingSection from '@/components/PricingSection';
-import FeaturesPage from '@/pages/features/FeaturesPage';
-import AboutPage from '@/pages/about/AboutPage';
-import BlogPage from '@/pages/blog/BlogPage';
-import HelpCenterPage from '@/pages/support/HelpCenterPage';
-import ContactPage from '@/pages/support/ContactPage';
-import FAQPage from '@/pages/support/FAQPage';
-import StatusPage from '@/pages/support/StatusPage';
-import TermsPage from '@/pages/legal/TermsPage';
-import PrivacyPage from '@/pages/legal/PrivacyPage';
-import CookiePage from '@/pages/legal/CookiePage';
-import LicensesPage from '@/pages/legal/LicensesPage';
+import PricingSection from '@/pages/PricingSection';
+import FeaturesPage from '@/pages/FeaturesPage';
+import AboutPage from '@/pages/AboutPage';
+import BlogPage from '@/pages/BlogPage';
+import HelpCenterPage from '@/pages/HelpCenterPage';
+import ContactPage from '@/pages/ContactPage';
+import FAQPage from '@/pages/FAQPage';
+import StatusPage from '@/pages/StatusPage';
+import TermsPage from '@/pages/TermsPage';
+import PrivacyPage from '@/pages/PrivacyPage';
+import CookiePage from '@/pages/CookiePage';
+import LicensesPage from '@/pages/LicensesPage';
 import DashboardPage from '@/pages/DashboardHome';
 import BookCreationPage from '@/pages/BookCreationPage';
 import BookPlanPage from '@/pages/BookPlanPage';
@@ -24,13 +22,12 @@ import PlanPage from '@/pages/account/PlanPage';
 import NotFound from '@/pages/NotFound';
 import RequireAuth from '@/components/RequireAuth';
 import { Toaster } from 'sonner';
+import { QueryClient } from 'react-query';
 import AccountSettingsPage from './pages/account/AccountSettingsPage';
-
-const queryClient = new QueryClient();
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <QueryClient>
       <AuthProvider>
         <Router>
           <Toaster />
@@ -83,7 +80,7 @@ function App() {
           </Routes>
         </Router>
       </AuthProvider>
-    </QueryClientProvider>
+    </QueryClient>
   );
 }
 

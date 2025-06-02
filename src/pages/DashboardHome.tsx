@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookOpen, Plus, Clock, CheckCircle, FileText, Crown, Settings } from 'lucide-react';
 import { Book } from '@/lib/api/types';
-import { getAllBooks } from '@/lib/api/bookService';
+import { getBooks } from '@/lib/api/bookService';
 import { toast } from 'sonner';
 
 const DashboardHome = () => {
@@ -18,7 +17,7 @@ const DashboardHome = () => {
     const fetchBooks = async () => {
       setIsLoading(true);
       try {
-        const fetchedBooks = await getAllBooks();
+        const fetchedBooks = await getBooks();
         setBooks(fetchedBooks);
       } catch (error) {
         console.error("Failed to fetch books:", error);
@@ -95,7 +94,7 @@ const DashboardHome = () => {
               <div className="ml-4">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">In Progress</p>
                 <p className="text-xl sm:text-2xl font-bold">
-                  {books.filter(book => (book as any).status === 'draft').length}
+                  {books.filter(book => book.status === 'draft').length}
                 </p>
               </div>
             </div>
@@ -109,7 +108,7 @@ const DashboardHome = () => {
               <div className="ml-4">
                 <p className="text-xs sm:text-sm font-medium text-gray-600">Completed</p>
                 <p className="text-xl sm:text-2xl font-bold">
-                  {books.filter(book => (book as any).status === 'published').length}
+                  {books.filter(book => book.status === 'published').length}
                 </p>
               </div>
             </div>
@@ -167,7 +166,7 @@ const DashboardHome = () => {
                         {book.description}
                       </p>
                       <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span className="capitalize">{(book as any).status || 'draft'}</span>
+                        <span className="capitalize">{book.status}</span>
                         <span>{book.chapters?.length || 0} chapters</span>
                       </div>
                     </CardContent>

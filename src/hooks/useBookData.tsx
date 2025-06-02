@@ -29,10 +29,6 @@ export const useBookData = (bookId: string | undefined) => {
     try {
       const bookData = await getBook(id);
       
-      if (!bookData) {
-        throw new Error('Book not found');
-      }
-      
       // Sanitize dates if they exist
       if (bookData && bookData.createdAt && typeof bookData.createdAt === 'string') {
         const date = new Date(bookData.createdAt);
@@ -83,7 +79,7 @@ export const useBookData = (bookId: string | undefined) => {
 
   // Update book mutation
   const updateBookMutation = useMutation({
-    mutationFn: ({ id, bookData }: { id: string; bookData: Partial<any> }) => updateBook(id, bookData),
+    mutationFn: updateBook,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['book', bookId] });
       toast.success('Book updated successfully!');
@@ -105,9 +101,7 @@ export const useBookData = (bookId: string | undefined) => {
       },
       (updatedBook) => {
         setBook(updatedBook);
-        if (bookId) {
-          updateBookMutation.mutate({ id: bookId, bookData: { ...updatedBook, tasks } });
-        }
+        updateBookMutation.mutate({ ...updatedBook, id: bookId, tasks });
       }
     );
   };
@@ -143,7 +137,7 @@ export const useBookData = (bookId: string | undefined) => {
     setBook(updatedBook);
     // Update the backend with the book changes
     if (bookId) {
-      updateBookMutation.mutate({ id: bookId, bookData: { ...updatedBook, tasks } });
+      updateBookMutation.mutate({ ...updatedBook, id: bookId, tasks });
     }
   };
 
