@@ -3,7 +3,7 @@
 import { toast } from "sonner";
 import { database } from "@/lib/firebase";
 import { ref, push, get, set, remove, child, query, orderByChild, equalTo } from "firebase/database";
-import { BookData, PlanItem } from "./types";
+import { BookData, PlanItem, Book } from "./types";
 import { generateBookPlan, canCreateBook, canAddChapter } from "./planService";
 
 // Get current user ID (you may need to adjust this based on your auth implementation)
@@ -13,7 +13,7 @@ const getCurrentUserId = () => {
 };
 
 // Function to get a book by ID
-export const getBook = async (bookId: string): Promise<any> => {
+export const getBook = async (bookId: string): Promise<Book> => {
   try {
     const userId = getCurrentUserId();
     const bookRef = ref(database, `users/${userId}/books/${bookId}`);
@@ -49,15 +49,15 @@ export const getBook = async (bookId: string): Promise<any> => {
 };
 
 // Function to update a book
-export const updateBook = async (book: any): Promise<void> => {
+export const updateBook = async (bookData: Partial<Book> & { id: string }): Promise<void> => {
   try {
     const userId = getCurrentUserId();
-    const { id, ...bookData } = book;
+    const { id, ...updateData } = bookData;
     
     // Add timestamp
-    bookData.updatedAt = new Date().toISOString();
+    updateData.updatedAt = new Date().toISOString();
     
-    await set(ref(database, `users/${userId}/books/${id}`), bookData);
+    await set(ref(database, `users/${userId}/books/${id}`), updateData);
     return Promise.resolve();
   } catch (error) {
     console.error("Error updating book:", error);
@@ -67,7 +67,7 @@ export const updateBook = async (book: any): Promise<void> => {
 };
 
 // Function to list all books
-export const listBooks = async (): Promise<any[]> => {
+export const listBooks = async (): Promise<Book[]> => {
   try {
     const userId = getCurrentUserId();
     const booksRef = ref(database, `users/${userId}/books`);
@@ -92,7 +92,7 @@ export const listBooks = async (): Promise<any[]> => {
 };
 
 // Function to create a new book
-export const createBook = async (bookData: any): Promise<any> => {
+export const createBook = async (bookData: Partial<Book>): Promise<Book> => {
   try {
     const userId = getCurrentUserId();
     
@@ -109,7 +109,9 @@ export const createBook = async (bookData: any): Promise<any> => {
     const bookWithTimestamps = {
       ...bookData,
       createdAt: timestamp,
-      updatedAt: timestamp
+      updatedAt: timestamp,
+      chapters: [],
+      tasks: []
     };
     
     // Push to Firebase and get the generated key
@@ -117,7 +119,19 @@ export const createBook = async (bookData: any): Promise<any> => {
     const newBookRef = push(booksRef);
     await set(newBookRef, bookWithTimestamps);
     
-    return Promise.resolve({ ...bookWithTimestamps, id: newBookRef.key });
+    const createdBook = { ...bookWithTimestamps, id: newBookRef.key } as Book;
+    
+    // Generate initial plan for the book
+    try {
+      const plan = await generateBookPlan(createdBook);
+      await set(ref(database, `users/${userId}/books/${newBookRef.key}/tasks`), plan);
+      createdBook.tasks = plan;
+    } catch (planError) {
+      console.error("Error generating initial plan:", planError);
+      // Continue even if plan generation fails
+    }
+    
+    return createdBook;
   } catch (error) {
     console.error("Error creating book:", error);
     toast.error("Failed to create book");

@@ -8,10 +8,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { Task, markTaskAsComplete, deleteTask, updateBookWithTasks } from './taskUtils';
 import { saveBookContent } from './bookContentUtils';
 import { useContentGeneration } from './useContentGeneration';
+import { Book } from '@/lib/api/types';
 
 export const useBookData = (bookId: string | undefined) => {
   const queryClient = useQueryClient();
-  const [book, setBook] = useState<any>(null);
+  const [book, setBook] = useState<Book | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +80,7 @@ export const useBookData = (bookId: string | undefined) => {
 
   // Update book mutation
   const updateBookMutation = useMutation({
-    mutationFn: updateBook,
+    mutationFn: (bookData: Partial<Book> & { id: string }) => updateBook(bookData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['book', bookId] });
       toast.success('Book updated successfully!');
@@ -101,7 +102,7 @@ export const useBookData = (bookId: string | undefined) => {
       },
       (updatedBook) => {
         setBook(updatedBook);
-        updateBookMutation.mutate({ ...updatedBook, id: bookId, tasks });
+        updateBookMutation.mutate({ ...updatedBook, id: bookId!, tasks });
       }
     );
   };
@@ -133,7 +134,7 @@ export const useBookData = (bookId: string | undefined) => {
   };
   
   // Save book content
-  const handleSaveBookContent = (updatedBook: any) => {
+  const handleSaveBookContent = (updatedBook: Book) => {
     setBook(updatedBook);
     // Update the backend with the book changes
     if (bookId) {

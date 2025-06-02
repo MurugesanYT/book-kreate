@@ -1,4 +1,5 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,81 +8,79 @@
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 260 30% 50%;
+    --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
-
-    --secondary: 258 55% 75%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
     --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 24 94% 53%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 260 30% 50%;
-
+    --ring: 222.2 84% 4.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    /* Book Kreate Brand Colors */
+    --book-purple: 147 50% 47%;
+    --book-orange: 24 95% 53%;
+    --book-lightPurple: 258 90% 66%;
+    --book-darkText: 210 40% 15%;
+    --book-lightGray: 210 40% 94%;
+    
+    /* Gradient text colors */
+    --color-1: 330 100% 40%; /* Dark Neon Pink */
+    --color-2: 140 100% 55%; /* Bright Electric Green */
+    --color-3: 210 100% 30%; /* Deep Neon Blue */
+    --color-4: 60 100% 70%; /* Light Neon Yellow */
+    --color-5: 295 100% 45%; /* Dark Neon Purple */
+    --brand: 50 100% 50%; /* Bright, punchy yellow */
   }
 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-
-    --primary: 260 30% 50%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 258 55% 75%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 24 94% 53%;
+    --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 260 30% 50%;
+    --ring: 212.7 26.8% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
     
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Gradient text colors for dark mode */
+    --color-1: 330 100% 40%; /* Dark Neon Pink */
+    --color-2: 140 100% 55%; /* Bright Electric Green */
+    --color-3: 210 100% 30%; /* Deep Neon Blue */
+    --color-4: 60 100% 70%; /* Light Neon Yellow */
+    --color-5: 295 100% 45%; /* Dark Neon Purple */
+    --brand: 50 100% 50%; /* Bright, punchy yellow */
   }
 }
 
@@ -89,34 +88,97 @@
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
   }
 }
 
-@layer components {
-  .hero-gradient {
-    @apply bg-gradient-to-br from-book-lightPurple/20 via-white to-book-orange/10;
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
   }
-  
-  .book-shadow {
-    @apply shadow-lg hover:shadow-xl transition-shadow duration-300;
+  50% {
+    transform: translateY(-10px);
   }
-  
-  .book-card {
-    @apply bg-white rounded-lg overflow-hidden book-shadow border border-slate-200;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Gradient text animations */
+@keyframes gradient-border {
+  0%, 100% { 
+    border-radius: 37% 29% 27% 27% / 28% 25% 41% 37%; 
   }
-  
-  .btn-primary {
-    @apply bg-book-purple hover:bg-book-purple/90 text-white font-medium py-2 px-6 rounded-md transition-colors duration-200;
+  25% { 
+    border-radius: 47% 29% 39% 49% / 61% 19% 66% 26%; 
   }
-  
-  .btn-secondary {
-    @apply bg-book-lightPurple hover:bg-book-lightPurple/90 text-white font-medium py-2 px-6 rounded-md transition-colors duration-200;
+  50% { 
+    border-radius: 57% 23% 47% 72% / 63% 17% 66% 33%; 
   }
-  
-  .btn-accent {
-    @apply bg-book-orange hover:bg-book-orange/90 text-white font-medium py-2 px-6 rounded-md transition-colors duration-200;
+  75% { 
+    border-radius: 28% 49% 29% 100% / 93% 20% 64% 25%; 
+  }
+}
+
+@keyframes gradient-1 {
+  0%, 100% { 
+    top: 0; 
+    right: 0; 
+  }
+  50% { 
+    top: 50%; 
+    right: 25%; 
+  }
+  75% { 
+    top: 25%; 
+    right: 50%; 
+  }
+}
+
+@keyframes gradient-2 {
+  0%, 100% { 
+    top: 0; 
+    left: 0; 
+  }
+  60% { 
+    top: 75%; 
+    left: 25%; 
+  }
+  85% { 
+    top: 50%; 
+    left: 50%; 
+  }
+}
+
+@keyframes gradient-3 {
+  0%, 100% { 
+    bottom: 0; 
+    left: 0; 
+  }
+  40% { 
+    bottom: 50%; 
+    left: 25%; 
+  }
+  65% { 
+    bottom: 25%; 
+    left: 50%; 
+  }
+}
+
+@keyframes gradient-4 {
+  0%, 100% { 
+    bottom: 0; 
+    right: 0; 
+  }
+  50% { 
+    bottom: 25%; 
+    right: 40%; 
+  }
+  90% { 
+    bottom: 50%; 
+    right: 25%; 
   }
 }

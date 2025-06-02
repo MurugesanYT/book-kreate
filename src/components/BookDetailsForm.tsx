@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/tabs";
 import { BookOpen, Plus, Trash2, LayoutTemplate, Sparkles } from 'lucide-react';
 import { generateBookTitle } from '@/lib/api';
+import { createBook } from '@/lib/api/bookService';
 import { allBookTemplates, getTemplatesByType, BookTemplate } from '@/lib/bookTemplates';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -208,28 +209,20 @@ const BookDetailsForm = () => {
         type: bookType,
         category: bookCategory,
         credits: validCredits,
-        needsGeneratedTitle: !title,
-        timestamp: new Date().toISOString(),
-        template: selectedTemplate ? selectedTemplate.id : null
+        template: selectedTemplate ? selectedTemplate.id : null,
+        content: []
       };
       
-      // For now, we'll just store it in localStorage as a demo
-      // In a real app, this would go to a database
-      const existingBooks = JSON.parse(localStorage.getItem('bookKreateBooks') || '[]');
-      const bookId = `book_${Date.now()}`;
+      // Create the book using the API
+      const createdBook = await createBook(bookData);
       
-      localStorage.setItem('bookKreateBooks', JSON.stringify([
-        ...existingBooks,
-        { id: bookId, ...bookData }
-      ]));
-      
-      toast.success("Book details saved successfully!");
+      toast.success("Book created successfully!");
       
       // Navigate to the book planning page
-      navigate(`/book/plan/${bookId}`);
-    } catch (error) {
-      console.error("Error saving book:", error);
-      toast.error("Failed to save book details. Please try again.");
+      navigate(`/book/${createdBook.id}`);
+    } catch (error: any) {
+      console.error("Error creating book:", error);
+      toast.error(error.message || "Failed to create book. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

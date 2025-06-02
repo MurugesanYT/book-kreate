@@ -1,8 +1,9 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { ArrowRight, BookOpen, Wand2, Check, Sparkles } from 'lucide-react';
+import { HeroPill } from "@/components/ui/hero-pill";
+import { GradientText } from "@/components/ui/gradient-text";
 
 const HeroSection = () => {
   return (
@@ -17,14 +18,18 @@ const HeroSection = () => {
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
-            <div className="inline-flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-book-purple/10 to-book-orange/10 text-book-purple text-sm font-medium border border-book-purple/20">
-              <Wand2 size={16} className="mr-2" />
-              <span>AI-Powered Book Creation</span>
+            <div className="flex justify-center md:justify-start">
+              <HeroPill 
+                href="/features"
+                label="Introducing Book Kreate"
+                announcement="🚀 New"
+                className="bg-book-purple/20 ring-book-purple/30 [&_div]:bg-book-purple/20 [&_div]:text-book-purple [&_p]:text-book-purple [&_svg_path]:fill-book-purple"
+              />
             </div>
             
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
               <span className="bg-gradient-to-r from-book-darkText via-book-purple to-book-orange bg-clip-text text-transparent">
-                Create Incredible Books with AI in Minutes
+                Create <GradientText>Incredible Books</GradientText> with AI in Minutes
               </span>
             </h1>
             

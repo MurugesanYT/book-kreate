@@ -1,6 +1,7 @@
+
 // Common types used across API services
 
-export type BookItemType = 'cover' | 'chapter' | 'credits';
+export type BookItemType = 'cover' | 'chapter' | 'credits' | 'coverPage' | 'tableOfContents' | 'characterList' | 'creditsPage';
 
 // Add ThemeColors interface
 export interface ThemeColors {
@@ -16,7 +17,7 @@ export interface ThemeOption {
   colors: ThemeColors;
 }
 
-// Add Book interface
+// Add Book interface with all required properties
 export interface Book {
   id: string;
   title: string;
@@ -24,16 +25,21 @@ export interface Book {
   content: string[];
   description?: string;
   coverImage?: string;
-  coverPage?: string;  // Added for cover page content
-  creditsPage?: string; // Added for credits page content
-  tableOfContents?: string; // Added for table of contents
-  characterList?: string; // Added for character list
+  coverPage?: string;
+  creditsPage?: string;
+  tableOfContents?: string;
+  characterList?: string;
   chapters?: Chapter[];
   genre?: string;
   published?: boolean;
   publishedDate?: string;
   createdAt: string;
   updatedAt: string;
+  type?: string;
+  category?: string;
+  template?: string;
+  credits?: Credit[];
+  tasks?: any[];
 }
 
 export interface Chapter {
@@ -41,6 +47,9 @@ export interface Chapter {
   title: string;
   content: string;
   order: number;
+  bookId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Credit {
@@ -54,28 +63,9 @@ export interface BaseExporterOptions {
   fontSize?: number;
 }
 
-export interface BookData {
-  id: string;
-  title: string;
-  description: string;
-  type: string;
-  category: string;
-  coverPage?: string;
-  chapters?: any[];
-  creditsPage?: string;
-  template?: string;
-  credits?: {
-    role: string;
-    name: string;
-  }[];
-  genre?: string;
+// BookData interface that matches the current usage
+export interface BookData extends Book {
   status: "draft" | "published";
-  coverImage?: string;
-  publishedDate?: string;
-  characterList?: string; // Added missing property
-  tableOfContents?: string; // Added missing property
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface ChapterItem {
@@ -256,7 +246,7 @@ export interface CBZExportOptions extends BaseExporterOptions {
 
 export interface LaTeXExportOptions extends BaseExporterOptions {
   documentClass: "book" | "article" | "report" | "memoir";
-  fontSize: number; // Changed from string to number to match BaseExporterOptions
+  fontSize: number;
   paperSize: "a4paper" | "letterpaper" | "a5paper";
   twoSided: boolean;
   includeTableOfContents: boolean;

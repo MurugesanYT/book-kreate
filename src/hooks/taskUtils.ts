@@ -1,6 +1,7 @@
 
 import { toast } from "sonner";
 import { updateBook } from "@/lib/api";
+import { Book } from "@/lib/api/types";
 
 export interface Task {
   id: string;
@@ -29,7 +30,7 @@ export const deleteTask = (tasks: Task[], taskId: string): Task[] => {
 /**
  * Update book with tasks in storage
  */
-export const updateBookWithTasks = async (book: any, bookId: string | undefined, tasks: Task[]) => {
+export const updateBookWithTasks = async (book: Book | null, bookId: string | undefined, tasks: Task[]) => {
   if (bookId && book) {
     try {
       await updateBook({ ...book, id: bookId, tasks: tasks });
