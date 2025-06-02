@@ -55,23 +55,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const handleSignIn = async (signInFunction: () => Promise<FirebaseUser>) => {
     try {
+      setLoading(true);
       const user = await signInFunction();
-      toast.success("Successfully signed in!");
-      return user;
-    } catch (error) {
-      console.error("Sign in error:", error);
       
-      const currentDomain = window.location.origin;
-      
-      if (error.message && error.message.includes('Authentication domain not authorized')) {
-        setAuthError(
-          `This app is running on a domain not authorized in Firebase. Please add "${currentDomain}" to your Firebase project's authorized domains list.`
-        );
-      } else {
-        toast.error("Failed to sign in. Please try again.");
+      if (user) {
+        toast.success(`Successfully signed in as ${user.displayName || user.email}!`);
+        return user;
       }
       
       return null;
+    } catch (error: any) {
+      console.error("Sign in error:", error);
+      
+      // Show user-friendly error messages
+      if (error.message.includes('popup')) {
+        toast.error("Please allow popups and try again");
+      } else if (error.message.includes('credential')) {
+        toast.error("Authentication failed. Please try a different sign-in method.");
+      } else if (error.message.includes('domain')) {
+        setAuthError(error.message);
+      } else {
+        toast.error(error.message || "Failed to sign in. Please try again.");
+      }
+      
+      return null;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -121,9 +130,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       <AlertDialog open={!!authError} onOpenChange={() => setAuthError(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Authentication Error</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle>Authentication Configuration Issue</AlertDialogTitle>
+            <AlertDialogDescription className="whitespace-pre-line">
               {authError}
+              {"\n\nThis is a configuration issue that needs to be resolved in the Firebase console."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
