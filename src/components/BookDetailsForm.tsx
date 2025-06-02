@@ -178,19 +178,16 @@ const BookDetailsForm = () => {
     setIsSubmitting(true);
     
     try {
-      // If title is not provided, generate one using AI
+      // If title is not provided, generate one using AI or fallback
       let bookTitle = title;
       if (!title) {
-        toast.loading("Generating a title for your book...");
         try {
           console.log("Calling generateBookTitle on submit with:", { description, bookType, bookCategory });
           bookTitle = await generateBookTitle(description, bookType, bookCategory);
           console.log("Generated title on submit:", bookTitle);
-          toast.success("Book title generated!");
         } catch (error) {
-          console.error("Failed to generate title on submit:", error);
-          toast.error("Could not generate title. Using default title.");
-          bookTitle = `${bookType} Story`; // Improved fallback title
+          console.error("Failed to generate title on submit, using fallback:", error);
+          bookTitle = `My ${bookType} Story`; // Simple fallback
         }
       }
       
@@ -214,7 +211,9 @@ const BookDetailsForm = () => {
       };
       
       // Create the book using the API
+      console.log('Creating book with data:', bookData);
       const createdBook = await createBook(bookData);
+      console.log('Book created successfully:', createdBook);
       
       toast.success("Book created successfully!");
       
