@@ -3,6 +3,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { ArrowRight, BookOpen, Wand2, Check, Sparkles } from 'lucide-react';
+import { HeroPill } from '@/components/ui/hero-pill';
+import { GradientText } from '@/components/ui/gradient-text';
 
 const HeroSection = () => {
   return (
@@ -17,14 +19,18 @@ const HeroSection = () => {
       <div className="max-w-7xl mx-auto relative z-10">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
-            <div className="inline-flex items-center px-3 py-1 rounded-full bg-gradient-to-r from-book-purple/10 to-book-orange/10 text-book-purple text-sm font-medium border border-book-purple/20">
-              <Wand2 size={16} className="mr-2" />
-              <span>AI-Powered Book Creation</span>
+            <div className="flex justify-center md:justify-start">
+              <HeroPill 
+                href="/about"
+                label="Introducing Book Kreate"
+                announcement="✨ New"
+                className="bg-book-purple/20 ring-book-purple/30 [&_div]:bg-book-purple/10 [&_div]:text-book-purple [&_p]:text-book-purple [&_svg_path]:fill-book-purple"
+              />
             </div>
             
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
               <span className="bg-gradient-to-r from-book-darkText via-book-purple to-book-orange bg-clip-text text-transparent">
-                Create Incredible Books with AI in Minutes
+                Create Incredible Books with <GradientText>AI</GradientText> in Minutes
               </span>
             </h1>
             
@@ -77,7 +83,6 @@ const HeroSection = () => {
             <div className="absolute -top-10 -left-10 w-20 h-20 bg-book-orange/10 rounded-full blur-xl"></div>
             <div className="absolute -bottom-10 -right-10 w-20 h-20 bg-book-purple/10 rounded-full blur-xl"></div>
             
-            {/* Main content preview */}
             <div className="rounded-2xl shadow-2xl overflow-hidden border border-white/50 bg-white/50 backdrop-blur-sm relative z-10 animate-float">
               <div className="bg-gradient-to-r from-book-purple to-book-orange h-2"></div>
               
@@ -129,7 +134,6 @@ const HeroSection = () => {
               </div>
             </div>
             
-            {/* Floating elements */}
             <div className="absolute -right-6 top-1/4 transform rotate-6 bg-white rounded-lg shadow-lg p-3 animate-bounce" style={{animationDuration: '6s'}}>
               <Sparkles size={24} className="text-book-orange" />
             </div>
@@ -140,7 +144,6 @@ const HeroSection = () => {
         </div>
       </div>
       
-      {/* Wave divider */}
       <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none">
         <svg className="relative block w-full h-10 md:h-16" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
           <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V120H0V95.8C57.32,118.92,150.83,82.75,321.39,56.44Z" className="fill-white"></path>

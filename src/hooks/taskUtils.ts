@@ -32,7 +32,7 @@ export const deleteTask = (tasks: Task[], taskId: string): Task[] => {
 export const updateBookWithTasks = async (book: any, bookId: string | undefined, tasks: Task[]) => {
   if (bookId && book) {
     try {
-      await updateBook({ ...book, id: bookId, tasks: tasks });
+      await updateBook(bookId, { ...book, tasks: tasks });
       return true;
     } catch (error: any) {
       toast.error(`Failed to update tasks: ${error.message || 'Unknown error'}`);
