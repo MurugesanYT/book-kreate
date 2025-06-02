@@ -56,13 +56,17 @@ export const useExport = () => {
           id: ch.id || `chapter-${idx}`,
           title: ch.title,
           content: ch.content,
-          order: idx
+          order: idx,
+          bookId: ch.bookId,
+          createdAt: ch.createdAt,
+          updatedAt: ch.updatedAt
         })) || [],
         genre: book.genre || '',
         published: book.published || false,
         publishedDate: book.publishedDate,
         createdAt: book.createdAt || new Date().toISOString(),
-        updatedAt: book.updatedAt || new Date().toISOString()
+        updatedAt: book.updatedAt || new Date().toISOString(),
+        status: book.status || "draft"
       };
       
       // Basic options that include table of contents and character list

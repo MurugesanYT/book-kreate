@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import Index from '@/pages/Index';
 import AuthPage from '@/pages/AuthPage';
-import PricingSection from '@/pages/PricingSection';
+import PricingSection from '@/components/PricingSection';
 import FeaturesPage from '@/pages/features/FeaturesPage';
 import AboutPage from '@/pages/about/AboutPage';
 import BlogPage from '@/pages/blog/BlogPage';
