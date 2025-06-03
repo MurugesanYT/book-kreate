@@ -8,17 +8,17 @@ const GEMINI_API_KEY = "AIzaSyDJ9lykUQGKZ5EB0P5GcsKjfjVbKlfoZVE";
 const API_BASE_URL = "https://generativelanguage.googleapis.com/v1/models";
 const MODEL_NAME = "gemini-2.0-flash-001";
 
-// Function to call the Gemini API with improved error handling and retries
+// Function to call the AI API with improved error handling and retries
 export const generateWithGemini = async (prompt: string, maxTokens = 1024): Promise<string> => {
   const maxRetries = 2; // Reduced retries to avoid long waits
   let retries = 0;
   let lastError: Error | null = null;
 
-  console.log("Starting API call to Gemini with prompt:", prompt.substring(0, 100) + "...");
+  console.log("Starting API call to Book Kreate AI with prompt:", prompt.substring(0, 100) + "...");
 
   while (retries <= maxRetries) {
     try {
-      console.log(`Generating content with Gemini (attempt ${retries + 1})`);
+      console.log(`Generating content with Book Kreate AI (attempt ${retries + 1})`);
       
       // Add exponential backoff delay between retries
       if (retries > 0) {
@@ -66,7 +66,7 @@ export const generateWithGemini = async (prompt: string, maxTokens = 1024): Prom
         
         // Handle specific error codes
         if (response.status === 503) {
-          console.log(`Gemini API overloaded (attempt ${retries + 1}), will retry...`);
+          console.log(`Book Kreate AI overloaded (attempt ${retries + 1}), will retry...`);
           throw new Error("The AI service is temporarily overloaded. Retrying...");
         } else if (response.status === 429) {
           console.log(`Rate limited (attempt ${retries + 1}), will retry...`);
@@ -81,7 +81,7 @@ export const generateWithGemini = async (prompt: string, maxTokens = 1024): Prom
         throw new Error("Failed to parse JSON response");
       });
       
-      console.log("Received response from Gemini API", { 
+      console.log("Received response from Book Kreate AI", { 
         status: response.status,
         hasData: !!data,
         hasCandidates: data?.candidates?.length > 0
@@ -104,7 +104,7 @@ export const generateWithGemini = async (prompt: string, maxTokens = 1024): Prom
         throw new Error("No text content in AI response");
       }
 
-      console.log("Successfully generated content with Gemini, length:", textContent.length);
+      console.log("Successfully generated content with Book Kreate AI, length:", textContent.length);
       return textContent;
     } catch (error) {
       console.error(`Error generating content (attempt ${retries + 1}):`, error);
@@ -112,7 +112,7 @@ export const generateWithGemini = async (prompt: string, maxTokens = 1024): Prom
       retries++;
       
       if (retries > maxRetries) {
-        console.error("All retries failed for Gemini API call, giving up.");
+        console.error("All retries failed for Book Kreate AI, giving up.");
         
         // Show user-friendly error message based on the type of error
         if (lastError.message.includes("overloaded") || lastError.message.includes("503")) {
