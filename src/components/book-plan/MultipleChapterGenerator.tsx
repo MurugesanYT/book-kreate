@@ -1,261 +1,312 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Users, Sparkles, AlertCircle, BookOpen, Zap, Clock, Target } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle, Loader2, Sparkles, BookOpen, Zap } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
-import { generateBookChapterWithContext } from '@/lib/api/extendedContentService';
-import { Task } from '@/hooks/taskUtils';
-import { Book } from '@/lib/api/types';
+import { canAddChapter, getUserPlan } from '@/lib/api/planService';
+import { generateWithGemini } from '@/lib/api/geminiService';
 
 interface MultipleChapterGeneratorProps {
-  book: Book;
-  onAddChapters: (chapters: Task[]) => void;
+  book: any;
+  onAddChapters: (chapters: any[]) => void;
 }
 
-const MultipleChapterGenerator: React.FC<MultipleChapterGeneratorProps> = ({
-  book,
-  onAddChapters
-}) => {
-  const [open, setOpen] = useState(false);
-  const [chapterCount, setChapterCount] = useState(5);
-  const [generationType, setGenerationType] = useState<'sequential' | 'outline'>('sequential');
+const MultipleChapterGenerator: React.FC<MultipleChapterGeneratorProps> = ({ book, onAddChapters }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [numberOfChapters, setNumberOfChapters] = useState(3);
+  const [chapterLength, setChapterLength] = useState('medium');
   const [customPrompt, setCustomPrompt] = useState('');
-  const [generating, setGenerating] = useState(false);
+  const [generationStyle, setGenerationStyle] = useState('sequential');
   const [progress, setProgress] = useState(0);
+  const [currentChapter, setCurrentChapter] = useState(0);
+  
+  const userPlan = getUserPlan();
+  const maxChapters = userPlan === 'Ultimate' ? 10 : userPlan === 'Pro' ? 6 : 3;
 
   const handleGenerateChapters = async () => {
-    if (chapterCount < 1 || chapterCount > 25) {
-      toast.error('Please enter a number between 1 and 25');
+    if (!canAddChapter(book)) {
+      toast.error(`Your ${userPlan} plan limits the number of chapters. Please upgrade to add more.`);
+      setIsOpen(false);
       return;
     }
 
-    setGenerating(true);
-    setProgress(0);
-    
     try {
-      toast.info(`🚀 Generating ${chapterCount} chapters with Book Kreate AI...`);
+      setIsGenerating(true);
+      setProgress(0);
+      setCurrentChapter(0);
       
-      const newChapters: Task[] = [];
+      const chapters = [];
+      const existingChapters = book.chapters || [];
       
-      for (let i = 1; i <= chapterCount; i++) {
-        setProgress((i / chapterCount) * 100);
+      // Create context from existing book content
+      const bookContext = `
+        Book Title: ${book.title}
+        Genre: ${book.category || 'Fiction'}
+        Description: ${book.description || 'A compelling story'}
+        ${book.characterList ? `Characters: ${book.characterList}` : ''}
         
-        const chapterTitle = `Chapter ${i}`;
-        let chapterDescription = `Content for chapter ${i} of ${book.title}`;
-        
-        // Add custom prompt context if provided
-        if (customPrompt) {
-          chapterDescription += `. Additional context: ${customPrompt}`;
-        }
-        
-        // Add generation type specific instructions
-        if (generationType === 'outline') {
-          chapterDescription += `. This chapter should follow a clear outline structure with key plot points.`;
-        } else {
-          chapterDescription += `. This chapter should flow naturally from the previous chapters.`;
-        }
-        
-        // Get previous chapters for context (limit to last 3 for performance)
-        const previousChapters = book.chapters?.slice(Math.max(0, book.chapters.length - 3)).map(ch => ({
-          title: ch.title,
-          content: ch.content || ''
-        })) || [];
+        Existing Chapters: ${existingChapters.length}
+        ${existingChapters.slice(-2).map((ch: any, idx: number) => 
+          `Chapter ${existingChapters.length - 1 + idx}: ${ch.title}\n${ch.content?.substring(0, 300) || ''}...`
+        ).join('\n\n')}
+      `;
+
+      for (let i = 0; i < numberOfChapters; i++) {
+        setCurrentChapter(i + 1);
+        setProgress(((i + 1) / numberOfChapters) * 100);
         
         try {
-          toast.loading(`✨ Creating ${chapterTitle} with AI...`);
+          // Generate chapter title
+          const titlePrompt = `Based on this book context:\n${bookContext}\n\nGenerate a compelling chapter title for Chapter ${existingChapters.length + i + 1}. ${customPrompt ? `Additional guidance: ${customPrompt}` : ''}\n\nReturn only the chapter title, nothing else.`;
           
-          const content = await generateBookChapterWithContext(
-            book,
-            chapterTitle,
-            chapterDescription,
-            previousChapters
-          );
+          const chapterTitle = await generateWithGemini(titlePrompt, 100);
           
-          const newChapter: Task = {
+          // Generate chapter content
+          const contentPrompt = `Write Chapter ${existingChapters.length + i + 1}: "${chapterTitle.trim()}" for this book:
+
+${bookContext}
+
+Chapter Requirements:
+- Length: ${chapterLength} (${chapterLength === 'short' ? '800-1200' : chapterLength === 'medium' ? '1500-2500' : '2500-4000'} words)
+- Style: ${generationStyle === 'sequential' ? 'Continue the story naturally from previous chapters' : 'Create an engaging standalone chapter that fits the overall narrative'}
+- Tone: Match the book's established tone and genre
+${customPrompt ? `- Special Instructions: ${customPrompt}` : ''}
+
+Write engaging, well-structured content with proper dialogue, character development, and scene description. Make it compelling and true to the book's style.
+
+Return only the chapter content, no title or extra formatting.`;
+
+          const chapterContent = await generateWithGemini(contentPrompt, chapterLength === 'short' ? 3000 : chapterLength === 'medium' ? 6000 : 10000);
+          
+          const newChapter = {
             id: uuidv4(),
-            title: chapterTitle,
+            title: chapterTitle.trim(),
+            description: `AI-generated ${chapterLength} chapter using ${generationStyle} style`,
             type: 'chapter',
             status: 'completed',
-            description: chapterDescription
+            content: chapterContent,
+            timestamp: new Date().toISOString(),
           };
           
-          // Add the chapter to the book's chapters array
-          if (!book.chapters) {
-            book.chapters = [];
-          }
+          chapters.push(newChapter);
           
-          book.chapters.push({
-            id: uuidv4(),
-            title: chapterTitle,
-            content: content,
-            order: book.chapters.length + 1
-          });
-          
-          newChapters.push(newChapter);
-          
-          toast.success(`📖 ${chapterTitle} completed!`);
-          
-          // Small delay to avoid overwhelming the API
-          if (i < chapterCount) {
+          // Add small delay between generations to prevent rate limiting
+          if (i < numberOfChapters - 1) {
             await new Promise(resolve => setTimeout(resolve, 1000));
           }
-        } catch (error) {
-          console.error(`Error generating chapter ${i}:`, error);
-          toast.error(`❌ Failed to generate Chapter ${i}`);
           
-          // Create an empty chapter as fallback
-          const fallbackChapter: Task = {
+        } catch (chapterError) {
+          console.error(`Error generating chapter ${i + 1}:`, chapterError);
+          
+          // Create fallback chapter
+          const fallbackChapter = {
             id: uuidv4(),
-            title: chapterTitle,
+            title: `Chapter ${existingChapters.length + i + 1}: Continuing the Journey`,
+            description: `Fallback chapter - please regenerate`,
             type: 'chapter',
-            status: 'pending',
-            description: `Chapter ${i} - needs content generation`
+            status: 'draft',
+            content: `This chapter was intended to continue the story of "${book.title}". Please regenerate this chapter for better content.`,
+            timestamp: new Date().toISOString(),
           };
-          newChapters.push(fallbackChapter);
+          
+          chapters.push(fallbackChapter);
         }
       }
       
-      if (newChapters.length > 0) {
-        onAddChapters(newChapters);
-        toast.success(`🎉 Successfully created ${newChapters.length} chapters! Your book is taking shape.`);
-        setOpen(false);
-        
-        // Reset form
-        setChapterCount(5);
-        setCustomPrompt('');
-        setGenerationType('sequential');
-      }
+      onAddChapters(chapters);
+      setProgress(100);
+      
+      toast.success(`Successfully generated ${chapters.length} chapters!`);
+      setIsOpen(false);
+      
     } catch (error) {
-      console.error('Error generating chapters:', error);
-      toast.error('❌ Failed to generate chapters. Please try again.');
+      console.error('Error in bulk generation:', error);
+      toast.error('Failed to generate chapters. Please try again.');
     } finally {
-      setGenerating(false);
+      setIsGenerating(false);
       setProgress(0);
+      setCurrentChapter(0);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2 bg-gradient-to-r from-book-purple to-book-orange hover:opacity-90 shadow-lg px-6 py-3 rounded-xl">
-          <Sparkles className="h-4 w-4" />
-          Bulk Generate Chapters
+        <Button className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 rounded-xl shadow-lg hover:shadow-xl transition-all font-semibold">
+          <Users className="h-5 w-5 mr-2" />
+          Generate Multiple Chapters
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-[600px] bg-white/95 backdrop-blur-lg rounded-3xl border border-green-200">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <Zap className="h-5 w-5 text-book-purple" />
-            AI Chapter Generator
+          <DialogTitle className="flex items-center gap-3 text-2xl">
+            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+              <Users className="h-5 w-5 text-white" />
+            </div>
+            AI Bulk Chapter Generator
           </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="chapterCount" className="text-sm font-medium">Number of Chapters</Label>
-              <Input
-                id="chapterCount"
-                type="number"
-                min="1"
-                max="25"
-                value={chapterCount}
-                onChange={(e) => setChapterCount(parseInt(e.target.value) || 1)}
-                placeholder="Enter number"
-                className="mt-1"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="generationType" className="text-sm font-medium">Generation Style</Label>
-              <Select value={generationType} onValueChange={(value: 'sequential' | 'outline') => setGenerationType(value)}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sequential">Sequential Flow</SelectItem>
-                  <SelectItem value="outline">Structured Outline</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div>
-            <Label htmlFor="customPrompt" className="text-sm font-medium">Additional Instructions (Optional)</Label>
-            <Textarea
-              id="customPrompt"
-              value={customPrompt}
-              onChange={(e) => setCustomPrompt(e.target.value)}
-              placeholder="Provide specific themes, tone, or plot points you want included..."
-              className="mt-1 min-h-[80px]"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Help our AI understand your vision better with specific guidance
-            </p>
-          </div>
-          
-          {generating && (
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-blue-800">Generating chapters...</span>
-                <span className="text-sm text-blue-600">{Math.round(progress)}%</span>
-              </div>
-              <div className="w-full bg-blue-200 rounded-full h-2">
-                <div 
-                  className="bg-gradient-to-r from-book-purple to-book-orange h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                ></div>
-              </div>
-            </div>
+        <div className="space-y-8 py-6">
+          {!canAddChapter(book) && (
+            <Alert variant="destructive" className="rounded-2xl border-red-200">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Chapter limit reached</AlertTitle>
+              <AlertDescription>
+                Your {userPlan} plan allows a maximum number of chapters. Please upgrade to add more chapters.
+              </AlertDescription>
+            </Alert>
           )}
           
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="flex items-start gap-3">
-              <BookOpen className="h-5 w-5 text-book-purple mt-0.5" />
-              <div>
-                <h4 className="font-medium text-gray-900 mb-1">How it works</h4>
-                <p className="text-sm text-gray-600">
-                  Our AI will analyze your book's context and generate {chapterCount} chapters with 
-                  rich content, maintaining consistency with your story's tone and style.
-                </p>
-              </div>
-            </div>
-          </div>
+          {/* Generation Progress */}
+          {isGenerating && (
+            <Card className="border-green-200 bg-green-50/50 rounded-2xl">
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-green-800">
+                      Generating Chapter {currentChapter} of {numberOfChapters}
+                    </span>
+                    <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
+                      {Math.round(progress)}%
+                    </Badge>
+                  </div>
+                  <Progress value={progress} className="h-3 bg-green-100" />
+                  <p className="text-sm text-green-700">
+                    Please wait while our AI crafts your chapters with care and creativity...
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
           
-          <div className="flex justify-end space-x-3 pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={() => setOpen(false)}
-              disabled={generating}
-              className="px-6"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleGenerateChapters}
-              disabled={generating || !chapterCount}
-              className="bg-gradient-to-r from-book-purple to-book-orange hover:opacity-90 px-6"
-            >
-              {generating ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Generate {chapterCount} Chapters
-                </>
-              )}
-            </Button>
-          </div>
+          {/* Configuration Options */}
+          {!isGenerating && (
+            <>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <Label htmlFor="numberOfChapters" className="text-base font-semibold">Number of Chapters</Label>
+                  <Select
+                    value={numberOfChapters.toString()}
+                    onValueChange={(value) => setNumberOfChapters(parseInt(value))}
+                  >
+                    <SelectTrigger className="rounded-xl border-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      {Array.from({ length: maxChapters }, (_, i) => i + 1).map((num) => (
+                        <SelectItem key={num} value={num.toString()}>
+                          {num} Chapter{num > 1 ? 's' : ''}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-3">
+                  <Label htmlFor="chapterLength" className="text-base font-semibold">Chapter Length</Label>
+                  <Select value={chapterLength} onValueChange={setChapterLength}>
+                    <SelectTrigger className="rounded-xl border-2">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      <SelectItem value="short">Short (~1,000 words)</SelectItem>
+                      <SelectItem value="medium">Medium (~2,000 words)</SelectItem>
+                      <SelectItem value="long">Long (~3,500 words)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <Label htmlFor="generationStyle" className="text-base font-semibold">Generation Style</Label>
+                <Select value={generationStyle} onValueChange={setGenerationStyle}>
+                  <SelectTrigger className="rounded-xl border-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="sequential">Sequential Story Progression</SelectItem>
+                    <SelectItem value="thematic">Thematic Chapters</SelectItem>
+                    <SelectItem value="character-focused">Character Development Focused</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-3">
+                <Label htmlFor="customPrompt" className="text-base font-semibold">
+                  Custom Instructions <span className="text-sm font-normal text-slate-500">(Optional)</span>
+                </Label>
+                <Textarea
+                  id="customPrompt"
+                  placeholder="Provide specific guidance for the AI about themes, plot points, or character development you want to include..."
+                  value={customPrompt}
+                  onChange={(e) => setCustomPrompt(e.target.value)}
+                  className="min-h-[120px] rounded-xl border-2"
+                />
+              </div>
+              
+              {/* Feature Highlights */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center p-4 bg-blue-50 rounded-2xl border border-blue-200">
+                  <Clock className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-blue-800">Time Efficient</p>
+                  <p className="text-xs text-blue-600">Generate hours of content in minutes</p>
+                </div>
+                
+                <div className="text-center p-4 bg-purple-50 rounded-2xl border border-purple-200">
+                  <Sparkles className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-purple-800">Context Aware</p>
+                  <p className="text-xs text-purple-600">Maintains story continuity</p>
+                </div>
+                
+                <div className="text-center p-4 bg-green-50 rounded-2xl border border-green-200">
+                  <Target className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-green-800">Customizable</p>
+                  <p className="text-xs text-green-600">Follows your specific guidelines</p>
+                </div>
+              </div>
+            </>
+          )}
         </div>
+        
+        <DialogFooter>
+          <Button 
+            variant="outline" 
+            onClick={() => setIsOpen(false)}
+            disabled={isGenerating}
+            className="rounded-xl border-2"
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleGenerateChapters} 
+            disabled={isGenerating || !canAddChapter(book)}
+            className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all"
+          >
+            {isGenerating ? (
+              <>
+                <Zap className="h-4 w-4 mr-2 animate-pulse" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4 mr-2" />
+                Generate {numberOfChapters} Chapter{numberOfChapters > 1 ? 's' : ''}
+              </>
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
