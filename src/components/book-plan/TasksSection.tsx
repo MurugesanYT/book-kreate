@@ -1,14 +1,10 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Plus, Book, Star } from 'lucide-react';
+import { Plus, Wand2, Users } from 'lucide-react';
 import { Task } from '@/hooks/taskUtils';
 import { Book as BookType } from '@/lib/api/types';
-import PendingTaskList from './PendingTaskList';
-import InProgressTaskList from './InProgressTaskList';
-import CompletedTaskList from './CompletedTaskList';
 import AddChapterDialog from './AddChapterDialog';
 import AIChapterCreator from './AIChapterCreator';
 import CharacterListDialog from './CharacterListDialog';
@@ -37,27 +33,21 @@ const TasksSection: React.FC<TasksSectionProps> = ({
   onAddChapter,
   onSave
 }) => {
-  const [activeTab, setActiveTab] = useState<string>('pending');
-  
-  // Ensure tasks is an array before filtering
-  const safeTasksArray = Array.isArray(tasks) ? tasks : [];
-  
-  const pendingTasks = safeTasksArray.filter(task => task.status === 'pending');
-  const inProgressTasks = safeTasksArray.filter(task => task.status === 'inProgress');
-  const completedTasks = safeTasksArray.filter(task => task.status === 'completed');
-  
   const showAddChapterButton = canAddChapter(book);
 
   const handleAddMultipleChapters = (chapters: Task[]) => {
     chapters.forEach(chapter => onAddChapter(chapter));
-    onSave(book); // Save the book with the new chapters
+    onSave(book);
   };
 
   return (
     <Card className="mt-6">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Book Tasks</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Wand2 className="h-5 w-5 text-purple-600" />
+            Chapter Generation Tools
+          </CardTitle>
           <div className="flex flex-wrap gap-2 items-center">
             <CharacterListDialog book={book} onSave={onSave} />
             {showAddChapterButton ? (
@@ -76,86 +66,49 @@ const TasksSection: React.FC<TasksSectionProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="pending" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-3 mb-4">
-            <TabsTrigger value="pending" className="flex items-center gap-2">
-              <Book className="h-4 w-4" />
-              Pending
-              {pendingTasks.length > 0 && (
-                <span className="ml-1 bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded-md text-xs">
-                  {pendingTasks.length}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="in-progress" className="flex items-center gap-2">
-              <Star className="h-4 w-4" />
-              In Progress
-              {inProgressTasks.length > 0 && (
-                <span className="ml-1 bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded-md text-xs">
-                  {inProgressTasks.length}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="completed" className="flex items-center gap-2">
-              Completed
-              {completedTasks.length > 0 && (
-                <span className="ml-1 bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded-md text-xs">
-                  {completedTasks.length}
-                </span>
-              )}
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="pending">
-            <PendingTaskList 
-              tasks={pendingTasks} 
-              generatingTaskId={generatingTaskId}
-              onGenerateContent={onGenerateContent} 
-              onDeleteTask={onDeleteTask} 
-            />
-            
-            {pendingTasks.length === 0 && (
-              <div className="text-center p-8 text-gray-500">
-                <p>No pending tasks</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                <Plus className="h-5 w-5 text-white" />
               </div>
-            )}
-          </TabsContent>
+              <h3 className="font-semibold text-blue-900">Add Single Chapter</h3>
+            </div>
+            <p className="text-blue-700 text-sm mb-4">Create one chapter at a time with custom titles and descriptions.</p>
+            {showAddChapterButton && <AddChapterDialog book={book} onAddChapter={onAddChapter} />}
+          </div>
           
-          <TabsContent value="in-progress">
-            <InProgressTaskList 
-              tasks={inProgressTasks}
-              generatingTaskId={generatingTaskId}
-            />
-            
-            {inProgressTasks.length === 0 && (
-              <div className="text-center p-8 text-gray-500">
-                <p>No tasks in progress</p>
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+                <Wand2 className="h-5 w-5 text-white" />
               </div>
-            )}
-          </TabsContent>
+              <h3 className="font-semibold text-purple-900">AI Chapter Creator</h3>
+            </div>
+            <p className="text-purple-700 text-sm mb-4">Let AI suggest and create chapters based on your book's content.</p>
+            {showAddChapterButton && <AIChapterCreator book={book} onAddChapter={onAddChapter} />}
+          </div>
           
-          <TabsContent value="completed">
-            <CompletedTaskList 
-              tasks={completedTasks}
-              onMarkAsComplete={onMarkAsComplete}
-            />
-            
-            {completedTasks.length === 0 && (
-              <div className="text-center p-8 text-gray-500">
-                <p>No completed tasks</p>
+          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                <Users className="h-5 w-5 text-white" />
               </div>
-            )}
-          </TabsContent>
-        </Tabs>
+              <h3 className="font-semibold text-green-900">Bulk Generator</h3>
+            </div>
+            <p className="text-green-700 text-sm mb-4">Generate multiple chapters at once with AI assistance.</p>
+            {showAddChapterButton && <MultipleChapterGenerator book={book} onAddChapters={handleAddMultipleChapters} />}
+          </div>
+        </div>
         
-        <Separator className="my-4" />
+        <Separator className="my-6" />
         
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <div>Total Tasks: {safeTasksArray.length}</div>
-          <div className="flex gap-3">
-            <div>Pending: {pendingTasks.length}</div>
-            <div>In Progress: {inProgressTasks.length}</div>
-            <div>Completed: {completedTasks.length}</div>
+        <div className="text-center py-8">
+          <p className="text-slate-600 mb-4">
+            Use the tools above to generate chapters for your book. All generated content will appear in the Write tab.
+          </p>
+          <div className="text-sm text-slate-500">
+            Your chapters will be automatically organized and ready for editing.
           </div>
         </div>
       </CardContent>

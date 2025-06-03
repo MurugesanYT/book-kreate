@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -15,8 +14,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useAuth } from '@/contexts/AuthContext';
-import { BookOpen, LogOut, PlusCircle, Clock, CheckCircle, Trash2 } from 'lucide-react';
+import { BookOpen, LogOut, PlusCircle, Clock, CheckCircle, Trash2, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface BookSummary {
   id: string;
@@ -33,7 +38,6 @@ const DashboardPage = () => {
   const { currentUser, logOut, loading } = useAuth();
   const navigate = useNavigate();
   const [books, setBooks] = useState<BookSummary[]>([]);
-  const [bookToDelete, setBookToDelete] = useState<string | null>(null);
   
   useEffect(() => {
     loadBooks();
@@ -115,15 +119,16 @@ const DashboardPage = () => {
     } catch (error) {
       console.error("Error deleting book:", error);
       toast.error("Failed to delete book");
-    } finally {
-      setBookToDelete(null);
     }
   };
   
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-book-purple"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-purple-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-purple-600 border-opacity-25 mx-auto mb-4"></div>
+          <p className="text-slate-600 font-medium">Loading your dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -138,11 +143,14 @@ const DashboardPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-book-lightGray">
-      <header className="bg-white shadow-sm border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50">
+      <header className="bg-white/95 backdrop-blur-lg shadow-sm border-b border-slate-200/60 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex justify-between items-center">
           <div className="flex items-center">
-            <span className="text-xl font-bold bg-gradient-to-r from-book-purple to-book-orange bg-clip-text text-transparent">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-purple-600 to-orange-500 flex items-center justify-center text-white mr-3 shadow-lg">
+              <span className="text-xl font-bold">BK</span>
+            </div>
+            <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-orange-500 bg-clip-text text-transparent">
               Book-Kreate
             </span>
           </div>
@@ -152,14 +160,14 @@ const DashboardPage = () => {
               <img 
                 src={currentUser.photoURL} 
                 alt={currentUser.displayName || "User"} 
-                className="w-10 h-10 rounded-full border-2 border-book-purple"
+                className="w-12 h-12 rounded-2xl border-2 border-purple-200 shadow-md"
               />
             )}
             
             <Button 
               variant="outline" 
               size="sm"
-              className="text-book-purple border-book-purple"
+              className="text-purple-600 border-purple-200 hover:bg-purple-50"
               onClick={logOut}
             >
               <LogOut size={16} className="mr-2" />
@@ -170,161 +178,173 @@ const DashboardPage = () => {
       </header>
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold text-book-darkText">
-            Welcome, {currentUser?.displayName || "User"}
-          </h1>
+        <div className="flex justify-between items-center mb-12">
+          <div>
+            <h1 className="text-4xl font-bold text-slate-800 mb-2">
+              Welcome back, {currentUser?.displayName || "Creator"}
+            </h1>
+            <p className="text-slate-600 text-lg">Continue your writing journey or start a new masterpiece</p>
+          </div>
           
           <Button 
-            className="bg-book-purple hover:bg-book-purple/90"
+            className="bg-gradient-to-r from-purple-600 to-orange-500 hover:from-purple-700 hover:to-orange-600 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
             onClick={handleCreateBook}
           >
-            <BookOpen size={16} className="mr-2" />
+            <BookOpen size={18} className="mr-2" />
             Create New Book
           </Button>
         </div>
         
         {sortedBooks.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-6 text-center">
-            <h2 className="text-xl font-semibold mb-4 text-book-darkText">
-              Your Book Dashboard
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl p-12 text-center border border-slate-200/50">
+            <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-orange-100 rounded-3xl flex items-center justify-center mx-auto mb-8">
+              <BookOpen className="h-12 w-12 text-purple-600" />
+            </div>
+            <h2 className="text-3xl font-bold mb-4 text-slate-800">
+              Your Writing Journey Starts Here
             </h2>
-            <p className="text-slate-600 mb-6">
-              You haven't created any books yet. Get started by clicking the "Create New Book" button.
+            <p className="text-slate-600 mb-8 text-lg max-w-md mx-auto">
+              Ready to create your first masterpiece? Our AI will help you transform your ideas into a complete book.
             </p>
             
-            <div className="max-w-md mx-auto">
-              <Button 
-                className="w-full py-6 bg-book-purple hover:bg-book-purple/90" 
-                onClick={handleCreateBook}
-              >
-                <BookOpen size={18} className="mr-2" />
-                Generate Book with AI
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div 
-              className="bg-white rounded-lg shadow-md p-6 border-2 border-dashed border-book-purple/30 flex flex-col items-center justify-center text-center cursor-pointer hover:border-book-purple transition-colors"
+            <Button 
+              className="bg-gradient-to-r from-purple-600 to-orange-500 hover:from-purple-700 hover:to-orange-600 text-white px-8 py-4 rounded-xl text-lg shadow-lg hover:shadow-xl transition-all duration-200" 
               onClick={handleCreateBook}
             >
-              <div className="w-16 h-16 rounded-full bg-book-purple/10 flex items-center justify-center mb-4">
-                <PlusCircle size={32} className="text-book-purple" />
+              <BookOpen size={20} className="mr-3" />
+              Start Writing Your Book
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div 
+              className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 border-2 border-dashed border-purple-300/50 flex flex-col items-center justify-center text-center cursor-pointer hover:border-purple-400 hover:bg-white/80 transition-all duration-300 hover:scale-105"
+              onClick={handleCreateBook}
+            >
+              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-100 to-orange-100 flex items-center justify-center mb-6">
+                <PlusCircle size={36} className="text-purple-600" />
               </div>
-              <h3 className="text-lg font-semibold text-book-darkText mb-2">
+              <h3 className="text-2xl font-bold text-slate-800 mb-3">
                 Create New Book
               </h3>
-              <p className="text-slate-500">
-                Start generating your next masterpiece with AI
+              <p className="text-slate-600 text-lg">
+                Start your next literary adventure with AI
               </p>
             </div>
             
             {sortedBooks.map((book) => (
               <div 
                 key={book.id} 
-                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+                className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 border border-slate-200/50"
               >
-                <div className="h-3 bg-gradient-to-r from-book-purple to-book-orange"></div>
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-2">
+                <div className="h-2 bg-gradient-to-r from-purple-600 to-orange-500"></div>
+                <div className="p-8">
+                  <div className="flex justify-between items-start mb-4">
                     <h3 
-                      className="text-lg font-semibold text-book-darkText mb-1 line-clamp-1 cursor-pointer hover:text-book-purple transition-colors"
+                      className="text-xl font-bold text-slate-800 mb-2 line-clamp-2 cursor-pointer hover:text-purple-600 transition-colors"
                       onClick={() => handleViewBook(book.id)}
                     >
                       {book.title || "Untitled Book"}
                     </h3>
                     
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-red-500 hover:bg-red-50 hover:text-red-600 -mt-1"
-                        >
-                          <Trash2 size={16} />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <MoreVertical className="h-4 w-4" />
                         </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Book</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete "{book.title}"? This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction 
-                            className="bg-red-500 text-white hover:bg-red-600"
-                            onClick={() => handleDeleteBook(book.id)}
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleViewBook(book.id)}>
+                          <BookOpen className="h-4 w-4 mr-2" />
+                          Open Book
+                        </DropdownMenuItem>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600 focus:text-red-600">
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Book
+                            </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Book</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete "{book.title}"? This action cannot be undone and all content will be permanently lost.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction 
+                                className="bg-red-500 text-white hover:bg-red-600"
+                                onClick={() => handleDeleteBook(book.id)}
+                              >
+                                Delete Book
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                   
                   <div 
-                    className="flex flex-wrap gap-2 mb-4 cursor-pointer"
+                    className="flex flex-wrap gap-2 mb-6 cursor-pointer"
                     onClick={() => handleViewBook(book.id)}
                   >
-                    <span className="bg-book-purple/10 text-book-purple px-2 py-0.5 rounded-full text-xs">
+                    <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium">
                       {book.type}
                     </span>
-                    <span className="bg-book-orange/10 text-book-orange px-2 py-0.5 rounded-full text-xs">
+                    <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-medium">
                       {book.category}
                     </span>
                     {book.chaptersCount > 0 && (
-                      <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-xs">
+                      <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
                         {book.completedChaptersCount}/{book.chaptersCount} chapters
                       </span>
                     )}
                   </div>
                   
                   <div 
-                    className="flex items-center justify-between mb-2 cursor-pointer"
+                    className="flex items-center justify-between mb-4 cursor-pointer"
                     onClick={() => handleViewBook(book.id)}
                   >
                     <span className="text-sm text-slate-500 flex items-center">
-                      <Clock size={14} className="mr-1" />
+                      <Clock size={14} className="mr-2" />
                       {new Date(book.timestamp).toLocaleDateString()}
                     </span>
-                    <span className="text-sm font-medium">
+                    <span className="text-sm font-semibold">
                       {book.progress === 100 ? (
                         <span className="text-green-600 flex items-center">
-                          <CheckCircle size={14} className="mr-1" />
+                          <CheckCircle size={16} className="mr-1" />
                           Complete
                         </span>
                       ) : (
-                        <span className="text-book-purple">{book.progress}% Complete</span>
+                        <span className="text-purple-600">{book.progress}% Complete</span>
                       )}
                     </span>
                   </div>
                   
                   <div 
-                    className="w-full bg-slate-200 rounded-full h-1.5 cursor-pointer"
+                    className="w-full bg-slate-200 rounded-full h-2 cursor-pointer mb-6"
                     onClick={() => handleViewBook(book.id)}
                   >
                     <div 
-                      className={`h-1.5 rounded-full ${
+                      className={`h-2 rounded-full transition-all duration-300 ${
                         book.progress === 100 
-                          ? 'bg-green-500' 
-                          : 'bg-book-purple'
+                          ? 'bg-gradient-to-r from-green-400 to-green-600' 
+                          : 'bg-gradient-to-r from-purple-600 to-orange-500'
                       }`}
                       style={{ width: `${book.progress}%` }}
                     ></div>
                   </div>
                   
-                  <div className="mt-4 flex">
-                    <Button 
-                      className="w-full mt-2 bg-book-purple hover:bg-book-purple/90" 
-                      onClick={() => handleViewBook(book.id)}
-                    >
-                      <BookOpen size={14} className="mr-2" />
-                      Continue
-                    </Button>
-                  </div>
+                  <Button 
+                    className="w-full bg-gradient-to-r from-purple-600 to-orange-500 hover:from-purple-700 hover:to-orange-600 text-white py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200" 
+                    onClick={() => handleViewBook(book.id)}
+                  >
+                    <BookOpen size={16} className="mr-2" />
+                    Continue Writing
+                  </Button>
                 </div>
               </div>
             ))}
