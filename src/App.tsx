@@ -62,7 +62,7 @@ function App() {
                 <BookCreationPage />
               </RequireAuth>
             } />
-            <Route path="/book/:id" element={
+            <Route path="/book/:bookId" element={
               <RequireAuth>
                 <BookPlanPage />
               </RequireAuth>

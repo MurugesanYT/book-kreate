@@ -11,10 +11,13 @@ import BookSettingsSection from '@/components/book-plan/BookSettingsSection';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const BookPlanPage = () => {
-  const { bookId } = useParams<{ bookId: string }>();
+  const params = useParams();
+  const bookId = params.bookId;
   const [activeTab, setActiveTab] = useState('plan');
   
-  console.log('BookPlanPage - bookId from params:', bookId);
+  console.log('BookPlanPage - Raw params:', params);
+  console.log('BookPlanPage - Extracted bookId:', bookId);
+  console.log('BookPlanPage - Current URL:', window.location.href);
   
   const {
     book,

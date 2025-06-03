@@ -223,15 +223,15 @@ const BookDetailsForm = () => {
       
       toast.success("Book created successfully!");
       
-      // Add a small delay to ensure the book is saved in the database
-      setTimeout(() => {
-        console.log('Navigating to book plan page with ID:', createdBook.id);
-        navigate(`/book/${createdBook.id}`);
-      }, 500);
+      // Navigate immediately with the correct book ID
+      const bookId = createdBook.id;
+      console.log('Navigating to book plan page with ID:', bookId);
+      navigate(`/book/${bookId}`);
       
     } catch (error: any) {
       console.error("Error creating book:", error);
       toast.error(error.message || "Failed to create book. Please try again.");
+    } finally {
       setIsSubmitting(false);
     }
   };
