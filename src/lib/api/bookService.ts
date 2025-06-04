@@ -1,15 +1,18 @@
 
 // Book service to handle book operations with Firebase Realtime Database
 import { toast } from "sonner";
-import { database } from "@/lib/firebase";
+import { database, auth } from "@/lib/firebase";
 import { ref, push, get, set, remove, child, query, orderByChild, equalTo } from "firebase/database";
 import { BookData, PlanItem, Book } from "./types";
 import { generateBookPlan, canCreateBook, canAddChapter } from "./planService";
 
-// Get current user ID (you may need to adjust this based on your auth implementation)
+// Get current user ID from Firebase Auth
 const getCurrentUserId = () => {
-  // For now, we'll use a default user ID. You should replace this with actual user authentication
-  return "user_default"; // Replace with actual user ID from auth context
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+  return user.uid;
 };
 
 // Function to get a book by ID

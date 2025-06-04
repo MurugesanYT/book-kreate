@@ -4,6 +4,7 @@ import { Facebook, Twitter as X, Instagram, Github, Mail, MapPin, BookOpen, Send
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { subscribeToNewsletter } from "@/lib/api/newsletterService";
 
 const LandingFooter = () => {
   const currentYear = new Date().getFullYear();
@@ -24,20 +25,18 @@ const LandingFooter = () => {
 
     setIsLoading(true);
     
-    // Simulate API call - replace with actual newsletter service
     try {
-      // TODO: Integrate with newsletter service (ConvertKit, Mailchimp, etc.)
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await subscribeToNewsletter(email);
       
       toast({
         title: "Success!",
         description: "You've been subscribed to our newsletter.",
       });
       setEmail('');
-    } catch (error) {
+    } catch (error: any) {
       toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
+        title: "Subscription failed",
+        description: error.message || "Something went wrong. Please try again.",
         variant: "destructive",
       });
     } finally {

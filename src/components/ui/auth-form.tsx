@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react"
-import { ChevronLeft, Github, Twitter } from "lucide-react"
+import { ChevronLeft, Github } from "lucide-react"
 import { motion } from "framer-motion"
 import { FcGoogle } from "react-icons/fc"
 
@@ -85,11 +85,11 @@ const SocialButtons: React.FC<SocialButtonsProps> = ({
         Continue with Google
       </SocialButton>
       <SocialButton 
-        icon={<Twitter size={20} />} 
+        icon={<div className="w-5 h-5 bg-black rounded-sm flex items-center justify-center text-white font-bold text-sm">𝕏</div>} 
         onClick={onTwitterSignIn}
         disabled={isLoading}
       >
-        Continue with Twitter
+        Continue with X
       </SocialButton>
       <SocialButton 
         icon={<Github size={20} />} 
