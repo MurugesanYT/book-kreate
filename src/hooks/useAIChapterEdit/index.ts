@@ -89,3 +89,4 @@ Consider the character development and plot progression that has happened so far
 export * from './types';
 export * from './constants';
 export * from './contentAnalysis';
+export * from './contentGeneration';
