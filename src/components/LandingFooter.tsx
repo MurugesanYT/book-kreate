@@ -1,12 +1,49 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Twitter as X, Instagram, Github, Mail, MapPin, BookOpen } from 'lucide-react';
+import { Facebook, Twitter as X, Instagram, Github, Mail, MapPin, BookOpen, Send } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 const LandingFooter = () => {
   const currentYear = new Date().getFullYear();
+  const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast({
+        title: "Email required",
+        description: "Please enter your email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    
+    // Simulate API call - replace with actual newsletter service
+    try {
+      // TODO: Integrate with newsletter service (ConvertKit, Mailchimp, etc.)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast({
+        title: "Success!",
+        description: "You've been subscribed to our newsletter.",
+      });
+      setEmail('');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   return (
     <footer className="bg-gradient-to-br from-slate-900 to-book-purple/90 text-white">
@@ -19,22 +56,47 @@ const LandingFooter = () => {
       
       {/* Newsletter section */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-8 pb-16">
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 md:p-10 mb-16 border border-white/20 shadow-xl">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
+        <div className="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-lg rounded-2xl p-6 md:p-10 mb-16 border border-white/20 shadow-2xl relative overflow-hidden">
+          {/* Background decorative elements */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-book-orange/20 rounded-full blur-2xl"></div>
+            <div className="absolute bottom-0 left-0 w-40 h-40 bg-book-purple/20 rounded-full blur-2xl"></div>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8 items-center relative z-10">
             <div>
-              <h3 className="text-2xl md:text-3xl font-bold mb-4">Stay updated with our latest features</h3>
+              <h3 className="text-2xl md:text-3xl font-bold mb-4 bg-gradient-to-r from-white to-book-lightPurple bg-clip-text text-transparent">
+                Stay updated with our latest features
+              </h3>
               <p className="text-white/80 mb-4 md:mb-0">Join our newsletter and be the first to know about new AI book creation tools and features.</p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3">
+            <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3">
               <Input 
                 type="email" 
                 placeholder="Enter your email" 
-                className="bg-white/20 border-white/30 text-white placeholder:text-white/60 focus:border-white"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="bg-white/20 border-white/30 text-white placeholder:text-white/60 focus:border-white focus:ring-2 focus:ring-white/50 transition-all duration-200"
+                disabled={isLoading}
               />
-              <Button className="bg-white text-book-purple hover:bg-white/90">
-                Subscribe
+              <Button 
+                type="submit"
+                disabled={isLoading}
+                className="bg-gradient-to-r from-book-purple to-book-orange hover:from-book-purple/80 hover:to-book-orange/80 text-white font-medium px-6 transition-all duration-200 group"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full mr-2"></div>
+                    Subscribing...
+                  </>
+                ) : (
+                  <>
+                    Subscribe
+                    <Send size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
               </Button>
-            </div>
+            </form>
           </div>
         </div>
         
