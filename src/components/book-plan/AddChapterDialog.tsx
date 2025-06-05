@@ -20,9 +20,10 @@ type StylePreference = {
 interface AddChapterDialogProps {
   book: any;
   onAddChapter: (newChapter: any) => void;
+  children?: React.ReactNode;
 }
 
-const AddChapterDialog: React.FC<AddChapterDialogProps> = ({ book, onAddChapter }) => {
+const AddChapterDialog: React.FC<AddChapterDialogProps> = ({ book, onAddChapter, children }) => {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -96,10 +97,12 @@ const AddChapterDialog: React.FC<AddChapterDialogProps> = ({ book, onAddChapter 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Chapter
-        </Button>
+        {children || (
+          <Button className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Chapter
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
