@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Check, Info, Star, Crown, Zap, Gift } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,7 @@ interface PlanCardProps {
     aiGeneration: string;
     templates: number;
     exclusiveFeatures: string[];
+    support?: string;
   };
   isPlanActive: boolean;
   isPlanPopular: boolean;
@@ -87,47 +87,47 @@ const PlanCard = ({
       }`}
     >
       {isPlanPopular && (
-        <div className="absolute top-0 left-0 right-0 bg-book-purple text-white text-center py-2 font-medium">
+        <div className="absolute top-0 left-0 right-0 bg-book-purple text-white text-center py-2 font-medium text-sm">
           Most Popular
         </div>
       )}
       
       {planName === 'Ultimate' && (
-        <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-center py-2 font-medium">
+        <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-center py-2 font-medium text-sm">
           ⭐ Premium Features
         </div>
       )}
       
       {isPlanActive && (
         <div className="absolute top-3 right-3 z-10">
-          <Badge className="bg-green-50 border border-green-200 text-green-700">
+          <Badge className="bg-green-50 border border-green-200 text-green-700 text-xs">
             Current Plan
           </Badge>
         </div>
       )}
       
-      <div className={`p-8 bg-white backdrop-blur-sm ${(isPlanPopular || planName === 'Ultimate') ? "pt-14" : ""}`}>
+      <div className={`p-4 sm:p-8 bg-white backdrop-blur-sm ${(isPlanPopular || planName === 'Ultimate') ? "pt-12 sm:pt-14" : ""}`}>
         <div className="flex items-center gap-3 mb-4">
           <div className={`p-2 rounded-lg bg-gradient-to-r ${getPlanColor()} text-white`}>
             {getPlanIcon()}
           </div>
-          <h3 className="text-2xl font-bold text-book-darkText">
+          <h3 className="text-xl sm:text-2xl font-bold text-book-darkText">
             {planName}
           </h3>
         </div>
         
         <div className="mb-4 flex items-end">
-          <span className="text-4xl font-bold">{planDetails.price}</span>
-          <span className="text-slate-500 ml-1">{planName === 'Free' ? '' : 'per month'}</span>
+          <span className="text-3xl sm:text-4xl font-bold">{planDetails.price}</span>
+          <span className="text-slate-500 ml-1 text-sm">{planName === 'Free' ? '' : 'per month'}</span>
         </div>
         
-        <p className="text-slate-600 mb-6">
+        <p className="text-slate-600 mb-6 text-sm sm:text-base">
           {getPlanDescription()}
         </p>
         
-        <div className="p-4 rounded-lg bg-slate-50 border border-slate-100 mb-6">
-          <h4 className="font-semibold text-book-darkText mb-3">Plan Limits:</h4>
-          <div className="space-y-2 text-sm">
+        <div className="p-3 sm:p-4 rounded-lg bg-slate-50 border border-slate-100 mb-6">
+          <h4 className="font-semibold text-book-darkText mb-3 text-sm sm:text-base">Plan Limits:</h4>
+          <div className="space-y-2 text-xs sm:text-sm">
             <div className="flex justify-between">
               <span>Books per month:</span> 
               <span className="font-medium">{planDetails.books === Infinity ? "Unlimited" : planDetails.books}</span>
@@ -147,48 +147,48 @@ const PlanCard = ({
           </div>
         </div>
         
-        <ul className="space-y-3 mb-8">
+        <ul className="space-y-2 sm:space-y-3 mb-6 sm:mb-8">
           {[
             `${planDetails.books === Infinity ? "Unlimited" : planDetails.books} books per month`,
             `${planDetails.chapters === Infinity ? "Unlimited" : planDetails.chapters} chapters per book`,
             `${getAIGenerationDescription()}`,
             `${planDetails.templates} book templates`,
             `Export to ${planDetails.exportFormats.length} format${planDetails.exportFormats.length > 1 ? 's' : ''}`,
-            `${planName === 'Free' ? "Community" : planName === 'Basic' ? "Email" : planName === 'Pro' ? "Priority" : "24/7 dedicated"} support`,
+            planDetails.support || `${planName === 'Free' ? "Community" : planName === 'Basic' ? "Email" : planName === 'Pro' ? "Priority" : "Dedicated"} support`,
             ...(planDetails.exclusiveFeatures.slice(0, 3).map(feature => 
               feature.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())
             ))
           ].map((feature, featureIndex) => (
             <li key={featureIndex} className="flex items-start">
-              <Check className="h-5 w-5 text-book-purple flex-shrink-0 mr-2 mt-0.5" />
-              <span className="text-slate-700">{feature}</span>
+              <Check className="h-4 w-4 sm:h-5 sm:w-5 text-book-purple flex-shrink-0 mr-2 mt-0.5" />
+              <span className="text-slate-700 text-xs sm:text-sm">{feature}</span>
             </li>
           ))}
           {planDetails.exclusiveFeatures.length > 3 && (
             <li className="flex items-start">
-              <Check className="h-5 w-5 text-book-purple flex-shrink-0 mr-2 mt-0.5" />
-              <span className="text-slate-700">+ {planDetails.exclusiveFeatures.length - 3} more exclusive features</span>
+              <Check className="h-4 w-4 sm:h-5 sm:w-5 text-book-purple flex-shrink-0 mr-2 mt-0.5" />
+              <span className="text-slate-700 text-xs sm:text-sm">+ {planDetails.exclusiveFeatures.length - 3} more exclusive features</span>
             </li>
           )}
         </ul>
         
-        <div className="mb-6">
-          <h4 className="font-semibold text-book-darkText mb-3 flex items-center">
+        <div className="mb-4 sm:mb-6">
+          <h4 className="font-semibold text-book-darkText mb-2 sm:mb-3 flex items-center text-sm sm:text-base">
             Export Formats 
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
-                  <Info className="h-4 w-4 text-slate-400 ml-2" />
+                  <Info className="h-3 w-3 sm:h-4 sm:w-4 text-slate-400 ml-2" />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Available formats for exporting your books</p>
+                  <p className="text-xs">Available formats for exporting your books</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </h4>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1 sm:gap-2">
             {planDetails.exportFormats.map((format, i) => (
-              <Badge key={i} variant="secondary" className="bg-slate-100 text-slate-600">
+              <Badge key={i} variant="secondary" className="bg-slate-100 text-slate-600 text-xs">
                 .{format}
               </Badge>
             ))}
@@ -197,7 +197,7 @@ const PlanCard = ({
         
         {isPlanActive ? (
           <Button 
-            className="w-full bg-slate-100 text-book-darkText py-6"
+            className="w-full bg-slate-100 text-book-darkText py-4 sm:py-6 text-sm sm:text-base"
             disabled
           >
             <Check className="h-4 w-4 mr-2" /> Current Plan
@@ -213,7 +213,7 @@ const PlanCard = ({
                   : planName === 'Free'
                     ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:opacity-90"
                     : "bg-slate-100 text-book-darkText hover:bg-slate-200"
-            } py-6 transition-all duration-300 group-hover:shadow-md`}
+            } py-4 sm:py-6 transition-all duration-300 group-hover:shadow-md text-sm sm:text-base`}
           >
             {planName === 'Free' ? 'Start Free' : `Upgrade to ${planName}`}
           </Button>

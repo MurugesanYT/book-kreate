@@ -93,10 +93,10 @@ const BookPlanPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-orange-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-orange-50 flex items-center justify-center p-4">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your book...</p>
+          <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-sm sm:text-base">Loading your book...</p>
         </div>
       </div>
     );
@@ -104,10 +104,10 @@ const BookPlanPage = () => {
 
   if (!book) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-orange-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-orange-50 flex items-center justify-center p-4">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">Book not found</p>
-          <Button onClick={() => navigate('/dashboard')} variant="outline">
+          <p className="text-gray-600 mb-4 text-sm sm:text-base">Book not found</p>
+          <Button onClick={() => navigate('/dashboard')} variant="outline" size="sm">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
           </Button>
@@ -118,32 +118,33 @@ const BookPlanPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-orange-50">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
         {/* Header */}
         <BookPlanHeader book={book} onUpdate={handleBookUpdate} />
 
         {/* Main Content Grid */}
-        <div className="grid lg:grid-cols-3 gap-8 mt-8">
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-8 mt-4 sm:mt-8">
           {/* Left Column - Tasks and Analytics */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-1 space-y-4 sm:space-y-6">
             <TasksSection book={book} onUpdate={handleBookUpdate} />
             <BookAnalyticsSection book={book} />
           </div>
 
           {/* Right Column - Book Content */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-3xl shadow-xl p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Book Content</h2>
-                <div className="flex gap-2">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl p-3 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Book Content</h2>
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                   <BulkChapterCreator 
                     book={book} 
                     onChaptersCreated={handleBulkChaptersCreated}
                   />
-                  <AddChapterDialog onAddChapter={handleAddChapter}>
-                    <Button variant="outline" className="gap-2">
+                  <AddChapterDialog book={book} onAddChapter={handleAddChapter}>
+                    <Button variant="outline" className="gap-2 w-full sm:w-auto text-sm">
                       <Plus className="h-4 w-4" />
-                      Add Chapter
+                      <span className="hidden sm:inline">Add Chapter</span>
+                      <span className="sm:hidden">Add</span>
                     </Button>
                   </AddChapterDialog>
                 </div>

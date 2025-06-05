@@ -1,8 +1,7 @@
-
 import { BookData } from './types';
 import { toast } from 'sonner';
 
-// Define available plans with new Free tier and updated limits
+// Define available plans with corrected features and realistic support
 export const PLANS = {
   Free: {
     books: 2,
@@ -11,7 +10,8 @@ export const PLANS = {
     price: '$0',
     aiGeneration: 'basic',
     templates: 0,
-    exclusiveFeatures: []
+    exclusiveFeatures: [],
+    support: 'Community forum'
   },
   Basic: {
     books: 10,
@@ -20,7 +20,8 @@ export const PLANS = {
     price: '$5',
     aiGeneration: 'standard',
     templates: 5,
-    exclusiveFeatures: ['basic-analytics', 'chapter-suggestions']
+    exclusiveFeatures: ['basic-analytics', 'chapter-suggestions'],
+    support: 'Email support'
   },
   Pro: {
     books: 30,
@@ -29,7 +30,8 @@ export const PLANS = {
     price: '$19',
     aiGeneration: 'advanced',
     templates: 25,
-    exclusiveFeatures: ['advanced-analytics', 'ai-character-development', 'plot-analysis', 'style-enhancement']
+    exclusiveFeatures: ['advanced-analytics', 'ai-character-development', 'plot-analysis', 'style-enhancement'],
+    support: 'Priority email support'
   },
   Ultimate: {
     books: Infinity,
@@ -47,9 +49,9 @@ export const PLANS = {
       'market-trend-analysis',
       'collaborative-editing',
       'white-label-export',
-      'api-access',
-      'priority-support'
-    ]
+      'api-access'
+    ],
+    support: 'Priority support with faster response'
   }
 };
 
