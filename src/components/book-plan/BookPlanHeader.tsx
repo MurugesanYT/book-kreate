@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -7,13 +6,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { LineChart, BookOpen } from 'lucide-react';
 
 interface BookPlanHeaderProps {
-  title?: string;
-  genre?: string;
-  book?: any;
-  onSave?: (updatedBook: any) => void;
+  book: any;
+  onUpdate?: (updatedBook: any) => void;
 }
 
-const BookPlanHeader: React.FC<BookPlanHeaderProps> = ({ title, genre, book }) => {
+const BookPlanHeader: React.FC<BookPlanHeaderProps> = ({ book, onUpdate }) => {
   const navigate = useNavigate();
   
   // Calculate sentiment score based on book content if available
@@ -83,7 +80,7 @@ const BookPlanHeader: React.FC<BookPlanHeaderProps> = ({ title, genre, book }) =
     <div className="flex justify-between items-center mb-8">
       <div>
         <div className="flex items-center gap-2">
-          <h1 className="text-3xl font-bold">{book?.title || title || 'Book Plan'}</h1>
+          <h1 className="text-3xl font-bold">{book?.title || 'Book Plan'}</h1>
           {sentiment && (
             <TooltipProvider>
               <Tooltip>
@@ -105,7 +102,7 @@ const BookPlanHeader: React.FC<BookPlanHeaderProps> = ({ title, genre, book }) =
             </TooltipProvider>
           )}
         </div>
-        {(book?.genre || genre) && <p className="text-slate-500">{book?.genre || genre}</p>}
+        {book?.genre && <p className="text-slate-500">{book.genre}</p>}
       </div>
       <div className="flex gap-2">
         <Button variant="outline" size="sm" onClick={() => navigate(`/book/analytics/${book?.id}`)}>

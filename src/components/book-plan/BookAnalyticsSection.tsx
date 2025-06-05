@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,10 +10,10 @@ import { analyzeSentiment } from '@/hooks/useAIChapterEdit';
 
 interface BookAnalyticsSectionProps {
   book: any;
-  tasks: any[];
+  tasks?: any[];
 }
 
-const BookAnalyticsSection: React.FC<BookAnalyticsSectionProps> = ({ book, tasks }) => {
+const BookAnalyticsSection: React.FC<BookAnalyticsSectionProps> = ({ book, tasks = [] }) => {
   const completedTasks = tasks?.filter(task => task.status === 'completed').length || 0;
   const totalTasks = tasks?.length || 0;
   

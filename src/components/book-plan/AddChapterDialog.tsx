@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 import { generateChapterContent } from '@/lib/ai/chapterGenerationService';
+import { Plus } from 'lucide-react';
 
 type StylePreference = {
   tone: 'formal' | 'casual' | 'poetic' | 'technical' | 'dramatic';
@@ -95,7 +96,10 @@ const AddChapterDialog: React.FC<AddChapterDialogProps> = ({ book, onAddChapter 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Add Chapter</Button>
+        <Button className="gap-2">
+          <Plus className="h-4 w-4" />
+          Add Chapter
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>

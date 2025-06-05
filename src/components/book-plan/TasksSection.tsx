@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Users, BookOpen, Sparkles } from 'lucide-react';
-import { Task } from '@/hooks/taskUtils';
 import { Book as BookType } from '@/lib/api/types';
 import AddChapterDialog from './AddChapterDialog';
 import CharacterListDialog from './CharacterListDialog';
@@ -12,31 +11,25 @@ import { Separator } from '@/components/ui/separator';
 import { canAddChapter } from '@/lib/api/planService';
 
 interface TasksSectionProps {
-  tasks: Task[];
   book: BookType;
-  generatingTaskId: string | null;
-  onGenerateContent: (taskId: string) => void;
-  onMarkAsComplete: (taskId: string) => void;
-  onDeleteTask: (taskId: string) => void;
-  onAddChapter: (newChapter: Task) => void;
-  onSave: (updatedBook: BookType) => void;
+  onUpdate?: (updatedBook: BookType) => void;
 }
 
-const TasksSection: React.FC<TasksSectionProps> = ({
-  tasks,
-  book,
-  generatingTaskId,
-  onGenerateContent,
-  onMarkAsComplete,
-  onDeleteTask,
-  onAddChapter,
-  onSave
-}) => {
+const TasksSection: React.FC<TasksSectionProps> = ({ book, onUpdate }) => {
   const showAddChapterButton = canAddChapter(book);
 
-  const handleAddMultipleChapters = (chapters: Task[]) => {
-    chapters.forEach(chapter => onAddChapter(chapter));
-    onSave(book);
+  const handleAddChapter = (newChapter: any) => {
+    if (!book || !onUpdate) return;
+    
+    const updatedChapters = [...(book.chapters || []), newChapter];
+    onUpdate({ ...book, chapters: updatedChapters });
+  };
+
+  const handleAddMultipleChapters = (chapters: any[]) => {
+    if (!book || !onUpdate) return;
+    
+    const updatedChapters = [...(book.chapters || []), ...chapters];
+    onUpdate({ ...book, chapters: updatedChapters });
   };
 
   return (
@@ -63,7 +56,7 @@ const TasksSection: React.FC<TasksSectionProps> = ({
               Writing Tools
             </CardTitle>
             <div className="flex flex-wrap gap-3 items-center">
-              <CharacterListDialog book={book} onSave={onSave} />
+              <CharacterListDialog book={book} onSave={onUpdate} />
             </div>
           </div>
         </CardHeader>
@@ -81,7 +74,7 @@ const TasksSection: React.FC<TasksSectionProps> = ({
                 Create one chapter at a time with custom titles and descriptions for precise control over your story.
               </p>
               {showAddChapterButton ? (
-                <AddChapterDialog book={book} onAddChapter={onAddChapter} />
+                <AddChapterDialog book={book} onAddChapter={handleAddChapter} />
               ) : (
                 <Button variant="outline" className="w-full py-3 text-lg" disabled>
                   <Plus className="h-5 w-5 mr-2" />
