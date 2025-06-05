@@ -1,100 +1,102 @@
 
-import React, { useState, useCallback, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { useBookData } from '@/hooks/useBookData';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Book } from '@/lib/api/types';
+import { getBook, updateBook, addChapter } from '@/lib/api/bookService';
+import { toast } from 'sonner';
 import BookPlanHeader from '@/components/book-plan/BookPlanHeader';
-import BookDescription from '@/components/book-plan/BookDescription';
 import TasksSection from '@/components/book-plan/TasksSection';
 import BookContentSection from '@/components/book-plan/BookContentSection';
 import BookAnalyticsSection from '@/components/book-plan/BookAnalyticsSection';
-import BookSettingsSection from '@/components/book-plan/BookSettingsSection';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import BulkChapterCreator from '@/components/book-plan/BulkChapterCreator';
+import AddChapterDialog from '@/components/book-plan/AddChapterDialog';
+import { Button } from '@/components/ui/button';
+import { Plus, ArrowLeft } from 'lucide-react';
 
 const BookPlanPage = () => {
-  const params = useParams();
-  const bookId = params.bookId;
-  const [activeTab, setActiveTab] = useState('plan');
-  
-  console.log('BookPlanPage - Raw params:', params);
-  console.log('BookPlanPage - Extracted bookId:', bookId);
-  console.log('BookPlanPage - Current URL:', window.location.href);
-  
-  const {
-    book,
-    tasks,
-    loading,
-    error,
-    generatingContent,
-    handleGenerateContent,
-    handleMarkAsComplete,
-    handleDeleteTask,
-    handleAddChapter,
-    handleSaveBookContent,
-  } = useBookData(bookId);
-
-  // Make sure we properly handle dates to avoid any "Invalid time value" errors
-  const formatDate = (dateString: string | undefined): string => {
-    if (!dateString) return 'Unknown date';
-    
-    try {
-      const date = new Date(dateString);
-      // Check if date is valid
-      if (isNaN(date.getTime())) {
-        return 'Invalid date';
-      }
-      return date.toLocaleString();
-    } catch (error) {
-      console.error("Date formatting error:", error);
-      return 'Invalid date';
-    }
-  };
-  
-  const handleTabChange = useCallback((value: string) => {
-    setActiveTab(value);
-  }, []);
+  const { bookId } = useParams<{ bookId: string }>();
+  const navigate = useNavigate();
+  const [book, setBook] = useState<Book | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log('BookPlanPage - book data:', book);
-    console.log('BookPlanPage - loading:', loading);
-    console.log('BookPlanPage - error:', error);
-    console.log('BookPlanPage - tasks:', tasks);
-  }, [book, loading, error, tasks]);
+    const loadBook = async () => {
+      if (!bookId) {
+        toast.error('Book ID is required');
+        navigate('/dashboard');
+        return;
+      }
 
-  if (loading) {
+      try {
+        const bookData = await getBook(bookId);
+        setBook(bookData);
+      } catch (error) {
+        console.error('Error loading book:', error);
+        toast.error('Failed to load book');
+        navigate('/dashboard');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadBook();
+  }, [bookId, navigate]);
+
+  const handleBookUpdate = async (updatedBook: Partial<Book>) => {
+    if (!book) return;
+
+    try {
+      await updateBook({ ...updatedBook, id: book.id });
+      setBook(prevBook => prevBook ? { ...prevBook, ...updatedBook } : null);
+      toast.success('Book updated successfully');
+    } catch (error) {
+      console.error('Error updating book:', error);
+      toast.error('Failed to update book');
+    }
+  };
+
+  const handleAddChapter = async (chapterData: any) => {
+    if (!book) return;
+
+    try {
+      await addChapter(book.id, chapterData);
+      
+      // Update local state
+      const updatedChapters = [...(book.chapters || []), chapterData];
+      setBook(prevBook => prevBook ? { ...prevBook, chapters: updatedChapters } : null);
+      
+      toast.success('Chapter added successfully');
+    } catch (error) {
+      console.error('Error adding chapter:', error);
+      toast.error('Failed to add chapter');
+    }
+  };
+
+  const handleBulkChaptersCreated = async (newChapters: any[]) => {
+    if (!book) return;
+
+    try {
+      // Add each chapter to the book
+      for (const chapter of newChapters) {
+        await addChapter(book.id, chapter);
+      }
+      
+      // Update local state
+      const updatedChapters = [...(book.chapters || []), ...newChapters];
+      setBook(prevBook => prevBook ? { ...prevBook, chapters: updatedChapters } : null);
+      
+    } catch (error) {
+      console.error('Error adding bulk chapters:', error);
+      throw error;
+    }
+  };
+
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-orange-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin w-12 h-12 border-t-4 border-book-purple rounded-full mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading book plan...</p>
-          {bookId && (
-            <p className="text-sm text-slate-400 mt-2">Book ID: {bookId}</p>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center max-w-md">
-          <h2 className="text-xl font-bold text-red-600 mb-2">Error Loading Book</h2>
-          <p className="text-slate-600 mb-4">{error}</p>
-          {bookId && (
-            <p className="text-sm text-slate-400 mb-4">Book ID: {bookId}</p>
-          )}
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-book-purple text-white rounded-md hover:bg-purple-700 transition-colors mr-2"
-          >
-            Try Again
-          </button>
-          <button
-            onClick={() => window.history.back()}
-            className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
-          >
-            Go Back
-          </button>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your book...</p>
         </div>
       </div>
     );
@@ -102,76 +104,54 @@ const BookPlanPage = () => {
 
   if (!book) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-orange-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-bold text-slate-800 mb-2">Book Not Found</h2>
-          <p className="text-slate-600 mb-4">The book you're looking for doesn't exist or you don't have permission to view it.</p>
-          {bookId && (
-            <p className="text-sm text-slate-400 mb-4">Searched for Book ID: {bookId}</p>
-          )}
-          <button
-            onClick={() => window.history.back()}
-            className="px-4 py-2 bg-book-purple text-white rounded-md hover:bg-purple-700 transition-colors"
-          >
-            Go Back
-          </button>
+          <p className="text-gray-600 mb-4">Book not found</p>
+          <Button onClick={() => navigate('/dashboard')} variant="outline">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
         </div>
       </div>
     );
   }
 
-  // Process the book data to ensure any dates are valid
-  const processedBook = {
-    ...book,
-    createdAt: book.createdAt ? formatDate(book.createdAt) : undefined,
-    updatedAt: book.updatedAt ? formatDate(book.updatedAt) : undefined
-  };
-
   return (
-    <div className="min-h-screen bg-slate-50/50">
-      <BookPlanHeader book={processedBook} onSave={handleSaveBookContent} />
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-orange-50">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <BookPlanHeader book={book} onUpdate={handleBookUpdate} />
 
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <BookDescription 
-          book={processedBook} 
-          description={processedBook.description || 'No description available'} 
-          onSave={handleSaveBookContent} 
-        />
+        {/* Main Content Grid */}
+        <div className="grid lg:grid-cols-3 gap-8 mt-8">
+          {/* Left Column - Tasks and Analytics */}
+          <div className="lg:col-span-1 space-y-6">
+            <TasksSection book={book} onUpdate={handleBookUpdate} />
+            <BookAnalyticsSection book={book} />
+          </div>
 
-        <div className="mt-8">
-          <Tabs defaultValue={activeTab} value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="mb-8">
-              <TabsTrigger value="plan" className="px-6">Plan</TabsTrigger>
-              <TabsTrigger value="write" className="px-6">Write</TabsTrigger>
-              <TabsTrigger value="analytics" className="px-6">Analytics</TabsTrigger>
-              <TabsTrigger value="settings" className="px-6">Settings</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="plan">
-              <TasksSection
-                book={processedBook}
-                tasks={tasks}
-                generatingTaskId={generatingContent}
-                onGenerateContent={handleGenerateContent}
-                onMarkAsComplete={handleMarkAsComplete}
-                onDeleteTask={handleDeleteTask}
-                onAddChapter={handleAddChapter}
-                onSave={handleSaveBookContent}
-              />
-            </TabsContent>
-            
-            <TabsContent value="write">
-              <BookContentSection book={processedBook} onSave={handleSaveBookContent} />
-            </TabsContent>
-            
-            <TabsContent value="analytics">
-              <BookAnalyticsSection book={processedBook} tasks={tasks} />
-            </TabsContent>
-            
-            <TabsContent value="settings">
-              <BookSettingsSection book={processedBook} onSave={handleSaveBookContent} />
-            </TabsContent>
-          </Tabs>
+          {/* Right Column - Book Content */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-3xl shadow-xl p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">Book Content</h2>
+                <div className="flex gap-2">
+                  <BulkChapterCreator 
+                    book={book} 
+                    onChaptersCreated={handleBulkChaptersCreated}
+                  />
+                  <AddChapterDialog onAddChapter={handleAddChapter}>
+                    <Button variant="outline" className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Add Chapter
+                    </Button>
+                  </AddChapterDialog>
+                </div>
+              </div>
+              
+              <BookContentSection book={book} onUpdate={handleBookUpdate} />
+            </div>
+          </div>
         </div>
       </div>
     </div>
