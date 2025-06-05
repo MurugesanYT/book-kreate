@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -49,9 +50,9 @@ const BookAnalyticsSection: React.FC<BookAnalyticsSectionProps> = ({ book, tasks
   
   const sentimentInfo = getSentimentLabel(averageSentiment);
   
-  // Prepare chart data
+  // Prepare chart data with responsive titles
   const wordCountData = chapterStats.map((chapter, index) => ({
-    chapter: chapter.title.length > 15 ? `${chapter.title.substring(0, 15)}...` : chapter.title,
+    chapter: chapter.title.length > 10 ? `${chapter.title.substring(0, 8)}...` : chapter.title,
     words: chapter.wordCount,
     sentiment: chapter.sentiment
   }));
@@ -66,56 +67,56 @@ const BookAnalyticsSection: React.FC<BookAnalyticsSectionProps> = ({ book, tasks
   ];
   
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Chapters</CardTitle>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+        <Card className="p-2 sm:p-4">
+          <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-4">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Chapters</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-2 sm:p-4 pt-0">
             <div className="flex items-center">
-              <BookOpen className="h-4 w-4 text-muted-foreground mr-2" />
-              <div className="text-2xl font-bold">{book.chapters?.length || 0}</div>
+              <BookOpen className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground mr-1 sm:mr-2" />
+              <div className="text-lg sm:text-2xl font-bold">{book.chapters?.length || 0}</div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Word Count</CardTitle>
+        <Card className="p-2 sm:p-4">
+          <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-4">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Word Count</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-2 sm:p-4 pt-0">
             <div className="flex items-center">
-              <FileText className="h-4 w-4 text-muted-foreground mr-2" />
-              <div className="text-2xl font-bold">{totalWords.toLocaleString()}</div>
+              <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground mr-1 sm:mr-2" />
+              <div className="text-sm sm:text-2xl font-bold">{totalWords.toLocaleString()}</div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Reading Time</CardTitle>
+        <Card className="p-2 sm:p-4">
+          <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-4">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Reading Time</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-2 sm:p-4 pt-0">
             <div className="flex items-center">
-              <Clock className="h-4 w-4 text-muted-foreground mr-2" />
-              <div className="text-2xl font-bold">
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground mr-1 sm:mr-2" />
+              <div className="text-xs sm:text-2xl font-bold">
                 {readingTimeMinutes >= 60 
-                  ? `${Math.floor(readingTimeMinutes / 60)} hr ${readingTimeMinutes % 60} min` 
-                  : `${readingTimeMinutes} min`}
+                  ? `${Math.floor(readingTimeMinutes / 60)}h ${readingTimeMinutes % 60}m` 
+                  : `${readingTimeMinutes}min`}
               </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Overall Sentiment</CardTitle>
+        <Card className="p-2 sm:p-4">
+          <CardHeader className="pb-1 sm:pb-2 p-2 sm:p-4">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Sentiment</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-2 sm:p-4 pt-0">
             <div className="flex items-center">
-              <ChartBar className="h-4 w-4 text-muted-foreground mr-2" />
-              <Badge className={`${sentimentInfo.color} hover:${sentimentInfo.color} font-normal`}>
+              <ChartBar className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground mr-1 sm:mr-2" />
+              <Badge className={`${sentimentInfo.color} hover:${sentimentInfo.color} font-normal text-xs`}>
                 {sentimentInfo.label}
               </Badge>
             </div>
@@ -124,34 +125,34 @@ const BookAnalyticsSection: React.FC<BookAnalyticsSectionProps> = ({ book, tasks
       </div>
 
       <Tabs defaultValue="wordcount" className="w-full">
-        <TabsList className="w-full max-w-lg mx-auto mb-6">
-          <TabsTrigger value="wordcount" className="flex-1">Word Count</TabsTrigger>
-          <TabsTrigger value="sentiment" className="flex-1">Sentiment</TabsTrigger>
-          <TabsTrigger value="progress" className="flex-1">Progress</TabsTrigger>
+        <TabsList className="w-full grid grid-cols-3 mb-4 sm:mb-6">
+          <TabsTrigger value="wordcount" className="text-xs sm:text-sm">Words</TabsTrigger>
+          <TabsTrigger value="sentiment" className="text-xs sm:text-sm">Sentiment</TabsTrigger>
+          <TabsTrigger value="progress" className="text-xs sm:text-sm">Progress</TabsTrigger>
         </TabsList>
         
         <TabsContent value="wordcount">
           <Card>
-            <CardHeader>
-              <CardTitle>Word Count by Chapter</CardTitle>
+            <CardHeader className="p-3 sm:p-6">
+              <CardTitle className="text-sm sm:text-base">Word Count by Chapter</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-6">
               {wordCountData.length > 0 ? (
-                <div className="h-[300px]">
+                <div className="h-[200px] sm:h-[300px]">
                   <BarChart
                     data={wordCountData}
                     index="chapter"
                     categories={['words']}
                     colors={['purple']}
                     valueFormatter={(value) => `${value.toLocaleString()} words`}
-                    yAxisWidth={60}
+                    yAxisWidth={40}
                   />
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-[300px] border-2 border-dashed rounded-lg">
-                  <div className="text-center">
-                    <p className="text-muted-foreground">No chapter data available</p>
-                    <p className="text-sm text-muted-foreground">Add chapters to see word count analytics</p>
+                <div className="flex items-center justify-center h-[200px] sm:h-[300px] border-2 border-dashed rounded-lg">
+                  <div className="text-center p-4">
+                    <p className="text-muted-foreground text-sm">No chapter data available</p>
+                    <p className="text-xs text-muted-foreground">Add chapters to see analytics</p>
                   </div>
                 </div>
               )}
@@ -161,19 +162,19 @@ const BookAnalyticsSection: React.FC<BookAnalyticsSectionProps> = ({ book, tasks
         
         <TabsContent value="sentiment">
           <Card>
-            <CardHeader>
-              <CardTitle>Sentiment Analysis by Chapter</CardTitle>
+            <CardHeader className="p-3 sm:p-6">
+              <CardTitle className="text-sm sm:text-base">Sentiment Analysis by Chapter</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-6">
               {wordCountData.length > 0 ? (
-                <div className="h-[300px]">
+                <div className="h-[200px] sm:h-[300px]">
                   <LineChart
                     data={wordCountData}
                     index="chapter"
                     categories={['sentiment']}
                     colors={['teal']}
                     valueFormatter={(value) => `${value}`}
-                    yAxisWidth={60}
+                    yAxisWidth={40}
                     showLegend={false}
                     startEndOnly={false}
                     showYAxis={true}
@@ -181,10 +182,10 @@ const BookAnalyticsSection: React.FC<BookAnalyticsSectionProps> = ({ book, tasks
                   />
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-[300px] border-2 border-dashed rounded-lg">
-                  <div className="text-center">
-                    <p className="text-muted-foreground">No sentiment data available</p>
-                    <p className="text-sm text-muted-foreground">Add chapters to see sentiment analysis</p>
+                <div className="flex items-center justify-center h-[200px] sm:h-[300px] border-2 border-dashed rounded-lg">
+                  <div className="text-center p-4">
+                    <p className="text-muted-foreground text-sm">No sentiment data available</p>
+                    <p className="text-xs text-muted-foreground">Add chapters to see analysis</p>
                   </div>
                 </div>
               )}
@@ -194,11 +195,11 @@ const BookAnalyticsSection: React.FC<BookAnalyticsSectionProps> = ({ book, tasks
         
         <TabsContent value="progress">
           <Card>
-            <CardHeader>
-              <CardTitle>Task Completion</CardTitle>
+            <CardHeader className="p-3 sm:p-6">
+              <CardTitle className="text-sm sm:text-base">Task Completion</CardTitle>
             </CardHeader>
-            <CardContent className="flex justify-center">
-              <div className="h-[300px] w-[300px]">
+            <CardContent className="flex justify-center p-3 sm:p-6">
+              <div className="h-[200px] w-[200px] sm:h-[300px] sm:w-[300px]">
                 <PieChart
                   data={taskStatusData}
                   index="name"
@@ -212,7 +213,7 @@ const BookAnalyticsSection: React.FC<BookAnalyticsSectionProps> = ({ book, tasks
         </TabsContent>
       </Tabs>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
         <CharacterMentionsCard book={book} />
         <ExportReportCard book={book} />
       </div>

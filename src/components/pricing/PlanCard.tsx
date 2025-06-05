@@ -1,14 +1,12 @@
+
 import React from 'react';
-import { Check, Info, Star, Crown, Zap, Gift } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PlanKey } from '@/lib/api/planService';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { getPlanIcon, getPlanColor, getPlanDescription } from './PlanIcons';
+import { PlanFeatures } from './PlanFeatures';
 
 interface PlanCardProps {
   planName: string;
@@ -27,52 +25,14 @@ interface PlanCardProps {
   onSelectPlan: (plan: PlanKey) => void;
 }
 
-const PlanCard = ({
-  planName,
-  planDetails,
-  isPlanActive,
-  isPlanPopular,
-  onSelectPlan
-}: PlanCardProps) => {
-  
-  // Plan-specific styling
-  const getPlanIcon = () => {
-    switch (planName) {
-      case 'Free': return <Gift className="h-5 w-5" />;
-      case 'Basic': return <Zap className="h-5 w-5" />;
-      case 'Pro': return <Star className="h-5 w-5" />;
-      case 'Ultimate': return <Crown className="h-5 w-5" />;
-      default: return null;
-    }
-  };
-
-  const getPlanColor = () => {
-    switch (planName) {
-      case 'Free': return 'from-green-500 to-emerald-600';
-      case 'Basic': return 'from-blue-500 to-blue-600';
-      case 'Pro': return 'from-purple-500 to-purple-600';
-      case 'Ultimate': return 'from-amber-500 to-orange-600';
-      default: return 'from-gray-500 to-gray-600';
-    }
-  };
-
-  const getPlanDescription = () => {
-    switch (planName) {
-      case 'Free': return "Perfect for trying out our platform and writing your first books";
-      case 'Basic': return "Great for casual writers and small projects";
-      case 'Pro': return "Ideal for serious authors and content creators";
-      case 'Ultimate': return "For professional authors, publishers, and power users";
-      default: return "";
-    }
-  };
-
-  const getAIGenerationDescription = () => {
-    switch (planDetails.aiGeneration) {
+const PlanCard = ({ planName, planDetails, isPlanActive, isPlanPopular, onSelectPlan }: PlanCardProps) => {
+  const getAIGenerationDescription = (aiGeneration: string) => {
+    switch (aiGeneration) {
       case 'basic': return "Basic AI assistance";
       case 'standard': return "Standard AI generation";
       case 'advanced': return "Advanced AI features";
       case 'premium': return "Premium AI with exclusive features";
-      default: return planDetails.aiGeneration;
+      default: return aiGeneration;
     }
   };
 
@@ -86,6 +46,7 @@ const PlanCard = ({
             : "border border-slate-200 shadow-md hover:-translate-y-1"
       }`}
     >
+      {/* Plan badges */}
       {isPlanPopular && (
         <div className="absolute top-0 left-0 right-0 bg-book-purple text-white text-center py-2 font-medium text-sm">
           Most Popular
@@ -107,24 +68,28 @@ const PlanCard = ({
       )}
       
       <div className={`p-4 sm:p-8 bg-white backdrop-blur-sm ${(isPlanPopular || planName === 'Ultimate') ? "pt-12 sm:pt-14" : ""}`}>
+        {/* Plan header */}
         <div className="flex items-center gap-3 mb-4">
-          <div className={`p-2 rounded-lg bg-gradient-to-r ${getPlanColor()} text-white`}>
-            {getPlanIcon()}
+          <div className={`p-2 rounded-lg bg-gradient-to-r ${getPlanColor(planName)} text-white`}>
+            {getPlanIcon(planName)}
           </div>
           <h3 className="text-xl sm:text-2xl font-bold text-book-darkText">
             {planName}
           </h3>
         </div>
         
+        {/* Price */}
         <div className="mb-4 flex items-end">
           <span className="text-3xl sm:text-4xl font-bold">{planDetails.price}</span>
           <span className="text-slate-500 ml-1 text-sm">{planName === 'Free' ? '' : 'per month'}</span>
         </div>
         
+        {/* Description */}
         <p className="text-slate-600 mb-6 text-sm sm:text-base">
-          {getPlanDescription()}
+          {getPlanDescription(planName)}
         </p>
         
+        {/* Plan limits */}
         <div className="p-3 sm:p-4 rounded-lg bg-slate-50 border border-slate-100 mb-6">
           <h4 className="font-semibold text-book-darkText mb-3 text-sm sm:text-base">Plan Limits:</h4>
           <div className="space-y-2 text-xs sm:text-sm">
@@ -138,7 +103,7 @@ const PlanCard = ({
             </div>
             <div className="flex justify-between">
               <span>AI Generation:</span> 
-              <span className="font-medium capitalize">{getAIGenerationDescription()}</span>
+              <span className="font-medium capitalize">{getAIGenerationDescription(planDetails.aiGeneration)}</span>
             </div>
             <div className="flex justify-between">
               <span>Book Templates:</span> 
@@ -147,31 +112,10 @@ const PlanCard = ({
           </div>
         </div>
         
-        <ul className="space-y-2 sm:space-y-3 mb-6 sm:mb-8">
-          {[
-            `${planDetails.books === Infinity ? "Unlimited" : planDetails.books} books per month`,
-            `${planDetails.chapters === Infinity ? "Unlimited" : planDetails.chapters} chapters per book`,
-            `${getAIGenerationDescription()}`,
-            `${planDetails.templates} book templates`,
-            `Export to ${planDetails.exportFormats.length} format${planDetails.exportFormats.length > 1 ? 's' : ''}`,
-            planDetails.support || `${planName === 'Free' ? "Community" : planName === 'Basic' ? "Email" : planName === 'Pro' ? "Priority" : "Dedicated"} support`,
-            ...(planDetails.exclusiveFeatures.slice(0, 3).map(feature => 
-              feature.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())
-            ))
-          ].map((feature, featureIndex) => (
-            <li key={featureIndex} className="flex items-start">
-              <Check className="h-4 w-4 sm:h-5 sm:w-5 text-book-purple flex-shrink-0 mr-2 mt-0.5" />
-              <span className="text-slate-700 text-xs sm:text-sm">{feature}</span>
-            </li>
-          ))}
-          {planDetails.exclusiveFeatures.length > 3 && (
-            <li className="flex items-start">
-              <Check className="h-4 w-4 sm:h-5 sm:w-5 text-book-purple flex-shrink-0 mr-2 mt-0.5" />
-              <span className="text-slate-700 text-xs sm:text-sm">+ {planDetails.exclusiveFeatures.length - 3} more exclusive features</span>
-            </li>
-          )}
-        </ul>
+        {/* Features list */}
+        <PlanFeatures planName={planName} planDetails={planDetails} />
         
+        {/* Export formats */}
         <div className="mb-4 sm:mb-6">
           <h4 className="font-semibold text-book-darkText mb-2 sm:mb-3 flex items-center text-sm sm:text-base">
             Export Formats 
@@ -195,12 +139,13 @@ const PlanCard = ({
           </div>
         </div>
         
+        {/* Action button */}
         {isPlanActive ? (
           <Button 
             className="w-full bg-slate-100 text-book-darkText py-4 sm:py-6 text-sm sm:text-base"
             disabled
           >
-            <Check className="h-4 w-4 mr-2" /> Current Plan
+            Current Plan
           </Button>
         ) : (
           <Button 
