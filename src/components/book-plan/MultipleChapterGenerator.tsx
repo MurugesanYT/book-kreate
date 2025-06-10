@@ -143,24 +143,24 @@ Return only the chapter content, no title or extra formatting.`;
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 rounded-xl shadow-lg hover:shadow-xl transition-all font-semibold">
-          <Users className="h-5 w-5 mr-2" />
+        <Button className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-2 md:py-3 rounded-lg md:rounded-xl shadow-lg hover:shadow-xl transition-all font-semibold text-sm md:text-base">
+          <Users className="h-4 w-4 md:h-5 md:w-5 mr-2" />
           Generate Multiple Chapters
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] bg-white/95 backdrop-blur-lg rounded-3xl border border-green-200">
+      <DialogContent className="sm:max-w-[90vw] md:max-w-[600px] bg-white/95 backdrop-blur-lg rounded-2xl md:rounded-3xl border border-green-200 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-3 text-2xl">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
-              <Users className="h-5 w-5 text-white" />
+          <DialogTitle className="flex items-center gap-2 md:gap-3 text-xl md:text-2xl">
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg md:rounded-xl flex items-center justify-center">
+              <Users className="h-4 w-4 md:h-5 md:w-5 text-white" />
             </div>
             AI Bulk Chapter Generator
           </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-8 py-6">
+        <div className="space-y-6 md:space-y-8 py-4 md:py-6">
           {!canAddChapter(book) && (
-            <Alert variant="destructive" className="rounded-2xl border-red-200">
+            <Alert variant="destructive" className="rounded-xl md:rounded-2xl border-red-200">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Chapter limit reached</AlertTitle>
               <AlertDescription>
@@ -169,21 +169,21 @@ Return only the chapter content, no title or extra formatting.`;
             </Alert>
           )}
           
-          {/* Generation Progress */}
+          {/* Generation Progress - Responsive */}
           {isGenerating && (
-            <Card className="border-green-200 bg-green-50/50 rounded-2xl">
-              <CardContent className="pt-6">
-                <div className="space-y-4">
+            <Card className="border-green-200 bg-green-50/50 rounded-xl md:rounded-2xl">
+              <CardContent className="pt-4 md:pt-6">
+                <div className="space-y-3 md:space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-green-800">
+                    <span className="text-xs md:text-sm font-medium text-green-800">
                       Generating Chapter {currentChapter} of {numberOfChapters}
                     </span>
-                    <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
+                    <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 text-xs">
                       {Math.round(progress)}%
                     </Badge>
                   </div>
-                  <Progress value={progress} className="h-3 bg-green-100" />
-                  <p className="text-sm text-green-700">
+                  <Progress value={progress} className="h-2 md:h-3 bg-green-100" />
+                  <p className="text-xs md:text-sm text-green-700">
                     Please wait while our AI crafts your chapters with care and creativity...
                   </p>
                 </div>
@@ -191,20 +191,20 @@ Return only the chapter content, no title or extra formatting.`;
             </Card>
           )}
           
-          {/* Configuration Options */}
+          {/* Configuration Options - Responsive */}
           {!isGenerating && (
             <>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <Label htmlFor="numberOfChapters" className="text-base font-semibold">Number of Chapters</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                <div className="space-y-2 md:space-y-3">
+                  <Label htmlFor="numberOfChapters" className="text-sm md:text-base font-semibold">Number of Chapters</Label>
                   <Select
                     value={numberOfChapters.toString()}
                     onValueChange={(value) => setNumberOfChapters(parseInt(value))}
                   >
-                    <SelectTrigger className="rounded-xl border-2">
+                    <SelectTrigger className="rounded-lg md:rounded-xl border-2 h-10 md:h-12">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl">
+                    <SelectContent className="rounded-lg md:rounded-xl">
                       {Array.from({ length: maxChapters }, (_, i) => i + 1).map((num) => (
                         <SelectItem key={num} value={num.toString()}>
                           {num} Chapter{num > 1 ? 's' : ''}
@@ -214,13 +214,13 @@ Return only the chapter content, no title or extra formatting.`;
                   </Select>
                 </div>
                 
-                <div className="space-y-3">
-                  <Label htmlFor="chapterLength" className="text-base font-semibold">Chapter Length</Label>
+                <div className="space-y-2 md:space-y-3">
+                  <Label htmlFor="chapterLength" className="text-sm md:text-base font-semibold">Chapter Length</Label>
                   <Select value={chapterLength} onValueChange={setChapterLength}>
-                    <SelectTrigger className="rounded-xl border-2">
+                    <SelectTrigger className="rounded-lg md:rounded-xl border-2 h-10 md:h-12">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl">
+                    <SelectContent className="rounded-lg md:rounded-xl">
                       <SelectItem value="short">Short (~1,000 words)</SelectItem>
                       <SelectItem value="medium">Medium (~2,000 words)</SelectItem>
                       <SelectItem value="long">Long (~3,500 words)</SelectItem>
@@ -229,13 +229,13 @@ Return only the chapter content, no title or extra formatting.`;
                 </div>
               </div>
               
-              <div className="space-y-3">
-                <Label htmlFor="generationStyle" className="text-base font-semibold">Generation Style</Label>
+              <div className="space-y-2 md:space-y-3">
+                <Label htmlFor="generationStyle" className="text-sm md:text-base font-semibold">Generation Style</Label>
                 <Select value={generationStyle} onValueChange={setGenerationStyle}>
-                  <SelectTrigger className="rounded-xl border-2">
+                  <SelectTrigger className="rounded-lg md:rounded-xl border-2 h-10 md:h-12">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl">
+                  <SelectContent className="rounded-lg md:rounded-xl">
                     <SelectItem value="sequential">Sequential Story Progression</SelectItem>
                     <SelectItem value="thematic">Thematic Chapters</SelectItem>
                     <SelectItem value="character-focused">Character Development Focused</SelectItem>
@@ -243,36 +243,36 @@ Return only the chapter content, no title or extra formatting.`;
                 </Select>
               </div>
               
-              <div className="space-y-3">
-                <Label htmlFor="customPrompt" className="text-base font-semibold">
-                  Custom Instructions <span className="text-sm font-normal text-slate-500">(Optional)</span>
+              <div className="space-y-2 md:space-y-3">
+                <Label htmlFor="customPrompt" className="text-sm md:text-base font-semibold">
+                  Custom Instructions <span className="text-xs md:text-sm font-normal text-slate-500">(Optional)</span>
                 </Label>
                 <Textarea
                   id="customPrompt"
                   placeholder="Provide specific guidance for the AI about themes, plot points, or character development you want to include..."
                   value={customPrompt}
                   onChange={(e) => setCustomPrompt(e.target.value)}
-                  className="min-h-[120px] rounded-xl border-2"
+                  className="min-h-[100px] md:min-h-[120px] rounded-lg md:rounded-xl border-2 text-sm md:text-base"
                 />
               </div>
               
-              {/* Feature Highlights */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-blue-50 rounded-2xl border border-blue-200">
-                  <Clock className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-blue-800">Time Efficient</p>
+              {/* Feature Highlights - Responsive */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                <div className="text-center p-3 md:p-4 bg-blue-50 rounded-xl md:rounded-2xl border border-blue-200">
+                  <Clock className="h-6 w-6 md:h-8 md:w-8 text-blue-600 mx-auto mb-2" />
+                  <p className="text-xs md:text-sm font-medium text-blue-800">Time Efficient</p>
                   <p className="text-xs text-blue-600">Generate hours of content in minutes</p>
                 </div>
                 
-                <div className="text-center p-4 bg-purple-50 rounded-2xl border border-purple-200">
-                  <Sparkles className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-purple-800">Context Aware</p>
+                <div className="text-center p-3 md:p-4 bg-purple-50 rounded-xl md:rounded-2xl border border-purple-200">
+                  <Sparkles className="h-6 w-6 md:h-8 md:w-8 text-purple-600 mx-auto mb-2" />
+                  <p className="text-xs md:text-sm font-medium text-purple-800">Context Aware</p>
                   <p className="text-xs text-purple-600">Maintains story continuity</p>
                 </div>
                 
-                <div className="text-center p-4 bg-green-50 rounded-2xl border border-green-200">
-                  <Target className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-green-800">Customizable</p>
+                <div className="text-center p-3 md:p-4 bg-green-50 rounded-xl md:rounded-2xl border border-green-200">
+                  <Target className="h-6 w-6 md:h-8 md:w-8 text-green-600 mx-auto mb-2" />
+                  <p className="text-xs md:text-sm font-medium text-green-800">Customizable</p>
                   <p className="text-xs text-green-600">Follows your specific guidelines</p>
                 </div>
               </div>
@@ -280,28 +280,28 @@ Return only the chapter content, no title or extra formatting.`;
           )}
         </div>
         
-        <DialogFooter>
+        <DialogFooter className="gap-2">
           <Button 
             variant="outline" 
             onClick={() => setIsOpen(false)}
             disabled={isGenerating}
-            className="rounded-xl border-2"
+            className="rounded-lg md:rounded-xl border-2 text-sm md:text-base"
           >
             Cancel
           </Button>
           <Button 
             onClick={handleGenerateChapters} 
             disabled={isGenerating || !canAddChapter(book)}
-            className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all"
+            className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg md:rounded-xl shadow-lg hover:shadow-xl transition-all text-sm md:text-base"
           >
             {isGenerating ? (
               <>
-                <Zap className="h-4 w-4 mr-2 animate-pulse" />
+                <Zap className="h-3 w-3 md:h-4 md:w-4 mr-2 animate-pulse" />
                 Generating...
               </>
             ) : (
               <>
-                <Sparkles className="h-4 w-4 mr-2" />
+                <Sparkles className="h-3 w-3 md:h-4 md:w-4 mr-2" />
                 Generate {numberOfChapters} Chapter{numberOfChapters > 1 ? 's' : ''}
               </>
             )}

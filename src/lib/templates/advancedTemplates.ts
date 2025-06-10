@@ -1,10 +1,9 @@
-
-import { BookTemplate } from './templateTypes';
+import { type BookTemplate } from './templateTypes';
 import { BASIC_TEMPLATES } from './basicTemplates';
 import { PRO_TEMPLATES } from './proTemplates';
 import { ULTIMATE_TEMPLATES } from './ultimateTemplates';
 
-export { BookTemplate } from './templateTypes';
+export type { BookTemplate } from './templateTypes';
 
 export const ADVANCED_TEMPLATES: BookTemplate[] = [
   ...BASIC_TEMPLATES,

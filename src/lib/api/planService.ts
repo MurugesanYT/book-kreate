@@ -1,6 +1,5 @@
-
 import { toast } from 'sonner';
-import { PLANS, PlanKey } from './plans/planDefinitions';
+import { PLANS, type PlanKey } from './plans/planDefinitions';
 import { 
   canCreateBook as validateBookCreation,
   canAddChapter as validateChapterAddition,
@@ -17,7 +16,8 @@ import { generateBookPlan as createBookPlan } from './plans/planBookGenerator';
 import { BookData } from './types';
 
 // Export plans for external use
-export { PLANS, PlanKey } from './plans/planDefinitions';
+export { PLANS };
+export type { PlanKey } from './plans/planDefinitions';
 
 // Get user's current plan
 export const getUserPlan = (): PlanKey => {
