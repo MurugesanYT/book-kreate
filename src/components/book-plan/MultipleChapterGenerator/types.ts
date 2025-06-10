@@ -4,7 +4,7 @@ export interface MultipleChapterGeneratorProps {
   onAddChapters: (chapters: any[]) => void;
 }
 
-export interface GenerationConfig {
+export interface ChapterGenerationConfig {
   numberOfChapters: number;
   chapterLength: 'short' | 'medium' | 'long';
   customPrompt: string;

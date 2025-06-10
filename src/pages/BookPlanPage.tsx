@@ -11,7 +11,8 @@ import BookAnalyticsSection from '@/components/book-plan/BookAnalyticsSection';
 import BulkChapterCreator from '@/components/book-plan/BulkChapterCreator';
 import AddChapterDialog from '@/components/book-plan/AddChapterDialog';
 import { Button } from '@/components/ui/button';
-import { Plus, ArrowLeft } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, ArrowLeft, BookOpen, BarChart3, Settings } from 'lucide-react';
 
 const BookPlanPage = () => {
   const { bookId } = useParams<{ bookId: string }>();
@@ -122,37 +123,55 @@ const BookPlanPage = () => {
         {/* Header */}
         <BookPlanHeader book={book} onUpdate={handleBookUpdate} />
 
-        {/* Main Content Grid */}
-        <div className="grid lg:grid-cols-3 gap-4 sm:gap-8 mt-4 sm:mt-8">
-          {/* Left Column - Tasks and Analytics */}
-          <div className="lg:col-span-1 space-y-4 sm:space-y-6">
-            <TasksSection book={book} onUpdate={handleBookUpdate} />
-            <BookAnalyticsSection book={book} />
-          </div>
+        {/* Main Content with Tabs */}
+        <div className="mt-4 sm:mt-8">
+          <Tabs defaultValue="content" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsTrigger value="content" className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4" />
+                <span className="hidden sm:inline">Content</span>
+              </TabsTrigger>
+              <TabsTrigger value="tools" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                <span className="hidden sm:inline">Tools</span>
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                <span className="hidden sm:inline">Analytics</span>
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Right Column - Book Content */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl p-3 sm:p-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Book Content</h2>
-                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                  <BulkChapterCreator 
-                    book={book} 
-                    onChaptersCreated={handleBulkChaptersCreated}
-                  />
-                  <AddChapterDialog book={book} onAddChapter={handleAddChapter}>
-                    <Button variant="outline" className="gap-2 w-full sm:w-auto text-sm">
-                      <Plus className="h-4 w-4" />
-                      <span className="hidden sm:inline">Add Chapter</span>
-                      <span className="sm:hidden">Add</span>
-                    </Button>
-                  </AddChapterDialog>
+            <TabsContent value="content" className="space-y-6">
+              <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl p-3 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Book Content</h2>
+                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    <BulkChapterCreator 
+                      book={book} 
+                      onChaptersCreated={handleBulkChaptersCreated}
+                    />
+                    <AddChapterDialog book={book} onAddChapter={handleAddChapter}>
+                      <Button variant="outline" className="gap-2 w-full sm:w-auto text-sm">
+                        <Plus className="h-4 w-4" />
+                        <span className="hidden sm:inline">Add Chapter</span>
+                        <span className="sm:hidden">Add</span>
+                      </Button>
+                    </AddChapterDialog>
+                  </div>
                 </div>
+                
+                <BookContentSection book={book} onUpdate={handleBookUpdate} />
               </div>
-              
-              <BookContentSection book={book} onUpdate={handleBookUpdate} />
-            </div>
-          </div>
+            </TabsContent>
+
+            <TabsContent value="tools">
+              <TasksSection book={book} onUpdate={handleBookUpdate} />
+            </TabsContent>
+
+            <TabsContent value="analytics">
+              <BookAnalyticsSection book={book} />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>

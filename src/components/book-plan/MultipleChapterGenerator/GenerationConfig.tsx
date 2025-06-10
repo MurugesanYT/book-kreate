@@ -3,20 +3,20 @@ import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { GenerationConfig } from './types';
+import { ChapterGenerationConfig } from './types';
 
 interface GenerationConfigProps {
-  config: GenerationConfig;
-  onConfigChange: (config: GenerationConfig) => void;
+  config: ChapterGenerationConfig;
+  onConfigChange: (config: ChapterGenerationConfig) => void;
   maxChapters: number;
 }
 
-const GenerationConfig: React.FC<GenerationConfigProps> = ({
+const GenerationConfigComponent: React.FC<GenerationConfigProps> = ({
   config,
   onConfigChange,
   maxChapters
 }) => {
-  const updateConfig = (field: keyof GenerationConfig, value: any) => {
+  const updateConfig = (field: keyof ChapterGenerationConfig, value: any) => {
     onConfigChange({ ...config, [field]: value });
   };
 
@@ -93,4 +93,4 @@ const GenerationConfig: React.FC<GenerationConfigProps> = ({
   );
 };
 
-export default GenerationConfig;
+export default GenerationConfigComponent;

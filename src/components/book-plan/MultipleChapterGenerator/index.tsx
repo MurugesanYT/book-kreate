@@ -8,14 +8,14 @@ import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 import { canAddChapter, getUserPlan } from '@/lib/api/planService';
 import { generateWithGemini } from '@/lib/api/geminiService';
-import { MultipleChapterGeneratorProps, GenerationConfig, GenerationProgress as ProgressType } from './types';
-import GenerationConfig from './GenerationConfig';
+import { MultipleChapterGeneratorProps, ChapterGenerationConfig, GenerationProgress as ProgressType } from './types';
+import GenerationConfigComponent from './GenerationConfig';
 import GenerationProgress from './GenerationProgress';
 import FeatureHighlights from './FeatureHighlights';
 
 const MultipleChapterGenerator: React.FC<MultipleChapterGeneratorProps> = ({ book, onAddChapters }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [config, setConfig] = useState<GenerationConfig>({
+  const [config, setConfig] = useState<ChapterGenerationConfig>({
     numberOfChapters: 3,
     chapterLength: 'medium',
     customPrompt: '',
@@ -179,7 +179,7 @@ Return only the chapter content, no title or extra formatting.`;
           
           {!progress.isGenerating && (
             <>
-              <GenerationConfig 
+              <GenerationConfigComponent 
                 config={config}
                 onConfigChange={setConfig}
                 maxChapters={maxChapters}
