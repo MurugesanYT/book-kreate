@@ -13,6 +13,7 @@ interface BookSummary {
   progress: number;
   chaptersCount: number;
   completedChaptersCount: number;
+  isListed?: boolean;
 }
 
 interface BookGridProps {
@@ -20,9 +21,10 @@ interface BookGridProps {
   onCreateBook: () => void;
   onViewBook: (bookId: string) => void;
   onDeleteBook: (bookId: string) => void;
+  onRenameBook: (bookId: string, newTitle: string) => void;
 }
 
-const BookGrid = ({ books, onCreateBook, onViewBook, onDeleteBook }: BookGridProps) => {
+const BookGrid = ({ books, onCreateBook, onViewBook, onDeleteBook, onRenameBook }: BookGridProps) => {
   const sortedBooks = [...books].sort((a, b) => 
     new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
@@ -58,8 +60,9 @@ const BookGrid = ({ books, onCreateBook, onViewBook, onDeleteBook }: BookGridPro
         <BookCard 
           key={book.id} 
           book={book}
-          onViewBook={onViewBook}
-          onDeleteBook={onDeleteBook}
+          onView={onViewBook}
+          onDelete={onDeleteBook}
+          onRename={onRenameBook}
         />
       ))}
     </div>

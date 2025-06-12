@@ -17,6 +17,7 @@ interface BookSummary {
   progress: number;
   chaptersCount: number;
   completedChaptersCount: number;
+  isListed?: boolean;
 }
 
 const DashboardPage = () => {
@@ -55,7 +56,8 @@ const DashboardPage = () => {
           timestamp: book.timestamp,
           progress: Math.min(Math.max(progress, 0), 100),
           chaptersCount,
-          completedChaptersCount
+          completedChaptersCount,
+          isListed: book.isListed || false
         };
       });
       
@@ -93,6 +95,26 @@ const DashboardPage = () => {
       toast.error("Failed to delete book");
     }
   };
+
+  const handleRenameBook = (bookId: string, newTitle: string) => {
+    try {
+      const storedBooks = JSON.parse(localStorage.getItem('bookKreateBooks') || '[]');
+      const updatedBooks = storedBooks.map((book: any) => 
+        book.id === bookId ? { ...book, title: newTitle } : book
+      );
+      
+      localStorage.setItem('bookKreateBooks', JSON.stringify(updatedBooks));
+      
+      setBooks(books.map(book => 
+        book.id === bookId ? { ...book, title: newTitle } : book
+      ));
+      
+      toast.success("Book renamed successfully");
+    } catch (error) {
+      console.error("Error renaming book:", error);
+      toast.error("Failed to rename book");
+    }
+  };
   
   if (loading) {
     return (
@@ -122,6 +144,7 @@ const DashboardPage = () => {
           onCreateBook={handleCreateBook}
           onViewBook={handleViewBook}
           onDeleteBook={handleDeleteBook}
+          onRenameBook={handleRenameBook}
         />
       </main>
     </div>
