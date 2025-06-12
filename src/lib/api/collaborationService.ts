@@ -129,7 +129,8 @@ export const sendTeamInvitation = async (
     await set(newInvitationRef, invitation);
     
     // Add invitation to invitee's pending invitations
-    await set(ref(database, `userInvitations/${email.replace('.', '_')}/{newInvitationRef.key}`), true);
+    const emailKey = email.replace(/\./g, '_').replace(/[@]/g, '_');
+    await set(ref(database, `userInvitations/${emailKey}/${newInvitationRef.key}`), true);
     
     toast.success("Invitation sent successfully!");
   } catch (error) {
@@ -177,7 +178,8 @@ export const getPendingInvitations = async (): Promise<Invitation[]> => {
       return [];
     }
     
-    const userInvitationsRef = ref(database, `userInvitations/${user.email.replace('.', '_')}`);
+    const emailKey = user.email.replace(/\./g, '_').replace(/[@]/g, '_');
+    const userInvitationsRef = ref(database, `userInvitations/${emailKey}`);
     const snapshot = await get(userInvitationsRef);
     
     if (!snapshot.exists()) {
@@ -244,7 +246,8 @@ export const acceptTeamInvitation = async (invitationId: string): Promise<void> 
     await set(ref(database, `invitations/${invitationId}/status`), 'accepted');
     
     // Remove from pending invitations
-    await remove(ref(database, `userInvitations/${user.email.replace('.', '_')}/${invitationId}`));
+    const emailKey = user.email.replace(/\./g, '_').replace(/[@]/g, '_');
+    await remove(ref(database, `userInvitations/${emailKey}/${invitationId}`));
     
     toast.success("Team invitation accepted!");
   } catch (error) {
