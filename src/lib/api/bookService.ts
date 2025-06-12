@@ -38,6 +38,19 @@ export const getBook = async (bookId: string): Promise<Book> => {
       book.status = "draft";
     }
     
+    // Generate table of contents if not present
+    if (!book.tableOfContents && book.chapters && book.chapters.length > 0) {
+      book.tableOfContents = "TABLE OF CONTENTS\n\n" + book.chapters
+        .sort((a: any, b: any) => a.order - b.order)
+        .map((ch: any, idx: number) => `${idx + 1}. ${ch.title}`)
+        .join('\n');
+    }
+    
+    // Generate character list if not present
+    if (!book.characterList) {
+      book.characterList = "CHARACTER LIST\n\nNo character information available";
+    }
+    
     // Generate a plan if no tasks exist
     if (!book.tasks) {
       console.log("No tasks found, generating plan for book:", book.title);

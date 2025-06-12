@@ -1,148 +1,113 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { BookOpen, Clock, CheckCircle, Trash2, MoreVertical } from 'lucide-react';
-
-interface BookSummary {
-  id: string;
-  title: string;
-  type: string;
-  category: string;
-  timestamp: string;
-  progress: number;
-  chaptersCount: number;
-  completedChaptersCount: number;
-}
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { BookOpen, Calendar, FileText } from 'lucide-react';
+import BookActions from './BookActions';
 
 interface BookCardProps {
-  book: BookSummary;
-  onViewBook: (bookId: string) => void;
-  onDeleteBook: (bookId: string) => void;
+  book: {
+    id: string;
+    title: string;
+    type: string;
+    category: string;
+    timestamp: string;
+    progress: number;
+    chaptersCount: number;
+    completedChaptersCount: number;
+    isListed?: boolean;
+  };
+  onView: (bookId: string) => void;
+  onDelete: (bookId: string) => void;
+  onRename: (bookId: string, newTitle: string) => void;
 }
 
-const BookCard = ({ book, onViewBook, onDeleteBook }: BookCardProps) => {
+const BookCard: React.FC<BookCardProps> = ({ book, onView, onDelete, onRename }) => {
+  const formatDate = (timestamp: string) => {
+    return new Date(timestamp).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const getProgressColor = (progress: number) => {
+    if (progress < 30) return 'bg-red-500';
+    if (progress < 70) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
+
   return (
-    <div className="bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden hover:shadow-3xl transition-all duration-300 hover:scale-105 border border-purple-100 group">
-      <div className="h-3 bg-gradient-to-r from-purple-600 to-orange-500"></div>
-      <div className="p-8">
-        <div className="flex justify-between items-start mb-6">
-          <div className="flex-1">
-            <h3 
-              className="text-xl font-bold text-slate-800 mb-3 line-clamp-2 cursor-pointer hover:text-purple-600 transition-colors leading-tight"
-              onClick={() => onViewBook(book.id)}
-            >
-              {book.title || "Untitled Book"}
-            </h3>
-            
-            <div className="flex flex-wrap gap-2 mb-4">
-              <span className="bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 px-3 py-1 rounded-full text-sm font-semibold shadow-sm">
+    <Card className="group hover:shadow-lg transition-all duration-200 border-0 shadow-md bg-white/80 backdrop-blur-sm">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-lg font-bold text-gray-800 truncate pr-2">
+              {book.title}
+            </CardTitle>
+            <CardDescription className="flex items-center gap-2 mt-1">
+              <Badge variant="outline" className="text-xs">
                 {book.type}
-              </span>
-              <span className="bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 px-3 py-1 rounded-full text-sm font-semibold shadow-sm">
+              </Badge>
+              <Badge variant="secondary" className="text-xs">
                 {book.category}
-              </span>
-              {book.chaptersCount > 0 && (
-                <span className="bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold shadow-sm">
-                  {book.completedChaptersCount}/{book.chaptersCount} chapters
-                </span>
+              </Badge>
+              {book.isListed && (
+                <Badge className="text-xs bg-green-100 text-green-800">
+                  Listed
+                </Badge>
               )}
+            </CardDescription>
+          </div>
+          <BookActions
+            bookId={book.id}
+            bookTitle={book.title}
+            isListed={book.isListed}
+            onRename={(newTitle) => onRename(book.id, newTitle)}
+            onDelete={() => onDelete(book.id)}
+          />
+        </div>
+      </CardHeader>
+      
+      <CardContent className="pt-0">
+        <div className="space-y-4">
+          {/* Progress Section */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600">Progress</span>
+              <span className="font-medium text-gray-800">{book.progress}%</span>
+            </div>
+            <Progress 
+              value={book.progress} 
+              className="h-2"
+            />
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="flex items-center gap-2 text-gray-600">
+              <FileText className="h-4 w-4" />
+              <span>{book.completedChaptersCount}/{book.chaptersCount} chapters</span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-600">
+              <Calendar className="h-4 w-4" />
+              <span>{formatDate(book.timestamp)}</span>
             </div>
           </div>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-10 w-10 p-0 hover:bg-slate-100 rounded-full">
-                <MoreVertical className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-white/95 backdrop-blur-lg shadow-2xl border border-purple-100 rounded-2xl">
-              <DropdownMenuItem onClick={() => onViewBook(book.id)} className="rounded-xl">
-                <BookOpen className="h-4 w-4 mr-2" />
-                Open Book
-              </DropdownMenuItem>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600 focus:text-red-600 rounded-xl">
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Book
-                  </DropdownMenuItem>
-                </AlertDialogTrigger>
-                <AlertDialogContent className="bg-white/95 backdrop-blur-lg rounded-3xl border border-purple-100">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="text-2xl font-bold">Delete Book</AlertDialogTitle>
-                    <AlertDialogDescription className="text-lg">
-                      Are you sure you want to delete "{book.title}"? This action cannot be undone and all content will be permanently lost.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
-                    <AlertDialogAction 
-                      className="bg-red-500 text-white hover:bg-red-600 rounded-xl"
-                      onClick={() => onDeleteBook(book.id)}
-                    >
-                      Delete Book
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </DropdownMenuContent>
-          </DropdownMenu>
+
+          {/* Action Button */}
+          <Button 
+            onClick={() => onView(book.id)}
+            className="w-full bg-gradient-to-r from-purple-600 to-orange-500 hover:from-purple-700 hover:to-orange-600 text-white font-medium"
+          >
+            <BookOpen className="h-4 w-4 mr-2" />
+            Continue Writing
+          </Button>
         </div>
-        
-        <div className="flex items-center justify-between mb-6">
-          <span className="text-sm text-slate-500 flex items-center bg-slate-50 px-3 py-1 rounded-full">
-            <Clock size={14} className="mr-2" />
-            {new Date(book.timestamp).toLocaleDateString()}
-          </span>
-          <span className="text-sm font-semibold">
-            {book.progress === 100 ? (
-              <span className="text-green-600 flex items-center bg-green-50 px-3 py-1 rounded-full">
-                <CheckCircle size={16} className="mr-1" />
-                Complete
-              </span>
-            ) : (
-              <span className="text-purple-600 bg-purple-50 px-3 py-1 rounded-full">{book.progress}% Complete</span>
-            )}
-          </span>
-        </div>
-        
-        <div className="w-full bg-slate-200 rounded-full h-3 mb-6 shadow-inner">
-          <div 
-            className={`h-3 rounded-full transition-all duration-500 shadow-lg ${
-              book.progress === 100 
-                ? 'bg-gradient-to-r from-green-400 to-green-600' 
-                : 'bg-gradient-to-r from-purple-600 to-orange-500'
-            }`}
-            style={{ width: `${book.progress}%` }}
-          ></div>
-        </div>
-        
-        <Button 
-          className="w-full bg-gradient-to-r from-purple-600 to-orange-500 hover:from-purple-700 hover:to-orange-600 text-white py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 font-semibold" 
-          onClick={() => onViewBook(book.id)}
-        >
-          <BookOpen size={18} className="mr-2" />
-          Continue Writing
-        </Button>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
