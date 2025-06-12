@@ -2,6 +2,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import LandingPage from './pages/LandingPage';
 import DashboardPage from './pages/DashboardPage';
 import BookPlanPage from './pages/BookPlanPage';
 import BookCreationPage from './pages/BookCreationPage';
@@ -19,7 +20,7 @@ function App() {
         <AuthProvider>
           <Toaster />
           <Routes>
-            <Route path="/" element={<AuthPage />} />
+            <Route path="/" element={<LandingPage />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/book/plan/:bookId" element={<BookPlanPage />} />

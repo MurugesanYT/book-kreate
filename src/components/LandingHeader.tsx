@@ -27,6 +27,9 @@ const LandingHeader = () => {
             <Link to="/features" className="text-slate-700 hover:text-book-purple transition-colors font-medium">
               Features
             </Link>
+            <Link to="/marketplace" className="text-slate-700 hover:text-book-purple transition-colors font-medium">
+              Marketplace
+            </Link>
             <Link to="/pricing" className="text-slate-700 hover:text-book-purple transition-colors font-medium">
               Pricing
             </Link>
@@ -105,6 +108,13 @@ const LandingHeader = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               Features
+            </Link>
+            <Link 
+              to="/marketplace" 
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Marketplace
             </Link>
             <Link 
               to="/pricing" 

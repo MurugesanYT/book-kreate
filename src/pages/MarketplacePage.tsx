@@ -6,8 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getMarketplaceBooks, MarketplaceBook } from '@/lib/api/marketplaceService';
-import { Search, Download, Star, Filter } from 'lucide-react';
+import { Search, Download, Star, Filter, ArrowUpDown, Grid, List, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 
 const MarketplacePage = () => {
   const [books, setBooks] = useState<MarketplaceBook[]>([]);
@@ -15,6 +16,8 @@ const MarketplacePage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [priceFilter, setPriceFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -22,8 +25,8 @@ const MarketplacePage = () => {
   }, []);
 
   useEffect(() => {
-    filterBooks();
-  }, [books, searchTerm, categoryFilter, priceFilter]);
+    filterAndSortBooks();
+  }, [books, searchTerm, categoryFilter, priceFilter, sortBy]);
 
   const loadMarketplaceBooks = async () => {
     try {
@@ -37,7 +40,7 @@ const MarketplacePage = () => {
     }
   };
 
-  const filterBooks = () => {
+  const filterAndSortBooks = () => {
     let filtered = books;
 
     // Search filter
@@ -60,6 +63,28 @@ const MarketplacePage = () => {
     } else if (priceFilter === 'paid') {
       filtered = filtered.filter(book => !book.isFree);
     }
+
+    // Sort books
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'newest':
+          return new Date(b.listedAt).getTime() - new Date(a.listedAt).getTime();
+        case 'oldest':
+          return new Date(a.listedAt).getTime() - new Date(b.listedAt).getTime();
+        case 'price-low':
+          return (a.price || 0) - (b.price || 0);
+        case 'price-high':
+          return (b.price || 0) - (a.price || 0);
+        case 'rating':
+          return b.rating - a.rating;
+        case 'downloads':
+          return b.downloadCount - a.downloadCount;
+        case 'title':
+          return a.title.localeCompare(b.title);
+        default:
+          return 0;
+      }
+    });
 
     setFilteredBooks(filtered);
   };
@@ -85,14 +110,41 @@ const MarketplacePage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-orange-50">
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">Book Marketplace</h1>
-          <p className="text-gray-600">Discover and download books created by our community</p>
+        {/* Header */}
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-4 mb-4">
+              <Link to="/dashboard">
+                <Button variant="outline" size="sm">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Dashboard
+                </Button>
+              </Link>
+            </div>
+            <h1 className="text-4xl font-bold text-gray-800 mb-4">Book Marketplace</h1>
+            <p className="text-gray-600">Discover and download books created by our community</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+            >
+              <Grid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}
         <div className="mb-8 space-y-4">
-          <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -105,7 +157,7 @@ const MarketplacePage = () => {
               </div>
             </div>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full md:w-48">
+              <SelectTrigger className="w-full lg:w-48">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
@@ -116,7 +168,7 @@ const MarketplacePage = () => {
               </SelectContent>
             </Select>
             <Select value={priceFilter} onValueChange={setPriceFilter}>
-              <SelectTrigger className="w-full md:w-32">
+              <SelectTrigger className="w-full lg:w-32">
                 <SelectValue placeholder="All Prices" />
               </SelectTrigger>
               <SelectContent>
@@ -125,14 +177,41 @@ const MarketplacePage = () => {
                 <SelectItem value="paid">Paid</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full lg:w-48">
+                <ArrowUpDown className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="oldest">Oldest First</SelectItem>
+                <SelectItem value="title">Title A-Z</SelectItem>
+                <SelectItem value="rating">Highest Rated</SelectItem>
+                <SelectItem value="downloads">Most Downloaded</SelectItem>
+                <SelectItem value="price-low">Price: Low to High</SelectItem>
+                <SelectItem value="price-high">Price: High to Low</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
-        {/* Books Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {/* Results count */}
+        <div className="mb-6">
+          <p className="text-gray-600">
+            Showing {filteredBooks.length} of {books.length} books
+          </p>
+        </div>
+
+        {/* Books Grid/List */}
+        <div className={viewMode === 'grid' 
+          ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+          : "space-y-4"
+        }>
           {filteredBooks.map((book) => (
-            <Card key={book.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
+            <Card key={book.id} className={`hover:shadow-lg transition-shadow ${
+              viewMode === 'list' ? 'flex flex-row' : ''
+            }`}>
+              <CardHeader className={viewMode === 'list' ? 'flex-1' : ''}>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <CardTitle className="text-lg line-clamp-2">{book.title}</CardTitle>
@@ -147,7 +226,7 @@ const MarketplacePage = () => {
                   )}
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className={viewMode === 'list' ? 'flex-1' : ''}>
                 <p className="text-sm text-gray-600 mb-4 line-clamp-3">
                   {book.description}
                 </p>
